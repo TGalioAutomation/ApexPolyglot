@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>LingoPilot — 90 ngày bứt phá ngôn ngữ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="style-overrides.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">L</span><span>LingoPilot</span></div>
+        <div class="profile-card"><div class="avatar">ML</div><div><strong>Minh Lê</strong><span>Đang xây baseline</span></div><button class="icon-btn" aria-label="Tuỳ chọn">•••</button></div>
+        <nav class="main-nav" aria-label="Điều hướng chính">
+          <a class="nav-item active" href="#dashboard"><span>⌂</span> Tổng quan</a>
+          <a class="nav-item" href="#knowledge"><span>◒</span> Học &amp; luyện tập</a>
+          <a class="nav-item" href="#assessment"><span>✓</span> Kiểm tra năng lực</a>
+          <a class="nav-item" href="#roadmap"><span>▣</span> Lộ trình 90 ngày</a>
+          <a class="nav-item" href="#insights"><span>◌</span> Tiến bộ</a>
+        </nav>
+        <div class="sidebar-bottom"><div class="streak-box"><span class="fire">✦</span><div><strong id="streakDays">0 ngày</strong><small>chuỗi học liên tục</small></div><span class="arrow">→</span></div><div class="mini-links"><span>⚙ Cài đặt</span><span>?</span></div></div>
+      </aside>
+
+      <main class="content" id="dashboard">
+        <header class="topbar"><div><span class="eyebrow">THỨ BA, 15 THÁNG 8, 2026</span><h1>Chào buổi sáng, Minh <span class="wave">✦</span></h1><p class="subline">Mỗi ngày một chút. Sau 90 ngày, bạn sẽ bất ngờ về chính mình.</p></div><div class="top-actions"><button class="search-btn">⌕ <span>Tìm kiếm</span><kbd>⌘ K</kbd></button><button class="notification" aria-label="Thông báo">♢<i></i></button></div></header>
+
+        <section class="hero-card">
+          <div class="hero-copy"><span class="pill light" id="dayBadge">DAY 1 / 90</span><h2>Hôm nay bạn muốn<br /><em>chinh phục điều gì?</em></h2><p>Lộ trình được cá nhân hoá bởi AI dựa trên mục tiêu và thói quen học của bạn.</p><button class="primary-btn" data-start data-lesson="english-listen">Tiếp tục bài học <span>→</span></button></div>
+          <div class="hero-art"><div class="sun"></div><div class="hill hill-back"></div><div class="hill hill-front"></div><div class="paper-plane">◢</div><div class="road"></div></div>
+        </section>
+
+        <section class="section-head"><div><span class="section-kicker">YOUR MOMENTUM</span><h2>Đà tiến bộ của bạn</h2></div><button class="text-btn">7 ngày qua <span>⌄</span></button></section>
+        <section class="stats-grid" id="insights">
+          <article class="stat-card"><div class="stat-top"><span class="stat-icon blue">◔</span><span class="trend positive">Mục tiêu 35 phút/ngày</span></div><strong id="studyHours">0 <small>giờ</small></strong><p>Thời gian học</p><div class="spark blue-spark"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="stat-card"><div class="stat-top"><span class="stat-icon orange">✦</span><span class="trend positive" id="sessionCount">0 phiên</span></div><strong id="streakStat">0 <small>ngày</small></strong><p>Chuỗi liên tục</p><div class="week-dots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="today"></i><i></i></div></article>
+          <article class="stat-card"><div class="stat-top"><span class="stat-icon purple">⌁</span><span class="trend neutral">Mục tiêu 7</span></div><strong id="currentLevel">Chưa đủ <small>bằng chứng</small></strong><p>Level đã xác minh</p><div class="level-bar"><span id="levelFill" style="width:0"></span></div></article>
+        </section>
+
+        <section class="assessment-card" id="assessment">
+          <div class="assessment-copy"><span class="section-kicker">ADAPTIVE ASSESSMENT</span><h2>Kiểm tra để học đúng thứ cần thiết</h2><p>Test đầu vào xác định baseline. Checkpoint ngày 7, 14, 30, 45, 60, 75 và 90 đo bằng chứng nghe–đọc–nói, rồi AI giáo viên giao yêu cầu học tiếp theo.</p><div class="assessment-actions"><button class="primary-btn assessment-start" data-language="en" data-kind="placement">Đầu vào English</button><button class="secondary-btn assessment-start" data-language="zh" data-kind="placement">中文入学测试</button><button class="secondary-btn assessment-start" data-language="en" data-kind="weekly">Checkpoint EN</button><button class="secondary-btn assessment-start" data-language="zh" data-kind="weekly">阶段测试 中文</button></div></div>
+          <aside class="requirements-panel"><div class="requirements-head"><span>YÊU CẦU CỦA GIÁO VIÊN AI</span><strong id="assessmentLevel">Chưa có baseline</strong></div><ol id="teacherRequirements"><li>Làm test đầu vào cho từng ngôn ngữ.</li><li>AI phân tích điểm yếu và tạo 3 nhiệm vụ đo được.</li><li>Hoàn thành checkpoint để mở bằng chứng level mới.</li></ol><small id="aiProviderStatus">Đang kiểm tra giáo viên AI...</small></aside>
+        </section>
+
+        <section class="knowledge-card" id="knowledge" aria-labelledby="knowledgeTitle">
+          <div class="knowledge-head">
+            <div><span class="section-kicker">BUILD YOUR LANGUAGE</span><h2 id="knowledgeTitle">Từ mới &amp; ngữ pháp</h2><p>Nhớ từ trong câu, hiểu mẫu ngữ pháp và thử lại ngay khi sai.</p></div>
+            <div class="knowledge-summary" aria-live="polite"><strong id="knowledgeMastered">0</strong><span>mục đã nhớ</span></div>
+          </div>
+          <div class="knowledge-toolbar">
+            <div class="segmented-control" role="tablist" aria-label="Chọn nội dung học">
+              <button class="knowledge-mode active" id="vocabularyTab" role="tab" aria-selected="true" aria-controls="vocabularyPanel" data-knowledge-mode="vocabulary">Từ mới</button>
+              <button class="knowledge-mode" id="grammarTab" role="tab" aria-selected="false" aria-controls="grammarPanel" data-knowledge-mode="grammar">Ngữ pháp</button>
+            </div>
+            <div class="language-switch" aria-label="Chọn ngôn ngữ">
+              <button class="knowledge-language active" aria-pressed="true" data-knowledge-language="en">English</button>
+              <button class="knowledge-language" aria-pressed="false" data-knowledge-language="zh">中文</button>
+            </div>
+          </div>
+
+          <div class="knowledge-layout">
+            <div class="knowledge-progress-panel">
+              <span class="knowledge-step" id="knowledgeStep">Từ 1 / 6</span>
+              <div class="knowledge-progress-track" aria-hidden="true"><i id="knowledgeProgressFill"></i></div>
+              <h3>Phiên học chủ động</h3>
+              <p>Đoán trước khi mở đáp án. Mục chưa nhớ sẽ quay lại trong lượt ôn.</p>
+              <dl><div><dt id="vocabularyKnownCount">0</dt><dd>Từ đã nhớ</dd></div><div><dt id="grammarPassedCount">0</dt><dd>Mẫu đã đạt</dd></div></dl>
+            </div>
+
+            <div class="knowledge-workspace">
+              <div class="knowledge-panel" id="vocabularyPanel" role="tabpanel" aria-labelledby="vocabularyTab">
+                <article class="vocabulary-card">
+                  <div class="vocabulary-meta"><span id="vocabularyTopic">GIAO TIẾP HẰNG NGÀY</span><button id="speakVocabulary" class="sound-btn" aria-label="Nghe từ và câu ví dụ">Nghe mẫu</button></div>
+                  <h3 id="vocabularyTerm">confident</h3>
+                  <p class="pronunciation" id="vocabularyPronunciation">/ˈkɒn.fɪ.dənt/</p>
+                  <button class="reveal-btn" id="revealVocabulary" aria-expanded="false">Hiện nghĩa &amp; ví dụ</button>
+                  <div class="vocabulary-answer" id="vocabularyAnswer" hidden>
+                    <strong id="vocabularyMeaning">tự tin</strong>
+                    <p id="vocabularyExample">I feel more confident when I practise every day.</p>
+                    <small id="vocabularyTranslation">Tôi tự tin hơn khi luyện tập mỗi ngày.</small>
+                  </div>
+                  <div class="knowledge-actions" id="vocabularyActions" hidden>
+                    <button class="review-btn" id="reviewVocabulary">Chưa nhớ — ôn lại</button>
+                    <button class="know-btn" id="knowVocabulary">Đã nhớ từ này</button>
+                  </div>
+                </article>
+              </div>
+
+              <div class="knowledge-panel" id="grammarPanel" role="tabpanel" aria-labelledby="grammarTab" hidden>
+                <article class="grammar-card">
+                  <div class="grammar-meta"><span id="grammarLevel">ENGLISH · NỀN TẢNG</span><span id="grammarCounter">Mẫu 1 / 3</span></div>
+                  <h3 id="grammarTitle">Present simple — thói quen</h3>
+                  <p class="grammar-rule" id="grammarRule">Dùng hiện tại đơn cho thói quen và sự thật lặp lại.</p>
+                  <div class="formula" id="grammarFormula">S + V(s/es) + …</div>
+                  <p class="grammar-example" id="grammarExample">She studies English every evening.</p>
+                  <fieldset class="grammar-question"><legend id="grammarPrompt">Chọn từ đúng: “He ___ Chinese on Sundays.”</legend><div id="grammarChoices" class="grammar-choices"></div></fieldset>
+                  <div class="grammar-feedback" id="grammarFeedback" role="status" aria-live="polite">Chọn một đáp án để kiểm tra.</div>
+                  <button class="primary-btn grammar-next" id="nextGrammar" hidden>Mẫu tiếp theo <span>→</span></button>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="lower-grid">
+          <div class="learning-panel" id="practice"><div class="section-head compact"><div><span class="section-kicker">DESIGNED FOR YOU</span><h2>Bài học hôm nay</h2></div><button class="text-btn">Xem tất cả →</button></div><div class="lesson-list">
+            <article class="lesson-card"><div class="lesson-symbol english">Aa</div><div class="lesson-main"><div><span class="language-tag">ENGLISH · NGHE</span><span class="time">12 phút</span></div><h3>Small talk, big confidence</h3><p>Nghe hiểu hội thoại đời thường</p><div class="lesson-progress"><span style="width: 68%"></span></div></div><button class="round-btn" data-start data-lesson="english-listen" aria-label="Bắt đầu bài nghe">→</button></article>
+            <article class="lesson-card"><div class="lesson-symbol chinese">文</div><div class="lesson-main"><div><span class="language-tag">中文 · NÓI</span><span class="time">15 phút</span></div><h3>介绍自己 — Giới thiệu bản thân</h3><p>Luyện thanh điệu cùng AI Coach</p><div class="lesson-progress purple-line"><span style="width: 34%"></span></div></div><button class="round-btn" data-start data-lesson="chinese-speak" aria-label="Bắt đầu bài nói">→</button></article>
+            <article class="lesson-card"><div class="lesson-symbol mixed">?</div><div class="lesson-main"><div><span class="language-tag">MIXED · ĐỌC</span><span class="time">10 phút</span></div><h3>The little things that matter</h3><p>Đọc nhanh và nhớ từ vựng mới</p><div class="lesson-progress green-line"><span style="width: 0%"></span></div></div><button class="round-btn" data-start data-lesson="mixed-read" aria-label="Bắt đầu bài đọc">→</button></article>
+          </div>
+          <aside class="coach-card"><div class="coach-header"><span class="section-kicker">AI LANGUAGE COACH</span><span class="online"><i></i> Online</span></div><div class="coach-avatar">✦</div><h2>Hỏi mình bất cứ điều gì.</h2><p>“Mình muốn luyện nói về chủ đề du lịch.”</p><div class="coach-input"><input id="coachInput" placeholder="Nhắn cho Coach..." /><button id="sendCoach" aria-label="Gửi">↑</button></div><div class="suggestions"><button data-prompt="Give me a 5-minute English speaking challenge">Thử thách 5 phút <span>↗</span></button><button data-prompt="帮我练习中文自我介绍">练习中文介绍 <span>↗</span></button></div><button class="generate-lesson" id="generateLesson">✦ Tạo bài 10 phút bằng AI</button><div id="coachReply" class="coach-reply" hidden></div></aside>
+        </section>
+        <section class="roadmap-card" id="roadmap"><div><span class="section-kicker">YOUR 90-DAY ROADMAP</span><h2>3 chặng đường, 1 phiên bản mới</h2><p>AI sẽ điều chỉnh cường độ mỗi tuần để bạn tiến bộ bền vững.</p></div><div class="roadmap-steps"><div class="road-step done"><span>01</span><strong>Nền tảng</strong><small>Ngày 1–30</small></div><div class="road-line active"></div><div class="road-step current"><span>02</span><strong>Bứt phá</strong><small>Ngày 31–60</small></div><div class="road-line"></div><div class="road-step"><span>03</span><strong>Tự tin</strong><small>Ngày 61–90</small></div></div></section>
+        <footer>LINGOPILOT <span>·</span> Học thông minh hơn, mỗi ngày một chút.</footer>
+      </main>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal" id="lessonModal" aria-hidden="true"><div class="modal-card"><button class="modal-close" id="closeModal">×</button><span class="pill" id="sessionLabel">AI SESSION</span><h2 id="sessionTitle">Phiên học 15 phút</h2><p id="sessionDescription">Nghe mẫu, đọc câu trả lời, rồi ghi âm để Coach phản hồi.</p><div class="practice-tabs"><button class="practice-tab active" data-mode="listen">Nghe</button><button class="practice-tab" data-mode="read">Đọc</button><button class="practice-tab" data-mode="speak">Nói</button></div><div class="prompt-card"><span id="promptText">“Tell me about one thing you learned today.”</span><div class="prompt-actions"><button id="playPrompt">▶ Nghe mẫu</button><button id="recordPrompt">◉ Ghi âm</button></div></div><div class="reading-check" id="readingCheck" hidden><strong>Câu hỏi nhanh</strong><p id="readingQuestion">What is the main idea?</p><div class="answer-row"><input id="readingAnswer" placeholder="Viết câu trả lời..." /><button id="checkAnswer">Kiểm tra</button></div></div><div id="speechStatus" class="speech-status" role="status">Sẵn sàng luyện nói</div><button class="primary-btn" id="beginSession">Hoàn thành phiên học <span>→</span></button></div></div>
+    <div class="modal assessment-modal" id="assessmentModal" aria-hidden="true"><div class="modal-card assessment-modal-card"><button class="modal-close" id="closeAssessment">×</button><div class="assessment-progress"><span id="assessmentStep">Câu 1 / 6</span><i><b id="assessmentProgress"></b></i></div><span class="pill" id="assessmentKind">PLACEMENT TEST</span><h2 id="assessmentTitle">Kiểm tra đầu vào English</h2><p id="assessmentPrompt">Đang tải câu hỏi...</p><button class="listen-test" id="listenAssessment" hidden>▶ Nghe câu hỏi</button><div id="assessmentChoices" class="assessment-choices"></div><textarea id="assessmentOpenAnswer" class="assessment-open-answer" rows="4" placeholder="Viết transcript câu trả lời của bạn..." hidden></textarea><p class="assessment-notice" id="assessmentNotice"></p><button class="primary-btn" id="nextAssessment">Câu tiếp theo <span>→</span></button></div></div>
+    <script src="app.js"></script>
+  </body>
+</html>

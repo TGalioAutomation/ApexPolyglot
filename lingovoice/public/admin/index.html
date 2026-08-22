@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0F172A" />
+  <title>LingoVoice Admin · Control plane</title>
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Bỏ qua điều hướng</a>
+  <header class="admin-header">
+    <div class="brand-block">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </span>
+      <div><strong>LingoVoice Admin</strong><span>Content &amp; audio control plane</span></div>
+    </div>
+    <div class="header-actions">
+      <span class="live-state" id="liveState"><i></i><span>Đang kết nối</span></span>
+      <a class="button secondary" href="/" target="_blank" rel="noopener">Mở app học</a>
+      <button class="button secondary" type="button" id="refreshAll">Làm mới</button>
+    </div>
+  </header>
+
+  <main id="main" class="admin-shell">
+    <section class="intro" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">OPERATIONS · PREPARED ASSETS</p>
+        <h1 id="pageTitle">Chuẩn bị trước, phục vụ tức thì</h1>
+        <p>Admin tạo và kiểm duyệt dữ liệu/audio. Website và mobile chỉ đọc tài nguyên đã sẵn sàng để giao diện người học luôn nhẹ và ổn định.</p>
+      </div>
+      <div class="updated-box"><span>Cập nhật gần nhất</span><strong id="updatedAt">—</strong></div>
+    </section>
+
+    <section class="metric-grid" aria-label="Tổng quan hệ thống">
+      <article class="metric-card"><span>Audio WAV</span><strong id="audioFiles">—</strong><small id="audioBytes">Đang tải…</small></article>
+      <article class="metric-card"><span>Manifest sẵn sàng</span><strong id="preparedAudio">—</strong><small id="audioCoverage">so với catalog</small></article>
+      <article class="metric-card"><span>Kho từ</span><strong id="vocabTotal">—</strong><small id="reviewedTotal">đã kiểm duyệt</small></article>
+      <article class="metric-card"><span>Học viên</span><strong id="learnerTotal">—</strong><small>Bộ nhớ phía server</small></article>
+    </section>
+
+    <section class="work-grid">
+      <article class="panel service-panel" aria-labelledby="serviceTitle">
+        <div class="panel-head"><div><p class="eyebrow">SYSTEM</p><h2 id="serviceTitle">Trạng thái dịch vụ</h2></div></div>
+        <div class="service-list" id="serviceList" aria-live="polite"></div>
+      </article>
+
+      <article class="panel" aria-labelledby="audioTitle">
+        <div class="panel-head">
+          <div><p class="eyebrow">AUDIO PIPELINE</p><h2 id="audioTitle">Tạo audio hàng loạt</h2></div>
+          <span class="status-pill">1 job / lần</span>
+        </div>
+        <p class="panel-copy">Quét câu mẫu, kho từ JSON, bài đọc và placement; chỉ tạo phần còn thiếu rồi ghi manifest cho client.</p>
+        <div class="form-grid compact">
+          <label>Giọng English<input id="voiceEn" type="text" maxlength="80" placeholder="Mặc định hệ thống" /></label>
+          <label>Giọng 中文<input id="voiceZh" type="text" maxlength="80" placeholder="Mặc định hệ thống" /></label>
+          <label>Tốc độ<select id="audioSpeed"><option value="0.9">0.90×</option><option value="0.95">0.95×</option><option value="1" selected>1.00×</option><option value="1.05">1.05×</option></select></label>
+        </div>
+        <button class="button primary" type="button" id="runPregen">Đảm bảo đủ audio</button>
+      </article>
+
+      <article class="panel" aria-labelledby="dataTitle">
+        <div class="panel-head"><div><p class="eyebrow">DATA QUALITY</p><h2 id="dataTitle">Kho dữ liệu học</h2></div><button class="button secondary small" type="button" id="runAudit">Chạy audit</button></div>
+        <div class="dataset-grid" id="datasetGrid"></div>
+        <div class="form-grid compact vocab-job-form">
+          <label>Ngôn ngữ<select id="prepLanguage"><option value="en">English</option><option value="zh">中文</option></select></label>
+          <label>Số mục<input id="prepLimit" type="number" min="1" max="200" value="20" /></label>
+          <button class="button secondary" type="button" id="runVocabPrep">Chuẩn bị thêm từ</button>
+        </div>
+      </article>
+
+      <article class="panel jobs-panel" aria-labelledby="jobsTitle">
+        <div class="panel-head"><div><p class="eyebrow">AUTOMATION</p><h2 id="jobsTitle">Hàng đợi công việc</h2></div><span class="status-pill" id="jobCount">0 job</span></div>
+        <div class="job-list" id="jobList" aria-live="polite"><p class="empty">Chưa có công việc.</p></div>
+      </article>
+    </section>
+
+    <section class="panel vocab-panel" aria-labelledby="vocabTitle">
+      <div class="panel-head">
+        <div><p class="eyebrow">CONTENT REVIEW</p><h2 id="vocabTitle">Kiểm duyệt từ vựng</h2></div>
+        <span class="status-pill" id="vocabResultCount">0 mục</span>
+      </div>
+      <form class="filter-bar" id="vocabFilters">
+        <label>Ngôn ngữ<select id="vocabLanguage"><option value="en">English</option><option value="zh">中文</option></select></label>
+        <label>Cấp độ<select id="vocabLevel"><option value="">Tất cả</option><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
+        <label class="search-field">Tìm kiếm<input id="vocabQuery" type="search" placeholder="Từ hoặc nghĩa…" /></label>
+        <button class="button secondary" type="submit">Lọc dữ liệu</button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Từ/cụm</th><th>Nghĩa</th><th>CEFR</th><th>Ví dụ</th><th>Kiểm duyệt</th></tr></thead>
+          <tbody id="vocabRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

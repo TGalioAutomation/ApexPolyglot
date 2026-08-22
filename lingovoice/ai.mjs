@@ -1,0 +1,293 @@
+// LingoVoice — AI teacher adapter (DeepSeek / Gemini / OpenAI)
+// Key chỉ nằm ở server (qua .env). Endpoint chat gọi module này.
+const PROVIDER_KEYS = {
+  gemini: 'GEMINI_API_KEY',
+  deepseek: 'DEEPSEEK_API_KEY',
+  openai: 'OPENAI_API_KEY'
+};
+
+export function configuredProviders() {
+  return Object.entries(PROVIDER_KEYS)
+    .filter(([, env]) => process.env[env])
+    .map(([name]) => name);
+}
+
+export function providerOrder() {
+  const configured = configuredProviders();
+  if (!configured.length) return [];
+  const preferred = (process.env.AI_PROVIDER || 'auto').toLowerCase();
+  if (preferred === 'auto' || !configured.includes(preferred)) return configured;
+  return [preferred, ...configured.filter((p) => p !== preferred)];
+}
+
+async function callProvider(provider, { system, user, json = false }) {
+  if (provider === 'deepseek') {
+    const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+    const base = (process.env.DEEPSEEK_API_BASE || 'https://api.deepseek.com').replace(/\/$/, '');
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        response_format: json ? { type: 'json_object' } : { type: 'text' },
+        max_tokens: json ? 1000 : 700,
+        temperature: 0.7,
+        stream: false
+      })
+    });
+    if (!res.ok) throw new Error(`DeepSeek returned ${res.status}`);
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('DeepSeek empty response');
+    return { text: text.trim(), provider, model };
+  }
+
+  if (provider === 'gemini') {
+    const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+    const base = (process.env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
+    const res = await fetch(`${base}/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
+        generationConfig: json ? { responseMimeType: 'application/json' } : undefined
+      })
+    });
+    if (!res.ok) throw new Error(`Gemini returned ${res.status}`);
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
+    if (!text) throw new Error('Gemini empty response');
+    return { text: text.trim(), provider, model };
+  }
+
+  if (provider === 'openai') {
+    const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+    const base = (process.env.OPENAI_API_BASE || 'https://api.openai.com/v1').replace(/\/$/, '');
+    const res = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        response_format: json ? { type: 'json_object' } : undefined,
+        max_tokens: json ? 1000 : 700,
+        temperature: 0.7
+      })
+    });
+    if (!res.ok) throw new Error(`OpenAI returned ${res.status}`);
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('OpenAI empty response');
+    return { text: text.trim(), provider, model };
+  }
+
+  throw new Error(`provider ${provider} not configured`);
+}
+
+export const TEACHER_PERSONALITIES = {
+  warm: 'Ấm áp: kiên nhẫn, dịu dàng, ghi nhận nỗ lực trước khi sửa lỗi; không tâng bốc quá mức.',
+  strict: 'Kỷ luật: nói thẳng lỗi quan trọng, đặt mục tiêu cụ thể và yêu cầu học viên thử lại; nghiêm túc nhưng luôn tôn trọng.',
+  energetic: 'Năng lượng: nhịp trả lời nhanh, tích cực, tạo động lực hành động ngay; sinh động nhưng không dùng emoji hoặc cảm thán quá mức.'
+};
+
+export function normalizeTeacherProfile(value = {}) {
+  const personality = Object.hasOwn(TEACHER_PERSONALITIES, value.personality) ? value.personality : 'warm';
+  const voices = {};
+  for (const lang of ['en', 'zh']) {
+    const candidate = value.voices?.[lang];
+    voices[lang] = typeof candidate === 'string' && /^[\w.-]{1,80}$/.test(candidate) ? candidate : null;
+  }
+  const rawSpeed = Number(value.speed);
+  const speed = Number.isFinite(rawSpeed) ? Math.min(1.15, Math.max(0.75, rawSpeed)) : 0.95;
+  return { personality, voices, speed };
+}
+
+// System prompt cho "giáo viên đồng hành"
+export function teacherSystem(profile = {}) {
+  const safeProfile = normalizeTeacherProfile(profile);
+  return `Bạn là cô giáo ngôn ngữ thân thiện đồng hành cùng học viên người Việt trong ứng dụng LingoVoice (học tiếng Anh và tiếng Trung).
+TÍNH CÁCH ĐƯỢC HỌC VIÊN CHỌN: ${TEACHER_PERSONALITIES[safeProfile.personality]}
+SỨ MỆNH: Luôn hướng học viên tới MỤC TIÊU cá nhân và giúp họ DÙNG, NÓI, NGHE THÔNG THẠO ngôn ngữ đang học — không chỉ dạy lý thuyết.
+Nguyên tắc BẮT BUỘC:
+- Trả lời NGẮN GỌN, tối đa 3–4 câu, không gạch đầu dòng dài, không dùng emoji.
+- Nói tiếng Việt là chính; khi minh hoạ, đưa câu mẫu đúng ngôn ngữ đang học.
+- Luôn bám theo BỘ NHỚ HỌC VIÊN được cung cấp (mục tiêu, level, điểm yếu, lỗi gần đây, từ đã học). Nếu mục tiêu chưa đặt, hãy khuyến khích đặt mục tiêu. Nếu có điểm yếu, ưu tiên luyện kỹ năng đó. Nếu có lỗi gần đây, nhắc học viên tránh lặp lại.
+- Ưu tiên đưa câu để học viên NGHE và NÓI/VIẾT lại (output-first), sau đó mới giải thích.
+- Phần LỚN quan trọng: luôn kết thúc phản hồi bằng ĐÚNG MỘT câu mẫu ngắn bằng ngôn ngữ đang học, bọc trong 【 câu mẫu 】. Đoạn trong 【 】 sẽ được đọc to bằng giọng máy, nên CHỈ chứa câu bằng ngôn ngữ đang học.
+- Khi học viên hỏi nghĩa/phát âm/cách dùng: giải thích ngắn, khuyến khích nghe và thử lại.
+- Chỉ dạy đúng ngôn ngữ/level/ngữ cảnh người học đang ở.
+- Không tự nhận là chứng chỉ, không chấm điểm phát âm từ văn bản.
+- Giọng điệu như giáo viên ngồi cạnh: tận tình, cụ thể, khích lệ.`;
+}
+
+// Gọi giáo viên; nếu chưa có key -> ném Error 'NO_AI'
+export async function runTeacher({ system, user }) {
+  const order = providerOrder();
+  if (!order.length) {
+    const err = new Error('NO_AI');
+    err.code = 'NO_AI';
+    throw err;
+  }
+  const errors = [];
+  for (const provider of order) {
+    try {
+      return await callProvider(provider, { system, user });
+    } catch (e) {
+      errors.push(e.message);
+    }
+  }
+  const err = new Error(`All AI providers failed: ${errors.join('; ')}`);
+  err.code = 'AI_ERROR';
+  throw err;
+}
+
+// ---- Structured generation (JSON + schema validator) ----
+export function extractJson(text) {
+  const cleaned = String(text || '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  return JSON.parse(cleaned);
+}
+
+// Chạy provider chế độ JSON; validator nhận object -> object hợp lệ hoặc null
+export async function runStructured({ system, user, validator }) {
+  const order = providerOrder();
+  if (!order.length) {
+    const err = new Error('NO_AI');
+    err.code = 'NO_AI';
+    throw err;
+  }
+  const errors = [];
+  for (const provider of order) {
+    try {
+      const result = await callProvider(provider, { system, user, json: true });
+      const parsed = extractJson(result.text);
+      const validated = validator(parsed);
+      if (validated === null) throw new Error(`${provider} returned invalid JSON shape`);
+      return { ...validated, provider, model: result.model };
+    } catch (e) {
+      errors.push(e.message);
+    }
+  }
+  const err = new Error(`All AI providers failed: ${errors.join('; ')}`);
+  err.code = 'AI_ERROR';
+  throw err;
+}
+
+function str(value, max) {
+  return typeof value === 'string' && value.trim() && value.length <= max ? value.trim() : null;
+}
+
+// ---- P0: sinh thẻ từ vựng (đầy đủ trường cho Vocabulary Studio) ----
+export async function generateVocabCard(term, language) {
+  const langName = language === 'zh' ? 'tiếng Trung giản thể' : 'tiếng Anh';
+  const card = await runStructured({
+    system: `Bạn là giáo viên tiếng ${langName} cho người Việt. Tạo thẻ từ vựng chất lượng cho app học.`,
+    user: language === 'zh'
+      ? `Tạo thẻ từ cho từ/cụm: "${term}". Trả JSON chỉ gồm: meaning (nghĩa tiếng Việt ngắn), example (câu ví dụ bằng tiếng Trung giản thể có chứa từ này, trình độ cơ bản-trung cấp), pinyin (phiên âm CÓ DẤU THANH của câu ví dụ), translation (dịch tiếng Việt câu ví dụ), topic (chủ đề ngắn), note (ghi chú measure word, tone pair hoặc cấu trúc ngắn khi phù hợp), freq (mức độ phổ biến: số nguyên 1-5, 1 là rất phổ biến, 5 là ít gặp).`
+      : `Tạo thẻ từ cho từ/cụm: "${term}". Trả JSON chỉ gồm: meaning (nghĩa tiếng Việt ngắn), example (câu ví dụ tiếng Anh có chứa từ này, trình độ cơ bản-trung cấp), translation (dịch tiếng Việt câu ví dụ), topic (chủ đề ngắn), pos (từ loại, ví dụ noun/verb/adjective), ipa (phiên âm IPA có trọng âm), collocations (mảng đúng 2 cụm từ/cấu trúc thường dùng với từ này), freq (mức độ phổ biến: số nguyên 1-5, 1 là rất phổ biến, 5 là ít gặp), workplace (boolean: từ có thường dùng trong giao tiếp công việc không).`,
+    validator: (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      if (language === 'zh') {
+        if (Object.keys(obj).sort().join('|') !== 'example|freq|meaning|note|pinyin|topic|translation') return null;
+        const clean = {};
+        for (const k of ['example', 'meaning', 'note', 'pinyin', 'topic', 'translation']) {
+          const v = str(obj[k], 400);
+          if (!v) return null;
+          clean[k] = v;
+        }
+        const freq = Number(obj.freq);
+        if (!Number.isInteger(freq) || freq < 1 || freq > 5) return null;
+        clean.freq = freq;
+        return { ...clean, term: str(term, 120) };
+      }
+      if (Object.keys(obj).sort().join('|') !== 'collocations|example|freq|ipa|meaning|pos|topic|translation|workplace') return null;
+      const clean = {};
+      for (const k of ['example', 'ipa', 'meaning', 'pos', 'topic', 'translation']) {
+        const v = str(obj[k], 400);
+        if (!v) return null;
+        clean[k] = v;
+      }
+      if (!Array.isArray(obj.collocations) || obj.collocations.length !== 2) return null;
+      const cols = obj.collocations.map((c) => str(c, 120));
+      if (cols.some((c) => !c)) return null;
+      clean.collocations = cols;
+      const freq = Number(obj.freq);
+      if (!Number.isInteger(freq) || freq < 1 || freq > 5) return null;
+      clean.freq = freq;
+      clean.workplace = Boolean(obj.workplace);
+      return { ...clean, term: str(term, 120) };
+    }
+  });
+  return card;
+}
+
+// ---- P1: feedback bài viết ----
+export async function writingFeedback({ text, prompt, language }) {
+  const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';
+  const fb = await runStructured({
+    system: `Bạn là giáo viên ${langName} chấm bài viết ngắn cho người Việt. Trả lời ngắn gọn, ấm áp.`,
+    user: `Bài tập: ${prompt}\n\nBài làm của học viên: ${text}\n\nTrả JSON chỉ gồm: praise (1 điểm làm tốt, tối đa 1 câu tiếng Việt), fix (một lỗi quan trọng nhất ảnh hưởng giao tiếp), corrected (câu sửa lại hoàn chỉnh bằng ${langName}), why (giải thích ngắn bằng tiếng Việt), retry (gợi ý viết lại ngắn gọn).`,
+    validator: (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      const keys = ['corrected', 'fix', 'praise', 'retry', 'why'];
+      if (Object.keys(obj).sort().join('|') !== keys.join('|')) return null;
+      const clean = {};
+      for (const k of keys) {
+        const v = str(obj[k], 500);
+        if (!v) return null;
+        clean[k] = v;
+      }
+      return clean;
+    }
+  });
+  return fb;
+}
+
+// ---- P2: lượt roleplay ----
+export async function roleplayTurn({ scenario, language, level, history }) {
+  const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';
+  const prompt = history.length
+    ? `Lịch sử hội thoại:\n${history.map((h) => `${h.role === 'teacher' ? 'Nhân viên' : 'Học viên'}: ${h.text}`).join('\n')}\n\nĐến lượt bạn trả lời học viên.`
+    : `Hãy mở đầu cuộc hội thoại với học viên trong tình huống này.`;
+  const turn = await runStructured({
+    system: `Bạn đang đóng vai nhân vật trong tình huống: "${scenario.title}". Ngôn ngữ: ${langName}. Trình độ học viên: mức ${level} (1-7). Nói ngắn gọn đúng vai, tự nhiên. Trả lời bằng ${langName}, KHÔNG dùng tiếng Việt trong lời thoại.`,
+    user: `${prompt}\n\nTrả JSON chỉ gồm: reply (lời thoại bằng ${langName}, 1-2 câu), hint (gợi ý cho học viên bằng tiếng Việt nếu cần, ngắn gọn).`,
+    validator: (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      if (Object.keys(obj).sort().join('|') !== 'hint|reply') return null;
+      const reply = str(obj.reply, 300);
+      const hint = str(obj.hint, 300);
+      if (!reply || !hint) return null;
+      return { reply, hint };
+    }
+  });
+  return turn;
+}
+
+// ---- P2: nhận xét cuối cuộc gọi thoại ----
+export async function roleplayFeedback({ scenario, language, history }) {
+  const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';
+  const lines = (history || []).slice(-20).map((h) => `${h.role === 'teacher' ? 'Nhân viên' : 'Học viên'}: ${h.text}`).join('\n') || '(chưa có lượt nào)';
+  const fb = await runStructured({
+    system: `Bạn là cô giáo ${langName} chấm một cuộc hội thoại ngắn của học viên người Việt trong tình huống "${scenario?.title || 'giao tiếp'}". Trả lời ngắn gọn, ấm áp, khích lệ.`,
+    user: `Hội thoại:\n${lines}\n\nTrả JSON chỉ gồm: praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), topFix (một lỗi/điều cần cải thiện quan trọng nhất bằng tiếng Việt), corrected (câu sửa đúng bằng ${langName} nếu có lỗi, nếu không thì chuỗi rỗng ""), next (bước luyện tiếp theo ngắn bằng tiếng Việt).`,
+    validator: (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      if (Object.keys(obj).sort().join('|') !== 'corrected|next|praise|topFix') return null;
+      const praise = str(obj.praise, 300);
+      const topFix = str(obj.topFix, 300);
+      const next = str(obj.next, 300);
+      const corrected = typeof obj.corrected === 'string' && obj.corrected.length <= 300 ? obj.corrected.trim() : '';
+      if (!praise || !topFix || !next) return null;
+      return { praise, topFix, corrected, next };
+    }
+  });
+  return fb;
+}

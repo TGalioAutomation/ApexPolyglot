@@ -1,0 +1,9 @@
+.env
+.git
+.gitignore
+cache/
+data/learner-memory.json
+node_modules/
+npm-debug.log*
+test/
+docs/
