@@ -146,6 +146,36 @@ button:active:not(:disabled) { transform: scale(0.97); }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #94A3B8; }
 .voice-status.ok .status-dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .voice-status.degraded .status-dot { background: #F59E0B; }
+.voice-status { cursor: pointer; }
+/* Cảnh báo degraded phải nhìn ra là cảnh báo, không phải chấm lạ: thêm badge "!" nhỏ */
+.voice-status.degraded::after {
+  content: '!';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #F59E0B;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+  margin-left: -2px;
+}
+.voice-status.broken::after {
+  content: '!';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--destructive);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+  margin-left: -2px;
+}
 .voice-status.broken .status-dot { background: var(--destructive); }
 
 /* ---- Layout ---- */

@@ -124,7 +124,7 @@ function saveTeacherProfile(value) {
 /* ---------- State ---------- */
 let language = 'en';
 let topicIndex = 0;
-let voiceState = { available: true, degraded: false, mode: 'prepared-only', prepared: 0 };
+let voiceState = { available: true, degraded: false, mode: 'prepared-only', prepared: 0, statusText: '' };
 let activeAudio = null;
 let playingKey = null; // key định danh câu đang phát
 let quiz = { sentence: null, options: [], correct: 0, total: 0, answered: false };
@@ -295,23 +295,33 @@ function setPlayingState(key, playing) {
 }
 
 /* ---------- Voice status ---------- */
+// Mobile thu gọn chip thành chấm 48px (chữ ẩn cho screen reader) — nên phải gắn
+// tooltip + aria-label + bấm vào hiện toast, người dùng mới hiểu chấm màu nghĩa là gì.
 function renderVoiceStatus() {
   const el = $('#voiceStatus');
   const text = el.querySelector('.status-text');
   el.classList.remove('ok', 'degraded', 'broken');
+  let message = '';
   if (voiceState.degraded) {
     el.classList.add('degraded');
-    text.textContent = 'Kho audio gián đoạn · có giọng thiết bị';
+    message = 'Kho audio gián đoạn · có giọng thiết bị';
   } else if (voiceState.available) {
     el.classList.add('ok');
-    text.textContent = `Audio tạo sẵn · ${voiceState.prepared} mục`;
+    message = `Audio tạo sẵn · ${voiceState.prepared} mục`;
   } else {
     el.classList.add('broken');
-    text.textContent = 'Chưa có giọng đọc';
+    message = 'Chưa có giọng đọc';
   }
+  text.textContent = message;
+  el.title = message;
+  el.setAttribute('aria-label', `Trạng thái âm thanh: ${message}. Chạm để đọc lại.`);
+  voiceState.statusText = message;
 }
 
 async function initVoice() {
+  $('#voiceStatus')?.addEventListener('click', () => {
+    if (voiceState.statusText) toast(voiceState.statusText, voiceState.degraded);
+  });
   try {
     const res = await fetch('/api/voice/status');
     const data = await res.json();
