@@ -1077,6 +1077,8 @@ body.teacher-settings .teacher-dock { display: none; }
 .grade-easy:hover { border-color: var(--accent); color: var(--accent); }
 .session-hint { text-align: center; color: var(--muted-fg); font-size: 12.5px; margin-top: 10px; }
 .kbd { display: inline-block; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--muted); font-size: 11px; margin-left: 6px; }
+/* keycap trên nút tối (primary): nền trắng mờ + chữ kế thừa trắng — tránh "ô trắng" chìm chữ */
+.btn.primary .kbd { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.4); color: inherit; }
 
 @media (max-width: 767px) {
   .session-actions {
