@@ -3,3 +3,7 @@ node_modules/
 *.log
 cache/
 data/learner-memory.json
+
+.video_agent/
+.DS_Store
+.zcode/

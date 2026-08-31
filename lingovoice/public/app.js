@@ -89,21 +89,24 @@ const LESSONS = {
   ]
 };
 
-const LANG_LABEL = { en: 'English', zh: '中文' };
-const SPEECH_LANG = { en: 'en-US', zh: 'zh-CN' };
+const LANG_LABEL = { en: 'English', zh: '中文', vi: 'Tiếng Việt' };
+const SPEECH_LANG = { en: 'en-US', zh: 'zh-CN', vi: 'vi-VN' };
 const TEACHER_PROFILE_KEY = 'lv-teacher-profile';
 const TEACHER_PERSONALITIES = ['warm', 'strict', 'energetic'];
-const DEFAULT_TEACHER_PROFILE = { personality: 'warm', voices: { en: null, zh: null }, speed: 0.95 };
+// Profile mặc định của Cô Linh — khớp voice design OpenVox co-linh-v2-natural.
+const DEFAULT_TEACHER_PROFILE = { personality: 'warm', voices: { en: 'F4', zh: 'zf_xiaoxiao' }, speed: 0.9 };
 
 function normalizeTeacherProfile(value = {}) {
   const personality = TEACHER_PERSONALITIES.includes(value.personality) ? value.personality : 'warm';
   const voices = {};
   for (const lang of ['en', 'zh']) {
     const voice = value.voices?.[lang];
-    voices[lang] = typeof voice === 'string' && /^[\w.-]{1,80}$/.test(voice) ? voice : null;
+    voices[lang] = typeof voice === 'string' && /^[\w.-]{1,80}$/.test(voice)
+      ? voice
+      : DEFAULT_TEACHER_PROFILE.voices[lang];
   }
   const speedValue = Number(value.speed);
-  const speed = Number.isFinite(speedValue) ? Math.min(1.15, Math.max(0.75, speedValue)) : 0.95;
+  const speed = Number.isFinite(speedValue) ? Math.min(1.15, Math.max(0.75, speedValue)) : DEFAULT_TEACHER_PROFILE.speed;
   return { personality, voices, speed };
 }
 
@@ -187,7 +190,7 @@ function playText(text, lang, opts = {}) {
   return new Promise((resolve) => {
     if (voiceState.available) {
       const teacherProfile = opts.teacherVoice ? getTeacherProfile() : null;
-      fetch('/api/voice/prepared', {
+      fetch(opts.teacherVoice ? '/api/voice/teacher' : '/api/voice/prepared', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -971,8 +974,8 @@ function listenOnce(options = {}) {
   return listenOnceWithBrowser(lang, options);
 }
 
-// Đọc to các câu mẫu 【 】 trong phản hồi bằng OpenVox (giọng đúng ngôn ngữ)
-// Đọc phần tiếng Việt bằng giọng trình duyệt (nếu có giọng vi); trả Promise
+// Fallback cuối cùng khi OpenVox không khả dụng; luồng chính của Cô Linh dùng
+// /api/voice/teacher để giữ một chất giọng thống nhất cho cả tiếng Việt và câu mẫu.
 async function speakBrowserVI(text) {
   if (!('speechSynthesis' in window)) return;
   const voices = window.speechSynthesis.getVoices();
@@ -1001,7 +1004,8 @@ function extractTargetSentence(reply, lang) {
   return good || null;
 }
 
-// Nói ĐẦY ĐỦ phản hồi cô giáo: phần tiếng Việt -> giọng trình duyệt; câu mẫu 【 】 -> OpenVox.
+// Nói ĐẦY ĐỦ phản hồi cô giáo bằng OpenVox: phần tiếng Việt dùng vi, câu mẫu
+// dùng đúng ngôn ngữ đang học. Nếu server TTS lỗi, playText tự fallback browser.
 // Nếu thiếu 【 】, tự trích câu ngôn ngữ đích để vẫn đọc to được (voice conversation).
 async function speakTeacherReply(reply, lang) {
   const parts = String(reply).split(/【|】/);
@@ -1013,7 +1017,7 @@ async function speakTeacherReply(reply, lang) {
       const part = (parts[i] || '').trim();
       if (!part) continue;
       if (i % 2 === 1) { await playText(part, lang, { announceFallback: false, teacherVoice: true }); spokeTarget = true; }
-      else await speakBrowserVI(part);
+      else await playText(part, 'vi', { announceFallback: false, teacherVoice: true });
     }
     if (!spokeTarget) {
       const fallback = extractTargetSentence(reply, lang);
@@ -1026,19 +1030,7 @@ async function speakTeacherReply(reply, lang) {
 }
 
 async function speakTargetSegments(reply, lang) {
-  const segs = String(reply).match(/【([^】]+)】/g);
-  if (!segs) { setCoLinhState('idle', 'Cô đã trả lời. Bạn có thể tiếp tục trò chuyện.'); return; }
-  document.body.classList.add('co-speaking'); // nhân vật "đang nói"
-  setCoLinhState('speaking', 'Cô đang đọc câu mẫu…');
-  try {
-    for (const seg of segs) {
-      const sentence = seg.replace(/【|】/g, '').trim();
-      if (sentence) await playText(sentence, lang === 'zh' ? 'zh' : 'en', { announceFallback: false, teacherVoice: true });
-    }
-  } finally {
-    document.body.classList.remove('co-speaking');
-    setCoLinhState('idle', 'Bấm “Nghe lại” nếu bạn muốn nghe thêm lần nữa.');
-  }
+  return speakTeacherReply(reply, lang);
 }
 
 function teacherInit() {

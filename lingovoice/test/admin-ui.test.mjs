@@ -34,8 +34,9 @@ test('job UI có loading, polling có điều kiện và phản hồi lỗi', ()
   assert.match(js, /status === 409/);
 });
 
-test('learner client chỉ gọi prepared audio', () => {
-  assert.match(app, /fetch\('\/api\/voice\/prepared'/);
+test('learner client dùng prepared audio, Cô Linh có route TTS riêng', () => {
+  assert.match(app, /fetch\(opts\.teacherVoice \? '\/api\/voice\/teacher' : '\/api\/voice\/prepared'/);
+  assert.match(server, /teacherSynthesisRoute/);
   assert.doesNotMatch(app, /fetch\('\/api\/voice\/speak\/stream'/);
   assert.match(server, /AUDIO_NOT_PREPARED/);
   assert.match(server, /deliveryMode: 'prepared-only'/);

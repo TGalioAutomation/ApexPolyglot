@@ -1,5 +1,6 @@
 // LingoVoice — AI teacher adapter (DeepSeek / Gemini / OpenAI)
 // Key chỉ nằm ở server (qua .env). Endpoint chat gọi module này.
+import { CO_LINH_VOICE_DESIGN } from './voice.mjs';
 const PROVIDER_KEYS = {
   gemini: 'GEMINI_API_KEY',
   deepseek: 'DEEPSEEK_API_KEY',
@@ -103,10 +104,16 @@ export function normalizeTeacherProfile(value = {}) {
   const voices = {};
   for (const lang of ['en', 'zh']) {
     const candidate = value.voices?.[lang];
-    voices[lang] = typeof candidate === 'string' && /^[\w.-]{1,80}$/.test(candidate) ? candidate : null;
+    const fallback = CO_LINH_VOICE_DESIGN[lang]?.voice || null;
+    // null là lựa chọn “không ép voice” hợp lệ từ UI; chỉ dùng design mới khi
+    // profile chưa có trường voice (profile cũ hoặc profile tối giản).
+    const hasPreference = Boolean(value.voices && Object.hasOwn(value.voices, lang));
+    voices[lang] = typeof candidate === 'string' && /^[\w.-]{1,80}$/.test(candidate)
+      ? candidate
+      : hasPreference ? null : fallback;
   }
   const rawSpeed = Number(value.speed);
-  const speed = Number.isFinite(rawSpeed) ? Math.min(1.15, Math.max(0.75, rawSpeed)) : 0.95;
+  const speed = Number.isFinite(rawSpeed) ? Math.min(1.15, Math.max(0.75, rawSpeed)) : 0.9;
   return { personality, voices, speed };
 }
 

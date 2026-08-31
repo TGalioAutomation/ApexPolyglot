@@ -45,7 +45,11 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.cjs': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml'
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg'
 };
 
 import { teacherSystem, normalizeTeacherProfile, runTeacher, configuredProviders, providerOrder, generateVocabCard, writingFeedback, roleplayTurn, roleplayFeedback } from './ai.mjs';
@@ -165,6 +169,7 @@ const server = createServer(async (request, response) => {
 
     const adminRoute = pathname === '/admin' || pathname.startsWith('/admin/') || pathname.startsWith('/api/admin/');
     const liveSynthesisRoute = pathname === '/api/voice/speak' || pathname === '/api/voice/speak/stream';
+    const teacherSynthesisRoute = pathname === '/api/voice/teacher';
 
     // Admin dùng credential riêng. Khi chưa cấu hình, chỉ máy local được phép truy cập.
     if (adminRoute && !hasAdminAccess(request)) {
@@ -265,6 +270,40 @@ const server = createServer(async (request, response) => {
         'X-Voice-Name': prepared.entry.voice || 'prepared'
       });
       response.end(prepared.audio);
+      return;
+    }
+
+    // Cô Linh cần đọc câu trả lời động của AI. Route này vẫn nằm sau auth public,
+    // còn route /api/voice/speak tiếp tục là control-plane/admin-only.
+    if (request.method === 'POST' && teacherSynthesisRoute) {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const text = typeof payload.text === 'string' ? payload.text.trim() : '';
+      if (!text) throw Object.assign(new Error('text is required'), { statusCode: 400 });
+      if (text.length > 2000) throw Object.assign(new Error('text too long'), { statusCode: 400 });
+      const language = payload.language === 'vi' || payload.language === 'vi-VN'
+        ? 'vi'
+        : payload.language === 'zh' || payload.language === 'zh-CN'
+          ? 'zh'
+          : payload.language === 'en' || payload.language === 'en-US' || payload.language === undefined
+            ? 'en'
+            : null;
+      if (!language) throw Object.assign(new Error('language must be "vi", "en" or "zh"'), { statusCode: 400 });
+      const result = await speakWithCache(voice, {
+        text,
+        language,
+        voice: typeof payload.voice === 'string' ? payload.voice : undefined,
+        model: typeof payload.model === 'string' ? payload.model : undefined,
+        speed: payload.speed
+      });
+      response.writeHead(200, {
+        'Content-Type': 'audio/wav',
+        'Cache-Control': 'no-store',
+        'X-Voice-Model': result.model || 'cache',
+        'X-Voice-Language': result.language,
+        'X-Voice-Name': result.voice || 'cache',
+        'X-Audio-Cache': result.cached ? 'hit' : 'miss'
+      });
+      response.end(result.audio);
       return;
     }
 

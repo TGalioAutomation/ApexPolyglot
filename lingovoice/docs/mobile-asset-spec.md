@@ -22,7 +22,7 @@ Tài liệu này là danh sách chuẩn cho icon và hình ảnh của web mobil
 | Learning action icons | `public/index.html`, `public/app.js` | Có | Play, check, microphone, send, close, volume |
 | Animated Cô Linh avatar | `public/app.js` | Có | SVG, 5 trạng thái: idle/listening/thinking/speaking/error |
 | Cô Linh onboarding illustration | `public/assets/co-linh-guide.webp` | Có | 1024×1536, WebP ~86KB, transparent, lazy-loaded |
-| Journey avatar `LV` | `public/index.html` | Có | Text avatar; có thể thay bằng profile photo sau này |
+| Default learner avatar | `public/assets/default-learner-avatar.webp` | Có | 256×256 WebP, dùng trong header journey; alt rỗng vì avatar trang trí |
 
 ## Icon set cần chốt cho mobile
 
@@ -58,12 +58,12 @@ Tài liệu này là danh sách chuẩn cho icon và hình ảnh của web mobil
 |---|---:|---|---:|
 | Cô Linh onboarding full-body | 1024×1536, hiển thị 76–112px | WebP transparent | Đã có |
 | Cô Linh avatar/teacher stage | 512×512 hoặc SVG | SVG/WebP | Đang dùng SVG động |
-| Empty state: chưa có bài hôm nay | 800×600 | WebP | Cần tạo |
-| Empty state: offline/audio chưa sẵn sàng | 800×600 | WebP | Cần tạo |
-| Error/retry illustration | 800×600 | WebP | Cần tạo |
-| Default learner avatar | 256×256 | SVG/WebP | Cần tạo |
+| Empty state: chưa có bài hôm nay | 800×600 | WebP | Đã tạo: `public/assets/empty-state-today.webp` |
+| Empty state: offline/audio chưa sẵn sàng | 800×600 | WebP | Đã tạo: `public/assets/offline-audio.webp` |
+| Error/retry illustration | 800×600 | WebP | Đã tạo: `public/assets/error-retry.webp` |
+| Default learner avatar | 256×256 | SVG/WebP | Đã tạo: `public/assets/default-learner-avatar.webp` |
 | Android adaptive icon foreground/background | 108×108dp | Vector/XML | Cần tạo |
-| Splash illustration/logo | 512×512 | Vector/WebP | Cần tạo |
+| Splash illustration/logo | 512×512 | Vector/WebP | Đã tạo: `public/assets/splash-illustration.webp` |
 
 ### P1 — cá nhân hóa 4 giai đoạn
 

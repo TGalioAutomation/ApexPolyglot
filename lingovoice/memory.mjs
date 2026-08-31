@@ -20,7 +20,7 @@ const DEFAULT_MEMORY = {
   recentLearned: [],
   recentMistakes: [],
   notes: [],
-  teacherProfile: { personality: 'warm', voices: { en: null, zh: null }, speed: 0.95 },
+  teacherProfile: { personality: 'warm', voices: { en: 'F4', zh: 'zf_xiaoxiao' }, speed: 0.9 },
   day: 1,
   updatedAt: null
 };

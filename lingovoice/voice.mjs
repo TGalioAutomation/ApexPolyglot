@@ -16,32 +16,71 @@ let manifestWriteQueue = Promise.resolve();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Voice design của Cô Linh: nữ, ấm, hội thoại tự nhiên và hơi chậm để học viên
+// nghe rõ từng từ. Version nằm trong cache key để đổi thiết kế sẽ tự sinh WAV mới,
+// không phát lại audio robot đã tạo trước đó.
+export const CO_LINH_VOICE_DESIGN = {
+  version: 'co-linh-v2-natural',
+  en: {
+    model: 'supertonic-3',
+    voice: 'F4',
+    speed: 0.9,
+    parameters: { temperature: 0.62, top_p: 0.88, repetition_penalty: 1.05, cfg_weight: 1.35, exaggeration: 0.28 }
+  },
+  zh: {
+    model: 'kokoro',
+    voice: 'zf_xiaoxiao',
+    speed: 0.9,
+    parameters: { temperature: 0.62, top_p: 0.88, repetition_penalty: 1.05, cfg_weight: 1.35, exaggeration: 0.28 }
+  },
+  vi: {
+    model: 'supertonic-3',
+    voice: 'F4',
+    speed: 0.9,
+    parameters: { temperature: 0.62, top_p: 0.88, repetition_penalty: 1.05, cfg_weight: 1.35, exaggeration: 0.28 }
+  }
+};
+
+function defaultVoiceDesign(language) {
+  return CO_LINH_VOICE_DESIGN[language] || {};
+}
+
+function normalizeVoiceParameters(language, params = {}) {
+  return { ...defaultVoiceDesign(language).parameters, ...params };
+}
+
 // Model theo ngôn ngữ (OpenVox có model hỗ trợ tiếng khác nhau):
 //   - English -> supertonic-3 (giọng tự nhiên, nhiều voice)
 //   - 中文     -> kokoro (có giọng tiếng Trung: zf_/zm_)
 // Đổi bằng env OPENVOX_EN_MODEL / OPENVOX_ZH_MODEL.
 export const MODEL_BY_LANG = {
-  en: process.env.OPENVOX_EN_MODEL || 'supertonic-3',
-  zh: process.env.OPENVOX_ZH_MODEL || 'kokoro'
+  en: process.env.OPENVOX_EN_MODEL || CO_LINH_VOICE_DESIGN.en.model,
+  zh: process.env.OPENVOX_ZH_MODEL || CO_LINH_VOICE_DESIGN.zh.model,
+  vi: process.env.OPENVOX_VI_MODEL || CO_LINH_VOICE_DESIGN.vi.model
 };
 export const PREFERRED_VOICES = {
-  en: process.env.OPENVOX_EN_VOICE || 'F1',
-  zh: process.env.OPENVOX_ZH_VOICE || 'zf_xiaoxiao'
+  en: process.env.OPENVOX_EN_VOICE || CO_LINH_VOICE_DESIGN.en.voice,
+  zh: process.env.OPENVOX_ZH_VOICE || CO_LINH_VOICE_DESIGN.zh.voice,
+  vi: process.env.OPENVOX_VI_VOICE || CO_LINH_VOICE_DESIGN.vi.voice
 };
 export const OPENVOX_API = (process.env.OPENVOX_API || 'http://127.0.0.1:8000/v1').replace(/\/$/, '');
 
 // ---- Cache audio (key gồm ngôn ngữ + model + giọng + văn bản; speed khi != 1) ----
-export function audioCacheKey({ language, text, model, voice, speed }) {
-  const sp = speed && Number(speed) !== 1 ? `|${Number(speed)}` : '';
-  return createHash('sha256').update(`${language}|${model || ''}|${voice || ''}|${text}${sp}`).digest('hex');
+export function audioCacheKey({ language, text, model, voice, speed, params }) {
+  const normalizedSpeed = Number(speed) || defaultVoiceDesign(language).speed || 1;
+  const normalizedParams = normalizeVoiceParameters(language, params);
+  return createHash('sha256')
+    .update(`${CO_LINH_VOICE_DESIGN.version}|${language}|${model || ''}|${voice || ''}|${String(text || '').trim()}|${normalizedSpeed}|${JSON.stringify(normalizedParams)}`)
+    .digest('hex');
 }
 export function audioCachePath(key) {
   return join(AUDIO_CACHE_DIR, `${key}.wav`);
 }
-export function preparedRequestKey({ language, text, model, voice, speed }) {
-  const normalizedSpeed = Number(speed) || 1;
+export function preparedRequestKey({ language, text, model, voice, speed, params }) {
+  const normalizedSpeed = Number(speed) || defaultVoiceDesign(language).speed || 1;
+  const normalizedParams = normalizeVoiceParameters(language, params);
   return createHash('sha256')
-    .update(`${language}|${String(model || '')}|${String(voice || '')}|${normalizedSpeed}|${String(text || '').trim()}`)
+    .update(`${CO_LINH_VOICE_DESIGN.version}|${language}|${String(model || '')}|${String(voice || '')}|${normalizedSpeed}|${JSON.stringify(normalizedParams)}|${String(text || '').trim()}`)
     .digest('hex');
 }
 export function hasCachedAudio(key) {
@@ -82,7 +121,9 @@ export async function rememberPreparedAudio(request, resolved) {
     text: String(request.text || '').trim(),
     requestedModel: request.model || null,
     requestedVoice: request.voice || null,
-    speed: Number(request.speed) || 1,
+    speed: Number(request.speed) || defaultVoiceDesign(request.language).speed || 1,
+    designVersion: CO_LINH_VOICE_DESIGN.version,
+    parameters: normalizeVoiceParameters(request.language, request.params),
     model: resolved.model || null,
     voice: resolved.voice || null,
     updatedAt: new Date().toISOString()
@@ -108,15 +149,17 @@ export async function preparedAudioStats() {
     updatedAt: manifest.updatedAt || null
   };
 }
-export async function prepareCachedAudio({ text, language, voice, model, speed }) {
-  const request = { text, language, voice, model, speed };
-  const resolvedModel = model || MODEL_BY_LANG[language];
-  const resolvedVoice = voice || PREFERRED_VOICES[language];
+export async function prepareCachedAudio({ text, language, voice, model, speed, params }) {
+  const design = defaultVoiceDesign(language);
+  const request = { text, language, voice, model, speed, params };
+  const resolvedModel = model || MODEL_BY_LANG[language] || design.model;
+  const resolvedVoice = voice || PREFERRED_VOICES[language] || design.voice;
+  const resolvedSpeed = Number(speed) || design.speed || 1;
   if (!resolvedModel || !resolvedVoice) return null;
-  const key = audioCacheKey({ language, text, model: resolvedModel, voice: resolvedVoice, speed });
+  const key = audioCacheKey({ language, text, model: resolvedModel, voice: resolvedVoice, speed: resolvedSpeed, params });
   if (!hasCachedAudio(key)) return null;
   await rememberPreparedAudio(request, { key, model: resolvedModel, voice: resolvedVoice });
-  return { key, model: resolvedModel, language, voice: resolvedVoice, cached: true };
+  return { key, model: resolvedModel, language, voice: resolvedVoice, speed: resolvedSpeed, cached: true };
 }
 export async function cachedAudioStats() {
   if (!existsSync(AUDIO_CACHE_DIR)) return { files: 0, bytes: 0 };
@@ -228,7 +271,7 @@ export class VoiceClient {
   }
 
   // Sinh audio qua OpenVox (không cache). speakWithCache() sẽ kiểm tra cache trước.
-  async synthesize({ text, language, voice, model, speed = 1.0, params = {} }) {
+  async synthesize({ text, language, voice, model, speed, params = {} }) {
     const modelId = await this.resolveModelFor(language, model); // model đúng ngôn ngữ
     await this.warm(modelId);
     const langs = await this.languages(modelId);
@@ -243,13 +286,14 @@ export class VoiceClient {
       voice: chosenVoice,
       response_format: 'wav',
       parameters: {
-        speed: Number(speed) || 1.0,
-        temperature: params.temperature !== undefined ? Number(params.temperature) : 0.7,
-        top_p: params.top_p !== undefined ? Number(params.top_p) : 0.9
+        speed: Number(speed) || defaultVoiceDesign(language).speed || 1.0,
+        temperature: params.temperature !== undefined ? Number(params.temperature) : normalizeVoiceParameters(language).temperature,
+        top_p: params.top_p !== undefined ? Number(params.top_p) : normalizeVoiceParameters(language).top_p
       }
     };
     for (const k of ['repetition_penalty', 'cfg_weight', 'exaggeration']) {
-      if (params[k] !== undefined) body.parameters[k] = Number(params[k]);
+      const value = normalizeVoiceParameters(language, params)[k];
+      if (value !== undefined) body.parameters[k] = Number(value);
     }
     let response;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -269,7 +313,7 @@ export class VoiceClient {
 
   // Stream TTS: mở SSE của OpenVox, trả về ReadableStream để proxy từng chunk.
   // (theo hợp đồng: POST /audio/speech với stream:true, không kèm response_format)
-  async synthesizeStream({ text, language, voice, model, speed }) {
+  async synthesizeStream({ text, language, voice, model, speed, params = {} }) {
     const modelId = await this.resolveModelFor(language, model);
     await this.warm(modelId);
     const langs = await this.languages(modelId);
@@ -283,7 +327,7 @@ export class VoiceClient {
       language,
       voice: chosenVoice,
       stream: true,
-      parameters: { speed: Number(speed) || 1.0 }
+      parameters: { speed: Number(speed) || defaultVoiceDesign(language).speed || 1.0, ...normalizeVoiceParameters(language, params) }
     };
     const response = await fetch(`${this.apiBase}/audio/speech`, {
       method: 'POST',
@@ -331,8 +375,8 @@ export class VoiceClient {
 
 // Kiểm tra cache trước; chỉ gọi OpenVox khi thiếu -> lưu lại để lần sau tức thì.
 // Key cache gồm ngôn ngữ + model + giọng + văn bản để đổi model/giọng là sinh mới.
-export async function speakWithCache(client, { text, language, voice, model, speed }) {
-  const request = { text, language, voice, model, speed };
+export async function speakWithCache(client, { text, language, voice, model, speed, params }) {
+  const request = { text, language, voice, model, speed, params };
   // Backfill manifest không cần OpenVox: cache mặc định có key deterministic từ env.
   // Nhờ đó admin vẫn kích hoạt được WAV đã có khi dịch vụ synth đang tạm dừng.
   const prepared = await prepareCachedAudio(request);
@@ -341,13 +385,13 @@ export async function speakWithCache(client, { text, language, voice, model, spe
   }
   const modelId = await client.resolveModelFor(language, model);
   const chosenVoice = await client.resolveVoice(modelId, language, voice);
-  const key = audioCacheKey({ language, text, model: modelId, voice: chosenVoice, speed });
+  const key = audioCacheKey({ language, text, model: modelId, voice: chosenVoice, speed, params });
   if (hasCachedAudio(key)) {
     const audio = await readCachedAudio(key);
     await rememberPreparedAudio(request, { key, model: modelId, voice: chosenVoice });
     return { audio, cached: true, key, model: modelId, language, voice: chosenVoice };
   }
-  const result = await client.synthesize({ text, language, voice: chosenVoice, model: modelId, speed });
+  const result = await client.synthesize({ text, language, voice: chosenVoice, model: modelId, speed, params });
   await writeCachedAudio(key, result.audio);
   await rememberPreparedAudio(request, { key, model: result.model, voice: result.voice });
   return { ...result, cached: false, key };

@@ -24,6 +24,12 @@ test('voice chat ưu tiên Android bridge và có browser fallback', () => {
   assert.match(js, /listenOnceWithBrowser/);
 });
 
+test('Cô Linh đọc toàn bộ phản hồi bằng OpenVox và giữ ngôn ngữ từng đoạn', () => {
+  assert.match(js, /fetch\(opts\.teacherVoice \? '\/api\/voice\/teacher' : '\/api\/voice\/prepared'/);
+  assert.match(js, /playText\(part, 'vi', \{ announceFallback: false, teacherVoice: true \}\)/);
+  assert.match(js, /return speakTeacherReply\(reply, lang\)/);
+});
+
 test('voice chat công bố lỗi quyền và khôi phục UI', () => {
   assert.match(js, /permission_denied:\s*'Cần quyền micro/);
   assert.match(js, /setCoLinhState\('error', message\)/);
