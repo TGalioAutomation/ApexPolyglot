@@ -1072,8 +1072,8 @@ function teacherInit() {
       .then((s) => {
         teacherState.aiConfigured = Boolean(s.configured);
         const el = $('#teacherAiStatus');
-        if (s.configured) { el.textContent = `AI: ${s.active}`; el.className = 'teacher-ai-status ok'; }
-        else { el.textContent = 'Cần key AI'; el.className = 'teacher-ai-status bad'; }
+        if (s.configured) { el.textContent = 'Giáo viên AI sẵn sàng'; el.className = 'teacher-ai-status ok'; }
+        else { el.textContent = 'Giáo viên AI chưa cấu hình'; el.className = 'teacher-ai-status bad'; }
       })
       .catch(() => {});
   } catch {}
@@ -1167,6 +1167,13 @@ function init() {
   $('#quizStart').addEventListener('click', () => {
     if (window.switchTab) window.switchTab('listening');
     startQuiz();
+  });
+  $('#teacherMin').addEventListener('click', () => {
+    const panel = $('#teacherPanel');
+    const min = panel.classList.toggle('min');
+    const btn = $('#teacherMin');
+    btn.setAttribute('aria-expanded', String(!min));
+    btn.setAttribute('aria-label', min ? 'Mở rộng khung trò chuyện' : 'Thu gọn khung trò chuyện');
   });
   $('#quizPlay').addEventListener('click', () => {
     if (!quiz.sentence) { startQuiz(); return; } // Prompt 4: bấm nghe khi chưa có câu -> tự tạo

@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Tới nội dung chính</a>
   <header class="topbar">
     <div class="brand">
       <svg class="brand-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -71,7 +72,7 @@
     </button>
   </nav>
 
-  <main class="container">
+  <main class="container" id="main-content" tabindex="-1">
     <!-- ===== HÔM NAY (Prompt 3: một hành động chính) ===== -->
     <section id="tab-today" class="tab-panel" role="tabpanel" aria-labelledby="tab-today-title">
       <h1 class="sr-only" id="tab-today-title">Hôm nay</h1>
@@ -586,7 +587,13 @@
     <!-- ===== THÊM / HỒ SƠ (setup + memory) ===== -->
     <section id="tab-setup" class="tab-panel" role="tabpanel" hidden aria-labelledby="ts-title">
       <h1 class="sr-only" id="ts-title">Mục tiêu &amp; hồ sơ</h1>
-      <div class="card">
+      <nav class="setup-sections" aria-label="Phần trong mục thiết lập">
+        <button type="button" data-target="profileCard">Hồ sơ</button>
+        <button type="button" data-target="placementBox">Test đầu vào</button>
+        <button type="button" data-target="accountCard">Tài khoản</button>
+        <button type="button" data-target="teacherCustomCard">Cô Linh</button>
+      </nav>
+      <div class="card" id="profileCard">
         <div class="section-head">
           <div><span class="section-kicker">LEARNING PROFILE</span><h2>Mục tiêu &amp; lịch học cá nhân</h2></div>
           <button class="btn ghost sm" id="profileSave">Lưu hồ sơ</button>
@@ -630,7 +637,7 @@
             <div class="split-labels"><span id="splitLabel">English 60% · 中文 40%</span></div>
           </fieldset>
         </div>
-        <div class="placement-box">
+        <div class="placement-box" id="placementBox">
           <div class="section-kicker">PLACEMENT TEST</div>
           <h3>Xác định trình độ khởi điểm</h3>
           <p class="hint">Làm test 5–8 phút cho mỗi ngôn ngữ để app giao bài đúng level.</p>
@@ -640,6 +647,15 @@
           </div>
           <div class="place-results" id="placeResults"></div>
         </div>
+        <fieldset class="setup-field" id="themeField">
+          <legend>Giao diện</legend>
+          <div class="seg" id="themeSeg">
+            <button type="button" data-theme-opt="system" class="active" aria-pressed="true">Theo hệ thống</button>
+            <button type="button" data-theme-opt="light" aria-pressed="false">Sáng</button>
+            <button type="button" data-theme-opt="dark" aria-pressed="false">Tối</button>
+          </div>
+          <p class="hint">Chế độ Tối dùng token đã chuẩn hóa — phù hợp học buổi tối.</p>
+        </fieldset>
         <div id="profileSummary" class="profile-summary"></div>
       </div>
 
@@ -753,10 +769,6 @@
           </div>
           <img class="onboard-character" src="/assets/co-linh-guide.webp" width="112" height="168" loading="lazy" decoding="async" alt="Cô Linh cầm sách, sẵn sàng đồng hành cùng bạn" />
         </div>
-        <div class="setup-field identity-field">
-          <label for="onboardName">Tên người học</label>
-          <input class="profile-input" id="onboardName" name="onboardName" maxlength="40" autocomplete="name" placeholder="Bạn muốn cô gọi là gì?" />
-        </div>
         <fieldset class="setup-field age-field">
           <legend>Chọn giai đoạn hiện tại</legend>
           <div class="age-picker" id="onboardAgePicker">
@@ -766,6 +778,10 @@
             <label class="age-option"><input type="radio" name="onboardAge" value="young-adult" /><span><b>18–25 tuổi</b><small>Ứng dụng cho đại học và công việc</small></span></label>
           </div>
         </fieldset>
+        <div class="setup-field identity-field">
+          <label for="onboardName">Tên người học</label>
+          <input class="profile-input" id="onboardName" name="onboardName" maxlength="40" autocomplete="name" placeholder="Bạn muốn cô gọi là gì?" />
+        </div>
         <fieldset class="setup-field">
           <legend>Mục tiêu (chọn 1–2)</legend>
           <label class="check stage-goal" data-goal="giao-tiep"><input type="checkbox" id="wg-goal-giaotiep" value="giao-tiep" /> Nghe và nói tự tin</label>
@@ -853,6 +869,9 @@
             <span class="teacher-meta" id="teacherMeta">Giáo viên đồng hành</span>
           </div>
         </div>
+        <button class="teacher-min" id="teacherMin" aria-expanded="true" aria-label="Thu gọn khung trò chuyện">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
         <button class="teacher-close" id="teacherClose" aria-label="Đóng cô giáo">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
         </button>

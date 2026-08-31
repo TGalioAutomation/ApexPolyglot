@@ -17,16 +17,22 @@
 | A7 | **P3** | Nút đóng banner lỗi 32px (< chuẩn 44px target); chữ stage-rail 9.5px quá nhỏ | Nút 40px; chữ 11px |
 | A8 | **P3** | Thông báo lỗi form tài khoản dùng `role=status` — screen reader không đọc ngay | Chuyển `role=alert` khi lỗi (WCAG 3.3.1) |
 
-## B. Khuyến nghị (chưa sửa — cần quyết định thiết kế/scope)
+## B. Khuyến nghị — ĐÃ SỬA theo yêu cầu (cùng đợt)
 
-| # | Mức | Quan sát | Đề xuất |
+| # | Mức | Bản sửa | Kiểm chứng |
 |---|---|---|---|
-| B1 | P2 | Dock Cô Linh mở rồi **persist đè ~60% panel Luyện tập** trên mobile, chỉ có nút X nhỏ để đóng | Thêm nút thu gọn dock thành dải mỏng; hoặc tự thu khi chuyển sang panel luyện tập |
-| B2 | P3 | Footer dock lộ "**AI: deepseek**" cho người học — chi tiết kỹ thuật không cần thiết với learner | Chỉ hiển thị với role admin, hoặc đổi文案 chung "AI đồng hành" |
-| B3 | P3 | Tab **Thiết lập rất dài** (hồ sơ → placement → tài khoản → Cô Linh → dữ liệu, 7+ màn cuộn) | Thêm dải điều hướng anchor/section chip đầu tab |
-| B4 | P3 | Thiếu **skip-link** tới nội dung chính cho bàn phím (WCAG 2.4.1) | Thêm "Tới nội dung chính" ẩn-hiện-khi-focus |
-| B5 | P3 | Onboarding mặc định chọn sẵn 18–25 — phụ huynh cho trẻ 3–12 phải chủ động đổi | Cân nhắc hỏi độ tuổi ngay câu hỏi đầu |
-| B6 | P3 | Chưa có khối `[data-theme="dark"]` ở mức runtime (token đã sẵn sàng) | Bật theo roadmap #5 |
+| B1 | P2 | Dock Cô Linh thêm **nút thu gọn/mở rộng** (`#teacherMin`, mũi tên + aria-expanded): chế độ min ẩn chat/context/prompts/input, panel còn dải header ~81px | Click thật: 476px → 81px, `.teacher-chat` display:none, aria-label đổi chiều |
+| B2 | P3 | Footer dock đổi "AI: deepseek" → **"Giáo viên AI sẵn sàng / chưa cấu hình"** — không lộ provider cho learner | DOM check text mới |
+| B3 | P3 | Tab Thiết lập thêm **dải chip điều hướng section** (Hồ sơ · Test đầu vào · Tài khoản · Cô Linh), cuộn mượt tới section | Click chip gọi đúng `scrollIntoView({behavior:'smooth', block:'start'})` (instrument proof) |
+| B4 | P3 | Thêm **skip-link** "Tới nội dung chính" (hiện khi focus, target `#main-content` tabindex=-1) — WCAG 2.4.1 | Rule `.skip-link:focus` có trong CSSOM; focus() đặt activeElement đúng |
+| B5 | P3 | Onboarding **hỏi độ tuổi trước ô tên** (fieldset age-picker chuyển lên đầu) | Test assert thứ tự onboardAgePicker < onboardName |
+| B6 | P3 | **Dark mode v1**: segmented control "Theo hệ thống / Sáng / Tối" (`lv-theme`), áp `data-theme` lên `<html>`, theo hệ-mặc-định qua matchMedia; sửa đảo màu toast + skeleton | Toggle chuyển đổi thật: body #17174A / card #1F1F5C ở chế độ Tối, trả về #EEF2FF khi Sáng |
+
+> Ghi chú B6: dark v1 phủ các bề mặt chính (body, card, topbar, nav, form) qua token;
+> tinh chỉnh góc khuất (ảnh minh họa viền sáng, grade chip, chart) vẫn thuộc roadmap #5.
+> Lưu ý kiểm chứng: phiên này guest trình duyệt bị nền throttle (`document.hasFocus()=false`,
+> native `scrollTo` không di chuyển) nên phần verify cuối dựa vào DOM/computed-style + instrument
+> thay vì screenshot; đã xác nhận cùng nguyên nhân với lỗi input tạm thời của môi trường, không phải code.
 
 ## C. Những gì đạt (không cần sửa)
 

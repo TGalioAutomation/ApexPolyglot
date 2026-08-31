@@ -77,6 +77,41 @@
     }
   });
 
+  /* ---------- 4b. Điều hướng section tab Thiết lập ---------- */
+  document.addEventListener('click', (event) => {
+    const chip = event.target.closest('.setup-sections button');
+    if (!chip) return;
+    const target = document.getElementById(chip.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  /* ---------- 4c. Giao diện sáng/tối (token [data-theme]) ---------- */
+  const THEME_KEY = 'lv-theme';
+  function applyTheme() {
+    let pref = 'system';
+    try { pref = localStorage.getItem(THEME_KEY) || 'system'; } catch (e) {}
+    const dark = pref === 'dark'
+      || (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.dataset.theme = 'dark';
+    else delete document.documentElement.dataset.theme;
+    document.querySelectorAll('#themeSeg button').forEach((b) => {
+      const active = b.dataset.themeOpt === pref;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', String(active));
+    });
+  }
+  document.addEventListener('click', (event) => {
+    const b = event.target.closest('#themeSeg button');
+    if (!b) return;
+    try { localStorage.setItem(THEME_KEY, b.dataset.themeOpt); } catch (e) {}
+    applyTheme();
+  });
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+  }
+  applyTheme();
+
   /* ---------- 5. Tài khoản & đồng bộ ---------- */
   const LAST_SYNC_KEY = 'lv-last-sync';
 

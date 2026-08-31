@@ -9,7 +9,7 @@
     "check": "node --check server.mjs && node --check admin.mjs && node --check ai.mjs && node --check voice.mjs && node --check pregen.mjs && node --check placement.mjs && node --check memory.mjs && node --check db/store.mjs && node --check db/auth.mjs && node --check db/sync.mjs && node --check db/migrate.mjs && node --check db/memory-adapter.mjs && node --check scripts/prep-vocab.mjs && node --check scripts/audit-vocab.mjs && node --check public/app.js && node --check public/lv-api.js && node --check public/lv-shell.js && node --check public/admin/admin.js && node --check public/srs-core.cjs && node --check public/writing-core.cjs && node --check public/learning.js && npm run data:audit",
     "data:audit": "node scripts/audit-vocab.mjs",
     "pregen": "node pregen.mjs",
-    "test": "node --test test/server.test.mjs test/srs.test.mjs test/teacher-ui.test.mjs test/teacher-speech-ui.test.mjs test/voice-design.test.mjs test/writing-core.test.mjs test/path-ui.test.mjs test/vocab-data.test.mjs test/accessibility-ui.test.mjs test/adaptive-age-ui.test.mjs test/admin-ui.test.mjs test/auth-sync.test.mjs test/db-integration.test.mjs test/account-ui.test.mjs",
+    "test": "node --test test/server.test.mjs test/srs.test.mjs test/teacher-ui.test.mjs test/teacher-speech-ui.test.mjs test/voice-design.test.mjs test/writing-core.test.mjs test/path-ui.test.mjs test/vocab-data.test.mjs test/accessibility-ui.test.mjs test/adaptive-age-ui.test.mjs test/admin-ui.test.mjs test/auth-sync.test.mjs test/db-integration.test.mjs test/account-ui.test.mjs test/ui-polish.test.mjs",
     "migrate": "node db/migrate.mjs"
   },
   "engines": {
