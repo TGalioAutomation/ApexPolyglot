@@ -58,6 +58,10 @@ import { VoiceClient, speakWithCache, OPENVOX_API, audioCacheKey, hasCachedAudio
 import { pregenAll } from './pregen.mjs';
 import { loadMemory, saveMemory, addMemoryNote, buildMemoryPrompt } from './memory.mjs';
 import { AdminService } from './admin.mjs';
+import { initializeStore } from './db/store.mjs';
+import { hashPassword, verifyPassword, passwordStrengthOk, newSessionToken, tokenHash, sessionExpiry, sessionCookie, clearSessionCookie, parseSessionCookie, resolveSession, publicUser } from './db/auth.mjs';
+import { normalizeSyncPayload, mapLegacyLocalState, validAgeGroup } from './db/sync.mjs';
+import { loadMemoryFromStore, saveMemoryToStore, buildSyncSnapshot } from './db/memory-adapter.mjs';
 
 function sendJson(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -158,6 +162,13 @@ const admin = new AdminService({
   aiStatus: () => ({ configured: configuredProviders().length > 0, active: providerOrder()[0] || null, providers: configuredProviders() })
 });
 
+// ---- PostgreSQL store (ADR-001). Thiếu DATABASE_URL -> app vẫn chạy, account/sync trả 503 DB_UNAVAILABLE.
+const store = await initializeStore({ migrate: process.env.MIGRATE_ON_START === '1' });
+const apiError = (message, statusCode, code) => Object.assign(new Error(message), { statusCode, code });
+function requireDb() {
+  if (!store) throw apiError('Server chưa cấu hình PostgreSQL (thiếu DATABASE_URL).', 503, 'DB_UNAVAILABLE');
+}
+
 const server = createServer(async (request, response) => {
   const url = request.url || '/';
   const pathname = url.split('?')[0];
@@ -203,13 +214,115 @@ const server = createServer(async (request, response) => {
     }
 
     // ---- API ----
+    // ---- Tài khoản + đồng bộ (ADR-001/002/004, hợp đồng docs/api-spec.md §1) ----
+    if (request.method === 'POST' && pathname === '/api/auth/register') {
+      requireDb();
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const username = typeof payload.username === 'string' ? payload.username.trim().toLowerCase() : '';
+      if (!/^[a-z0-9_.-]{3,32}$/.test(username)) throw apiError('Tên đăng nhập 3–32 ký tự (a-z, 0-9, ., _, -).', 400, 'USERNAME_INVALID');
+      if (!passwordStrengthOk(payload.password)) throw apiError('Mật khẩu cần ít nhất 8 ký tự.', 400, 'WEAK_PASSWORD');
+      if (await store.findUserByUsername(username)) throw apiError('Tên đăng nhập đã tồn tại.', 409, 'USERNAME_TAKEN');
+      const user = await store.createUser({
+        username,
+        passwordHash: hashPassword(payload.password),
+        displayName: typeof payload.displayName === 'string' ? payload.displayName.trim().slice(0, 60) : '',
+        ageGroup: validAgeGroup(payload.ageGroup)
+      });
+      const token = newSessionToken();
+      await store.createSession({ userId: user.id, tokenHash: tokenHash(token), expiresAt: sessionExpiry() });
+      response.setHeader('Set-Cookie', sessionCookie(token));
+      return sendJson(response, 201, { user: publicUser(user) });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/auth/login') {
+      requireDb();
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const user = typeof payload.username === 'string' ? await store.findUserByUsername(payload.username) : null;
+      if (!user || !verifyPassword(payload.password, user.password_hash)) {
+        throw apiError('Sai tên đăng nhập hoặc mật khẩu.', 401, 'INVALID_CREDENTIALS');
+      }
+      const token = newSessionToken();
+      await store.createSession({ userId: user.id, tokenHash: tokenHash(token), expiresAt: sessionExpiry() });
+      response.setHeader('Set-Cookie', sessionCookie(token));
+      return sendJson(response, 200, { user: publicUser(user) });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/auth/logout') {
+      const token = parseSessionCookie(request);
+      if (store && token) await store.deleteSession(tokenHash(token));
+      response.setHeader('Set-Cookie', clearSessionCookie());
+      return sendJson(response, 200, { ok: true });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/auth/me') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      return sendJson(response, 200, { user: publicUser(session.user) });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/sync/push') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const payload = normalizeSyncPayload(JSON.parse((await readBody(request)) || '{}'));
+      let srsAccepted = 0;
+      for (const item of payload.srs) if (await store.upsertSrsItem(session.user.id, item)) srsAccepted += 1;
+      const mistakesAccepted = payload.mistakes.length ? await store.insertMistakes(session.user.id, payload.mistakes) : 0;
+      const patch = payload.profilePatch;
+      if (patch.placements && typeof patch.placements === 'object') {
+        for (const lang of ['en', 'zh']) {
+          const p = patch.placements[lang];
+          if (p && Number.isFinite(p.level)) {
+            await store.insertPlacement({ userId: session.user.id, lang, level: p.level, overall: Number.isFinite(p.overall) ? p.overall : null, skills: p.skills || {}, weakest: p.weakest || null });
+          }
+        }
+        delete patch.placements;
+      }
+      if (Object.keys(patch).length) await store.patchProfile(session.user.id, patch);
+      return sendJson(response, 200, { accepted: { srs: srsAccepted, mistakes: mistakesAccepted } });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/sync/pull') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      return sendJson(response, 200, await buildSyncSnapshot(store, session.user));
+    }
+
+    if (request.method === 'POST' && pathname === '/api/sync/import-local') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const legacy = mapLegacyLocalState(JSON.parse((await readBody(request)) || '{}'));
+      let srsAccepted = 0;
+      for (const item of legacy.srs) if (await store.upsertSrsItem(session.user.id, item)) srsAccepted += 1;
+      const mistakesAccepted = legacy.mistakes.length ? await store.insertMistakes(session.user.id, legacy.mistakes) : 0;
+      const profilePatch = {
+        goals: legacy.profile.goals,
+        dailyMinutes: legacy.profile.dailyMinutes,
+        enRatio: legacy.profile.splitEn / 100
+      };
+      if (legacy.profile.journeyStartedAt) profilePatch.journeyStartedAt = legacy.profile.journeyStartedAt;
+      if (legacy.teacherProfile) profilePatch.teacherProfile = legacy.teacherProfile;
+      if (legacy.progress) profilePatch.progress = legacy.progress;
+      for (const lang of ['en', 'zh']) {
+        const p = legacy.profile.placement && legacy.profile.placement[lang];
+        if (p && Number.isFinite(p.level)) {
+          await store.insertPlacement({ userId: session.user.id, lang, level: p.level, overall: Number.isFinite(p.overall) ? p.overall : null, skills: p.skills || {}, weakest: p.weakest || null });
+        }
+      }
+      await store.patchProfile(session.user.id, profilePatch);
+      return sendJson(response, 200, { imported: { srs: srsAccepted, mistakes: mistakesAccepted } });
+    }
+
     if (request.method === 'GET' && pathname === '/healthz') {
       return sendJson(response, 200, { ok: true });
     }
 
     // ---- Control plane quản trị: chỉ chuẩn bị/audit dữ liệu, không trả secret ----
     if (request.method === 'GET' && pathname === '/api/admin/overview') {
-      return sendJson(response, 200, await admin.overview());
+      return sendJson(response, 200, { ...(await admin.overview()), db: store ? { available: true } : { available: false } });
     }
     if (request.method === 'GET' && pathname === '/api/admin/jobs') {
       return sendJson(response, 200, { jobs: admin.listJobs() });
@@ -552,6 +665,8 @@ const server = createServer(async (request, response) => {
 
     // ---- Bộ nhớ dài hạn ----
     if (request.method === 'GET' && pathname === '/api/memory') {
+      const session = store ? await resolveSession(store, request) : null;
+      if (session) return sendJson(response, 200, await loadMemoryFromStore(store, session.user));
       const learnerId = new URL(request.url, 'http://x').searchParams.get('learner') || 'default';
       return sendJson(response, 200, await loadMemory(learnerId));
     }
@@ -560,6 +675,8 @@ const server = createServer(async (request, response) => {
       const payload = JSON.parse((await readBody(request)) || '{}');
       const learnerId = typeof payload.learnerId === 'string' && payload.learnerId ? payload.learnerId : 'default';
       const patch = payload.patch && typeof payload.patch === 'object' ? payload.patch : {};
+      const session = store ? await resolveSession(store, request) : null;
+      if (session) return sendJson(response, 200, await saveMemoryToStore(store, session.user, patch));
       return sendJson(response, 200, await saveMemory(learnerId, patch));
     }
 
@@ -568,6 +685,8 @@ const server = createServer(async (request, response) => {
       const learnerId = typeof payload.learnerId === 'string' && payload.learnerId ? payload.learnerId : 'default';
       const note = typeof payload.note === 'string' ? payload.note.trim() : '';
       if (!note) throw Object.assign(new Error('note is required'), { statusCode: 400 });
+      const session = store ? await resolveSession(store, request) : null;
+      if (session) return sendJson(response, 200, await saveMemoryToStore(store, session.user, { notes: [{ text: note }] }));
       const mem = await addMemoryNote(learnerId, note);
       return sendJson(response, 200, mem);
     }
@@ -596,11 +715,13 @@ const server = createServer(async (request, response) => {
     if (error.message === 'forbidden') return response.writeHead(403).end();
     const status = error.code === 'ENOENT' ? 404 : (typeof error.statusCode === 'number' ? error.statusCode : 500);
     if (status >= 500) console.error(`[error] ${request.method} ${request.url} -> ${error.message}`);
-    sendJson(response, status, {
-      error: status === 503
-        ? 'Local voice is currently unavailable. Switching to text/browser mode.'
-        : error.message
-    });
+    sendJson(response, status, error.code
+      ? { error: error.message, code: error.code }
+      : {
+          error: status === 503
+            ? 'Local voice is currently unavailable. Switching to text/browser mode.'
+            : error.message
+        });
   }
 });
 
@@ -608,6 +729,7 @@ server.listen(PORT, HOST, () => {
   console.log(`LingoVoice listening on http://${HOST}:${PORT}`);
   console.log(`Access protection: ${ACCESS_PASSWORD ? `enabled (${ACCESS_USER})` : 'disabled'}`);
   console.log(`Admin protection: ${ADMIN_PASSWORD ? `enabled (${ADMIN_USER})` : 'loopback only'}`);
+  console.log(`PostgreSQL: ${store ? 'đã kết nối' : 'CHƯA cấu hình (DATABASE_URL) — tính năng tài khoản/đồng bộ tắt'}`);
   console.log(`OpenVox API: ${OPENVOX_API}`);
   const providers = configuredProviders();
   if (providers.length) {
