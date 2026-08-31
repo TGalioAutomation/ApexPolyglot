@@ -131,6 +131,8 @@
     if (!el) return;
     el.textContent = text || '';
     el.classList.toggle('is-error', !!isError);
+    // Lỗi phải được screen reader đọc ngay (WCAG 3.3.1) — role=alert, thường thì status
+    el.setAttribute('role', isError ? 'alert' : 'status');
   }
 
   function renderAccountUI(user) {

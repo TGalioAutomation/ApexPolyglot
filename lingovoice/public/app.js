@@ -459,10 +459,11 @@ function startQuiz() {
   teacherState.lastSentenceLang = language;
   updateTeacherContext();
   $('#quizText').textContent = sentence.text;
-  $('#quizText').hidden = false;
+  // Bài NGHE: ẩn văn bản câu cho tới khi trả lời xong (nếu không thì luyện nghe biến thành luyện đọc)
+  $('#quizText').hidden = true;
   $('#quizPlay').hidden = false;
   $('#quizPlay').classList.remove('playing');
-  $('#quizPlay').querySelector('span').textContent = 'Nghe lại câu';
+  $('#quizPlay').querySelector('span').textContent = 'Nghe câu';
   $('#quizChoices').hidden = false;
   $('#quizFeedback').textContent = '';
   $('#quizFeedback').className = 'quiz-feedback';
@@ -477,7 +478,8 @@ function startQuiz() {
     b.addEventListener('click', () => answerQuiz(b, option));
     box.append(b);
   });
-  playText(sentence.text, language, { announceFallback: false });
+  // Không tự phát: người học chủ động bấm "Nghe câu" (tránh autoplay bị trình duyệt chặn
+  // và tránh phát âm thanh ngoài ý muốn — WCAG 1.4.2)
 }
 
 function answerQuiz(btn, selected) {
@@ -496,6 +498,7 @@ function answerQuiz(btn, selected) {
     if (b.textContent === quiz.correct) b.classList.add('correct');
     else if (b === btn) b.classList.add('incorrect');
   });
+  $('#quizText').hidden = false; // đối chiếu văn bản SAU khi trả lời
   const fb = $('#quizFeedback');
   const explanation = quiz.sentence.vi ? ` (“${quiz.sentence.vi}”)` : '';
   fb.textContent = isCorrect
@@ -1168,6 +1171,7 @@ function init() {
   $('#quizPlay').addEventListener('click', () => {
     if (!quiz.sentence) { startQuiz(); return; } // Prompt 4: bấm nghe khi chưa có câu -> tự tạo
     playText(quiz.sentence.text, language, { announceFallback: false });
+    $('#quizPlay').querySelector('span').textContent = 'Nghe lại câu';
   });
   $('#quizNext').addEventListener('click', handleQuizNext);
 

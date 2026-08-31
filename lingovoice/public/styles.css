@@ -899,6 +899,7 @@ body { overflow-x: clip; }
 
 /* --- Header responsive (hết tràn ngang) --- */
 @media (max-width: 767px) {
+  .toast { bottom: 170px; } /* tránh đè FAB Cô Linh và vùng CTA đáy màn */
   .topbar { flex-wrap: wrap; row-gap: 6px; padding: 10px 12px; }
   .topbar .brand { font-size: 17px; }
   .topbar .lang-toggle { margin-left: auto; padding: 3px; }
@@ -918,7 +919,7 @@ body { overflow-x: clip; }
 @media (max-width: 520px) {
   .journey-banner { padding: 16px; border-radius: 18px; }
   .journey-symbol { width: 42px; height: 42px; }
-  .life-stage-rail li span { font-size: 9.5px; }
+  .life-stage-rail li span { font-size: 11px; }
   .life-stage-rail b { min-width: 38px; padding-inline: 5px; }
 }
 
@@ -1496,8 +1497,8 @@ body[data-stage="young-adult"] { --stage-accent: #0F766E; --stage-soft: #ECFDF5;
 .error-state[hidden] { display: none; }
 .error-dismiss {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 50%;
   background: var(--muted);
