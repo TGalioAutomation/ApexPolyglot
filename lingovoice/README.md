@@ -106,6 +106,19 @@ node server.mjs
 
 Mở http://localhost:4174
 
+### PostgreSQL (tài khoản + đồng bộ đa thiết bị)
+
+Đặt `DATABASE_URL` để bật đăng nhập và đồng bộ dữ liệu học (ADR-001). Không có
+DB thì app vẫn chạy đầy đủ tính năng học — các route tài khoản trả 503 `DB_UNAVAILABLE`.
+
+```bash
+docker compose up -d postgres        # PostgreSQL 16 local
+npm run migrate                      # áp db/migrations/*.sql
+DATABASE_URL=postgres://lingovoice:lingovoice@localhost:5432/lingovoice npm start
+```
+
+Hoặc chạy cả stack: `docker compose up -d --build` (app tự migrate khi khởi động).
+
 ## Chạy bản production bằng Docker
 
 ```bash
@@ -187,6 +200,8 @@ Không có key: app vẫn chạy đủ (voice, từ vựng, SRS, viết-dictatio
 
 ## API
 
+- `POST /api/auth/register|login|logout` · `GET /api/auth/me` — tài khoản người học (scrypt + session cookie HttpOnly, ADR-002).
+- `POST /api/sync/push` · `GET /api/sync/pull` · `POST /api/sync/import-local` — đồng bộ SRS/lỗi sai/tiến độ (offline-first, last-write-wins — ADR-004); import 1 lần dữ liệu localStorage cũ.
 - `GET /healthz` · `GET /api/voice/status` · `POST /api/voice/prepared` — trạng thái và WAV đã tạo sẵn cho learner.
 - `GET /api/admin/overview` · `/jobs` · `/vocab` — inventory và dữ liệu quản trị.
 - `POST /api/admin/jobs/pregen` · `/audit` · `/vocab` · `/vocab/review` — pipeline quản trị có giới hạn.
@@ -203,9 +218,13 @@ Proxy OpenVox tuân hợp đồng: khám phá model → warm → languages → v
 ## Kiểm thử
 
 ```bash
-npm run check   # syntax tất cả module + frontend
-npm test        # 19 integration tests (mock OpenVox + mock DeepSeek)
+npm run check   # syntax tất cả module (gồm db/) + frontend + audit vocab
+npm test        # 92 tests (mock OpenVox + mock DeepSeek; không cần PG)
 npm run pregen  # sinh sẵn toàn bộ audio bài nghe/đọc vào cache
+
+# integration test PostgreSQL thật (tự skip khi chưa set)
+TEST_DATABASE_URL=postgres://lingovoice:lingovoice@localhost:5432/lingovoice \
+  node --test test/db-integration.test.mjs
 ```
 
 ## Trí nhớ dài hạn của giáo viên
@@ -213,6 +232,7 @@ npm run pregen  # sinh sẵn toàn bộ audio bài nghe/đọc vào cache
 Cô giáo AI ghi nhớ học viên qua `data/learner-memory.json` (gitignored):
 
 - **Lưu**: hồ sơ mục tiêu, placement level + điểm yếu, tiến độ SRS (đã học / cần ôn / lỗi), từ đã học, lỗi sai, ghi chú.
+- **Hai tầng lưu trữ**: người học **chưa đăng nhập** → `data/learner-memory.json` như cũ; **có tài khoản** → PostgreSQL (`learner_profiles`, `placements`, `memory_notes`, `srs_items`, `mistakes`) qua `db/memory-adapter.mjs`.
 - **Đồng bộ tự động**: frontend gửi lên sau khi lưu hồ sơ, nộp placement, học từ, ghi lỗi.
 - **Sử dụng**: mọi `/api/teacher/chat` tự nạp bộ nhớ vào prompt; cô giáo được chỉ thị luôn bám mục tiêu và hướng tới **dùng, nói, nghe** thông thạo, nhắc điểm yếu và lỗi lặp lại.
 - **UI**: tab **Mục tiêu** hiển thị "Bộ nhớ cô giáo", cho thêm ghi chú, nút đồng bộ.
@@ -227,8 +247,12 @@ lingovoice/
   ai.mjs                # Adapter LLM giáo viên (DeepSeek/Gemini/OpenAI) + structured JSON
   voice.mjs             # VoiceClient OpenVox + cache audio trên đĩa + speakWithCache
   placement.mjs         # Ngân hàng câu + scoring deterministic
-  memory.mjs            # Trí nhớ dài hạn của giáo viên (store server-side + prompt builder)
+  memory.mjs            # Trí nhớ dài hạn — fallback JSON file cho learner nặc danh
+  db/                   # Lớp dữ liệu PostgreSQL: migrations, store, auth, sync, memory-adapter
   pregen.mjs            # Sinh trước toàn bộ audio (thư viện câu, thẻ từ, bài đọc, quiz)
+  AGENTS.md             # Quy tắc cho AI agent làm việc trên repo
+  .agents/              # Skills (lingovoice-dev/backend/frontend) + agent roles (planner/implementer/reviewer)
+  docs/                 # Tài liệu thiết kế chuẩn: architecture, data-model, api-spec, ui-design, testing, roadmap, ADR
   cache/audio/          # WAV đã sinh (gitignored)
   design-system/        # Quy chuẩn giao diện admin
   data/                 # learner-memory.json (gitignored)
@@ -238,5 +262,7 @@ lingovoice/
     styles.css          # Design system (indigo + green, Plus Jakarta Sans)
     app.js              # Core: playback, quiz, giáo viên đồng hành
     learning.js         # P0–P4 + memory: SRS, planner, placement, từ mới, viết, nói, đọc
-  test/server.test.mjs  # Integration tests (19)
+    lv-api.js           # API client tài khoản & đồng bộ (window.LVApi)
+    lv-shell.js         # Shell UI: stage theming, empty/error/offline state, tài khoản & sync
+  test/                 # 13 file test: integration API, UI, SRS, auth/sync, DB (tự skip)
 ```
