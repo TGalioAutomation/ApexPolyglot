@@ -988,16 +988,24 @@ body { overflow-x: clip; }
 
 .today-check { margin-top: 16px; }
 .check-stack { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+/* Item con nằm TRÊN card trắng: nền soft không viền — không nhái card cha.
+   Ô check mặc định (::before) chỉ dành cho li không có .check-circle riêng. */
 .check-stack li {
   display: flex; align-items: center; gap: 10px;
-  min-height: 46px; padding: 8px 12px; border: 1px solid var(--border);
-  border-radius: 12px; background: var(--card); cursor: pointer; font-weight: 600; font-size: 14.5px;
+  min-height: 46px; padding: 8px 12px;
+  border-radius: 12px; background: var(--primary-soft); cursor: pointer; font-weight: 600; font-size: 14.5px;
   transition: all 0.15s ease;
 }
 .check-stack li::before {
   content: ''; width: 20px; height: 20px; flex: none;
   border: 2px solid var(--secondary); border-radius: 6px;
 }
+.check-stack li.check-row::before,
+.check-stack li.lang-row::before { display: none; }
+.check-stack li.lang-row {
+  background: transparent; padding: 2px 4px; min-height: 34px;
+}
+.check-stack li.lang-row small { margin-left: auto; }
 .check-stack li.done { opacity: 0.7; }
 .check-stack li.done::before { background: var(--accent); border-color: var(--accent); }
 .check-stack li small { color: var(--muted-fg); font-weight: 500; margin-left: auto; }
