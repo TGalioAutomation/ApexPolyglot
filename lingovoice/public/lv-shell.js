@@ -45,9 +45,9 @@
   }
   window.addEventListener('error', (event) => {
     if (event && event.message && /Script error/i.test(event.message)) return;
+    if (event && event.filename && event.filename.includes('lv-shell')) return; // không tự báo lỗi của chính mình
     showError('Có lỗi nhỏ khi tải nội dung.');
   });
-  window.addEventListener('unhandledrejection', () => showError('Không tải được dữ liệu từ máy chủ.'));
   document.addEventListener('click', (event) => {
     if (event.target && event.target.closest('#globalErrorRetry')) {
       window.location.reload();
@@ -58,29 +58,24 @@
     }
   });
 
-  /* ---------- 4. Audio lỗi / offline — minh họa offline-audio.webp ---------- */
-  let offlineShown = false;
+  /* ---------- 4. Thẻ audio lỗi / offline — chỉ hiện khi được gọi chủ động ----------
+   * app.js/learning.js đã tự xử lý fallback audio (voiceState.degraded + speechSynthesis),
+   * nên lv-shell KHÔNG monkey-patch Audio.play nữa (chặn autoplay của trình duyệt là bình thường).
+   * Thẻ này dành cho các module mới gọi LVShell.showAudioOffline() khi cần. */
+  let audioOfflineShown = false;
+  function showAudioOffline() {
+    if (audioOfflineShown) return;
+    audioOfflineShown = true;
+    const box = $('audioOffline');
+    if (box) box.hidden = false;
+  }
   document.addEventListener('click', (event) => {
     if (event.target && event.target.closest('#audioOfflineDismiss')) {
       const box = $('audioOffline');
       if (box) box.hidden = true;
+      audioOfflineShown = false;
     }
   });
-  if (window.Audio) {
-    const originalPlay = Audio.prototype.play;
-    Audio.prototype.play = function () {
-      const result = originalPlay.apply(this, arguments);
-      if (result && typeof result.catch === 'function') {
-        result.catch(() => {
-          if (offlineShown) return;
-          offlineShown = true;
-          const box = $('audioOffline');
-          if (box) box.hidden = false;
-        });
-      }
-      return result;
-    };
-  }
 
   /* ---------- 5. Tài khoản & đồng bộ ---------- */
   const LAST_SYNC_KEY = 'lv-last-sync';
@@ -253,5 +248,5 @@
   bindAccountUI();
   refreshAccount();
 
-  window.LVShell = { showError, syncNow, refreshAccount };
+  window.LVShell = { showError, showAudioOffline, syncNow, refreshAccount };
 })();

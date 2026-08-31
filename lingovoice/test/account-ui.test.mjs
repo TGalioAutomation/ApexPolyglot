@@ -46,7 +46,8 @@ test('lv-shell: stage theming, empty state toggle, bắt lỗi audio — không 
   assert.match(shell, /document\.body\.dataset\.stage = age/);
   assert.match(shell, /\['preschool', 'child', 'teen', 'young-adult'\]\.includes/);
   assert.match(shell, /box\.hidden = hasGoals/);
-  assert.match(shell, /Audio\.prototype\.play/);
+  // KHÔNG monkey-patch Audio.play — app.js đã có fallback audio riêng (lv-shell chỉ cung cấp showAudioOffline)
+  assert.match(shell, /function showAudioOffline/);
   assert.match(shell, /lv-last-sync/);
   // LVApi client đủ endpoint sync
   assert.match(api, /\/api\/auth\/register/);

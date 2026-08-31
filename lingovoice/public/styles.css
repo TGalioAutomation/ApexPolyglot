@@ -1445,7 +1445,7 @@ body[data-stage="young-adult"] { --stage-accent: #0F766E; --stage-soft: #ECFDF5;
 .error-state {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--space-lg) + 68px);
+  top: 74px; /* dưới topbar sticky — KHÔNG đè lên nút CTA đáy màn (toast + nút chính) */
   transform: translateX(-50%);
   z-index: 60;
   display: flex;
@@ -1479,7 +1479,7 @@ body[data-stage="young-adult"] { --stage-accent: #0F766E; --stage-soft: #ECFDF5;
 .offline-state {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--space-lg) + 68px);
+  top: 140px; /* lệch dưới banner lỗi để không đè nhau khi cùng hiện */
   transform: translateX(-50%);
   z-index: 55;
   display: flex;
@@ -1555,7 +1555,7 @@ body[data-stage="young-adult"] { --stage-accent: #0F766E; --stage-soft: #ECFDF5;
 .account-message.is-error { color: var(--destructive); }
 
 @media (max-width: 480px) {
-  .error-state { flex-wrap: wrap; bottom: calc(var(--space-lg) + 76px); }
+  .error-state { flex-wrap: wrap; }
   .offline-state { flex-wrap: wrap; }
   .empty-state img { width: 180px; height: 135px; }
 }
