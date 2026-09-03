@@ -20,7 +20,7 @@ Toàn bộ màu/bo/shadow đi qua CSS variables, không hardcode hex:
 |---|---|---|---|
 | Hôm nay | `#tab-today` | Plan ngày, streak, banner hành trình 90 ngày | trống → `empty-state-today.webp` + CTA bắt đầu |
 | Lộ trình | `#tab-path` | Roadmap 3 chặng, next-best-action | — |
-| Từ vựng | `#tab-vocab` | Flashcard SRS, quiz, sổ lỗi sai | — |
+| Từ vựng | `#tab-vocab` | Flashcard SRS, **phiên học từ mới tích lũy (mới)**, quiz, sổ lỗi sai | hết từ mới → toast + gợi ý thêm từ |
 | Viết | `#tab-writing` | Xếp chunk, chính tả, dịch ngược, viết tự do | — |
 | Nói | `#tab-speaking` | Shadowing ASR + gọi điện roleplay | mất mic → hướng dẫn mở quyền |
 | Đọc | `#tab-reading` | Graded readers 3 mức, đọc theo câu | — |
@@ -29,6 +29,28 @@ Toàn bộ màu/bo/shadow đi qua CSS variables, không hardcode hex:
 
 Splash/onboarding lần đầu: `splash-illustration.webp` + 3 câu giới thiệu → nút bắt đầu.
 Avatar mặc định: `default-learner-avatar.webp` trong profile và topbar.
+
+### 2.1 Phiên học từ mới — kỹ thuật tích lũy (cumulative)
+
+Vào từ nút "Học từ mới" (`#vsLearnStart` / `#vsLearnQuick` / next-best-action), luồng 3 màn
+trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
+
+1. **Briefing** `#vstudio-brief` — nói rõ số lượng ngay từ đầu: số to `#vsBriefCount`
+   ("N từ mới"), mỗi từ kèm 1 câu mẫu trong danh sách preview `#vsBriefList` (chỉ hiện
+   term + câu gốc, giấu nghĩa để không lộ đáp án), chọn liều lượng 3/5/7 qua `#vsBriefBatch`
+   (lưu `localStorage lv-learn-batch`), ước lượng thời gian, CTA `#vsBriefStart`.
+2. **Phiên** `#vstudio-session` — bước dựng từ `SRS.buildLearnSteps` (`public/srs-core.cjs`):
+   xen kẽ **giới thiệu từ mới** (thẻ hiện ngay nghĩa + câu mẫu + audio, badge
+   `#vsStepBadge` "Từ mới x/N", nút `#vsUnderstood`) với **kiểm tra tích lũy** (flashcard đoán
+   nghĩa, badge "Kiểm tra tích lũy", chấm 4 mức SRS như ôn tập). Từ ghi "Lại" được xếp
+   thêm 1 lần kiểm tra cuối phiên (ngân sách `recheckBudget` = 3). Progress text
+   `#vsProgressText` luôn theo dạng "x/N từ mới".
+3. **Tổng kết** `#vstudio-summary` — 3 ô số liệu (từ mới / lần kiểm tra tích lũy / lần cần
+   học lại) + CTA "Học tiếp từ mới" / "Về kho từ".
+
+Phiên dở lưu `lv-session` mở rộng trường `steps` + `stepIndex` (client-only, không sync) để
+"Tiếp tục bài đang dở" quay lại đúng bước. Phím: Space = hiện đáp án / đã hiểu, 1–4 = đánh giá,
+Esc = thoát (thoát giữa chừng vẫn giữ phiên).
 
 ## 3. Trạng thái hệ thống (bắt buộc cho mọi view tải dữ liệu)
 

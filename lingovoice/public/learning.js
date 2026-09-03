@@ -359,7 +359,14 @@ function buildDict(lang) {
 }
 /* ================= VOCABULARY STUDIO ================= */
 const SRS = window.SRS || {};
-const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null };
+const LEARN_BATCHES = [3, 5, 7];
+const LEARN_BATCH_KEY = 'lv-learn-batch';
+function loadLearnBatch() {
+  const n = Number(localStorage.getItem(LEARN_BATCH_KEY));
+  return LEARN_BATCHES.includes(n) ? n : 5;
+}
+function saveLearnBatch(n) { try { localStorage.setItem(LEARN_BATCH_KEY, String(n)); } catch {} }
+const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null, steps: [], stepIndex: 0, batchSize: 5, recheckBudget: 0 };
 
 function vsItemState(lang, id) { return store.srs.items[lang]?.[id] || SRS.initial(); }
 function vsSave(lang, id, next) {
@@ -458,18 +465,24 @@ function renderStudioHome() {
   renderVsBank();
 }
 
+// Danh sách từ mới chưa học, xếp theo mục tiêu (công việc) rồi tần suất phổ biến
+function vsNewWords() {
+  const lang = LV.language;
+  const s = store.srs.items[lang] || {};
+  const goalWork = (store.profile.goals || []).includes('cong-viec');
+  return vocabItems(lang)
+    .filter((v) => !s[v.id] || s[v.id].state === 'new')
+    .sort((a, b) => {
+      if (goalWork) { const aw = (b.workplace ? 1 : 0) - (a.workplace ? 1 : 0); if (aw) return aw; }
+      return (a.freq || 3) - (b.freq || 3); // tần suất phổ biến (freq thấp) học trước
+    });
+}
+
 function vsBuildQueue(mode) {
   const lang = LV.language;
   if (mode === 'learn') {
-    const s = store.srs.items[lang] || {};
-    const goalWork = (store.profile.goals || []).includes('cong-viec');
-    return vocabItems(lang)
-      .filter((v) => !s[v.id] || s[v.id].state === 'new')
-      .sort((a, b) => {
-        if (goalWork) { const aw = (b.workplace ? 1 : 0) - (a.workplace ? 1 : 0); if (aw) return aw; }
-        return (a.freq || 3) - (b.freq || 3); // tần suất phổ biến (freq thấp) học trước
-      })
-      .slice(0, 3)
+    return vsNewWords()
+      .slice(0, vs.batchSize)
       .map((v) => ({ id: v.id, item: v }));
   }
   const s = store.srs.items[lang] || {};
@@ -480,25 +493,95 @@ function vsBuildQueue(mode) {
     .map(([id]) => ({ id, item: findVocab(lang, id) }));
 }
 
+// Hiện đúng 1 pane studio (home/brief/session/summary), ẩn phần còn lại
+function hideStudioPanes(which) {
+  ['home', 'brief', 'session', 'summary'].forEach((k) => {
+    const el = document.getElementById('vstudio-' + k);
+    if (el) el.hidden = k !== which;
+  });
+  document.body.classList.toggle('studio-session', which !== 'home');
+}
+
 function vsStartSession(mode) {
+  if (mode === 'learn') return vsOpenBrief(); // học mới luôn qua briefing: biết rõ số từ trước khi bắt đầu
   vs.mode = mode;
   vs.queue = vsBuildQueue(mode);
-  vs.index = 0; vs.revealed = false; vs.records = [];
+  vs.index = 0; vs.revealed = false; vs.records = []; vs.steps = []; vs.stepIndex = 0;
   if (!vs.queue.length) {
-    LV.toast(mode === 'review' ? 'Không có từ cần ôn ngay.' : 'Đã học hết từ mới. Thêm từ để học tiếp!');
+    LV.toast('Không có từ cần ôn ngay.');
     return;
   }
   vsPersist();
-  document.body.classList.add('studio-session');
-  document.getElementById('vstudio-home').hidden = true;
-  document.getElementById('vstudio-session').hidden = false;
+  hideStudioPanes('session');
   vsShowCard();
+}
+
+/* --- Briefing: nói rõ số lượng từ cần học ngay từ đầu --- */
+function vsOpenBrief() {
+  const words = vsNewWords();
+  if (!words.length) {
+    hideStudioPanes('home');
+    renderStudioHome();
+    LV.toast('Đã học hết từ mới. Thêm từ để học tiếp!');
+    return;
+  }
+  vs.batchSize = Math.min(loadLearnBatch(), words.length);
+  renderVsBrief(words);
+  hideStudioPanes('brief');
+}
+
+function renderVsBrief(words) {
+  const n = Math.min(vs.batchSize, words.length);
+  vs.batchSize = n;
+  const picked = words.slice(0, n);
+  $('#vsBriefCount').textContent = `${n} từ mới`;
+  $('#vsBriefDetail').textContent = `Mỗi từ kèm 1 câu mẫu · kiểm tra tích lũy xen kẽ ngay trong phiên · ~${Math.max(2, Math.round(n * 0.8))} phút`;
+  document.querySelectorAll('#vsBriefBatch button').forEach((b) => {
+    const val = Number(b.dataset.batch);
+    b.classList.toggle('active', val === n);
+    b.setAttribute('aria-pressed', String(val === n));
+    b.disabled = val > words.length;
+  });
+  const list = $('#vsBriefList');
+  list.replaceChildren();
+  picked.forEach((v, i) => {
+    const row = document.createElement('div'); row.className = 'review-item brief-item';
+    const ord = document.createElement('b'); ord.className = 'brief-ord'; ord.textContent = String(i + 1).padStart(2, '0');
+    const txt = document.createElement('div'); txt.className = 'ri-text';
+    const head = document.createElement('b'); head.textContent = v.term;
+    const sm = document.createElement('small'); sm.textContent = v.example || '';
+    txt.append(head, sm);
+    row.append(ord, txt);
+    list.append(row);
+  });
+  $('#vsBriefStart').textContent = `Bắt đầu học ${n} từ mới`;
+  announceVs(`Phiên học từ mới: ${n} từ, mỗi từ kèm một câu mẫu.`);
+}
+
+function vsBriefBegin() {
+  const words = vsNewWords().slice(0, Math.max(1, vs.batchSize));
+  if (!words.length) { LV.toast('Không còn từ mới để học.'); vsCloseBrief(); return; }
+  vs.mode = 'learn';
+  vs.queue = words.map((v) => ({ id: v.id, item: v }));
+  // Kỹ thuật tích lũy: xen kẽ giới thiệu từ mới với kiểm tra từ đã học trong chính phiên
+  vs.steps = SRS.buildLearnSteps ? SRS.buildLearnSteps(vs.queue.map((q) => q.id)) : vs.queue.map((q) => ({ t: 'learn', id: q.id }));
+  vs.stepIndex = 0; vs.index = 0; vs.revealed = false; vs.records = []; vs.recheckBudget = 3;
+  vsPersist();
+  hideStudioPanes('session');
+  vsShowStep();
+}
+
+function vsCloseBrief() {
+  hideStudioPanes('home');
+  renderStudioHome();
 }
 
 // Lưu trạng thái phiên để "tiếp tục bài đang dở" (giữ khi thoát, xoá khi hoàn thành)
 function vsPersist() {
   try {
-    localStorage.setItem('lv-session', JSON.stringify({ mode: vs.mode, ids: vs.queue.map((q) => q.id), index: vs.index, records: vs.records.map((r) => ({ id: r.id, grade: r.grade })) }));
+    const payload = { mode: vs.mode, ids: vs.queue.map((q) => q.id), index: vs.index, records: vs.records.map((r) => ({ id: r.id, grade: r.grade })) };
+    if (vs.mode === 'learn') { payload.steps = vs.steps; payload.stepIndex = vs.stepIndex; } // bước tích lũy để resume đúng chỗ
+    localStorage.setItem('lv-session', JSON.stringify(payload));
   } catch {}
 }
 function vsClearSession() {
@@ -516,24 +599,98 @@ function resumeSession() {
     const lang = LV.language;
     const queue = (s.ids || []).map((id) => ({ id, item: findVocab(lang, id) })).filter((x) => x.item);
     if (!queue.length) { vsClearSession(); LV.toast('Bài đang dở đã hết hiệu lực.'); return; }
-    vs.mode = s.mode === 'review' ? 'review' : 'learn';
     vs.queue = queue;
-    vs.index = Math.min(Number(s.index) || 0, queue.length - 1);
     vs.revealed = false;
     vs.records = (s.records || []).map((r) => ({ id: r.id, grade: r.grade, item: findVocab(lang, r.id) })).filter((r) => r.item);
-    document.body.classList.add('studio-session');
-    document.getElementById('vstudio-home').hidden = true;
-    document.getElementById('vstudio-session').hidden = false;
-    vsShowCard();
-    LV.toast(`Tiếp tục ${vs.mode === 'review' ? 'ôn tập' : 'học mới'} từ ${vs.index + 1}/${vs.queue.length}.`);
+    vs.mode = s.mode === 'review' ? 'review' : 'learn';
+    if (vs.mode === 'learn') {
+      // Phiên mới lưu steps (learn/check tích lũy); phiên cũ không có -> mỗi từ 1 lượt đoán như trước
+      vs.steps = Array.isArray(s.steps) && s.steps.length
+        ? s.steps.filter((st) => st && queue.some((q) => q.id === st.id))
+        : queue.map((q) => ({ t: 'check', id: q.id }));
+      if (!vs.steps.length) { vsClearSession(); LV.toast('Bài đang dở đã hết hiệu lực.'); return; }
+      vs.stepIndex = Math.min(Number(s.stepIndex) || 0, vs.steps.length - 1);
+      vs.index = 0;
+      hideStudioPanes('session');
+      vsShowStep();
+      LV.toast(`Tiếp tục học mới — đã học ${learnedCount()}/${queue.length} từ.`);
+    } else {
+      vs.index = Math.min(Number(s.index) || 0, queue.length - 1);
+      hideStudioPanes('session');
+      vsShowCard();
+      LV.toast(`Tiếp tục ôn tập từ ${vs.index + 1}/${queue.length}.`);
+    }
   } catch { vsClearSession(); }
 }
 function vsStartReview() { vsStartSession('review'); }
 function vsStartLearn() { vsStartSession('learn'); }
 function startLearn() { vsStartSession('learn'); }
 
+/* --- Bước phiên học mới (tích lũy): learn = giới thiệu từ mới, check = kiểm tra từ đã học --- */
+function vsStep() { return vs.steps[vs.stepIndex]; }
+function learnedCount() { return vs.steps.slice(0, vs.stepIndex + 1).filter((st) => st.t === 'learn').length; }
+// Item đang hiển thị: phiên learn đi theo bước, phiên ôn tập đi theo index
+function vsCurrentItem() {
+  if (vs.mode === 'learn') { const step = vsStep(); return step ? vs.queue.find((q) => q.id === step.id) || null : null; }
+  return vs.queue[vs.index] || null;
+}
+
+function vsShowStep() {
+  const step = vsStep();
+  if (!step) return vsFinish();
+  const cur = vs.queue.find((q) => q.id === step.id);
+  if (!cur) { vs.stepIndex += 1; return vsShowStep(); } // từ không còn trong kho — bỏ qua bước
+  const total = vs.queue.length;
+  const done = learnedCount();
+  const badge = $('#vsStepBadge');
+  badge.hidden = false;
+  if (step.t === 'learn') {
+    badge.textContent = `Từ mới ${done}/${total}`;
+    badge.classList.remove('check');
+    return vsShowLearnCard(cur.item, done, total);
+  }
+  badge.textContent = `Kiểm tra tích lũy · đã học ${done}/${total} từ`;
+  badge.classList.add('check');
+  vsShowCard();
+}
+
+// Thẻ giới thiệu từ mới: hiện ngay nghĩa + câu mẫu (không đoán) — làm quen từ trước khi bị kiểm tra
+function vsShowLearnCard(v, done, total) {
+  const isZh = LV.language === 'zh';
+  $('#vsTopic').textContent = v.topic || '';
+  $('#vsTerm').textContent = v.term;
+  const py = $('#vsPinyin');
+  if (isZh && v.pinyin) { py.textContent = v.pinyin; py.hidden = false; } else { py.textContent = ''; py.hidden = true; }
+  vsRenderBack(v);
+  $('#vsInterval').textContent = '';
+  $('#vsBack').hidden = false;
+  $('#vsReveal').hidden = true;
+  $('#vsGrades').hidden = true;
+  $('#vsUnderstood').hidden = false;
+  $('#vsProgressText').textContent = `${done}/${total} từ mới`;
+  $('#vsProgressBar').style.width = `${(vs.stepIndex / Math.max(1, vs.steps.length)) * 100}%`;
+  announceVs(`Từ mới ${done} trên ${total}: ${v.term}. Nghĩa: ${v.meaning}. Câu mẫu: ${v.example || ''}`);
+}
+
+function vsUnderstood() {
+  const step = vsStep();
+  if (!step || step.t !== 'learn') return;
+  // Đã giới thiệu xong: sang learning và đến hạn ôn ngay để tham gia kiểm tra tích lũy trong phiên
+  vsSave(LV.language, step.id, { ...SRS.initial(), state: 'learning', dueAt: Date.now() });
+  vsAdvance(250);
+}
+
+function vsAdvance(delay = 450) {
+  setTimeout(() => {
+    vs.stepIndex += 1;
+    if (vs.stepIndex >= vs.steps.length) vsFinish();
+    else { vsPersist(); vsShowStep(); }
+  }, delay);
+}
+
 function vsShowCard() {
-  const cur = vs.queue[vs.index];
+  const cur = vs.mode === 'learn' ? vs.queue.find((q) => q.id === vsStep().id) : vs.queue[vs.index];
+  if (!cur) return;
   vs.revealed = false;
   const v = cur.item;
   const isZh = LV.language === 'zh';
@@ -541,12 +698,18 @@ function vsShowCard() {
   $('#vsTerm').textContent = v.term;
   const py = $('#vsPinyin');
   if (isZh && v.pinyin) { py.textContent = v.pinyin; py.hidden = false; } else { py.textContent = ''; py.hidden = true; }
+  $('#vsUnderstood').hidden = true;
   $('#vsBack').hidden = true;
   $('#vsReveal').hidden = false;
   $('#vsGrades').hidden = true;
-  $('#vsProgressText').textContent = `${vs.index + 1} / ${vs.queue.length}`;
-  $('#vsProgressBar').style.width = `${(vs.index / vs.queue.length) * 100}%`;
-  announceVs(`Từ ${vs.index + 1} trên ${vs.queue.length}: ${v.term}`);
+  if (vs.mode === 'learn') {
+    $('#vsProgressText').textContent = `${learnedCount()}/${vs.queue.length} từ mới`;
+    $('#vsProgressBar').style.width = `${(vs.stepIndex / Math.max(1, vs.steps.length)) * 100}%`;
+  } else {
+    $('#vsProgressText').textContent = `${vs.index + 1} / ${vs.queue.length}`;
+    $('#vsProgressBar').style.width = `${(vs.index / vs.queue.length) * 100}%`;
+  }
+  announceVs(vs.mode === 'learn' ? `Kiểm tra tích lũy: ${v.term}` : `Từ ${vs.index + 1} trên ${vs.queue.length}: ${v.term}`);
 }
 
 function vsRenderBack(v) {
@@ -574,19 +737,26 @@ function vsRenderBack(v) {
 }
 
 function vsReveal() {
-  if (vs.revealed || !vs.queue[vs.index]) return;
+  if (vs.mode === 'learn') {
+    const step = vsStep();
+    if (!step) return;
+    if (step.t === 'learn') return vsUnderstood(); // Space trên thẻ giới thiệu = đã hiểu
+  }
+  const cur = vs.mode === 'learn' ? vs.queue.find((q) => q.id === vsStep()?.id) : vs.queue[vs.index];
+  if (vs.revealed || !cur) return;
   vs.revealed = true;
-  vsRenderBack(vs.queue[vs.index].item);
+  vsRenderBack(cur.item);
   $('#vsBack').hidden = false;
   $('#vsReveal').hidden = true;
   $('#vsGrades').hidden = false;
   $('#vsInterval').textContent = '';
-  announceVs(`Đáp án: ${vs.queue[vs.index].item.meaning}`);
+  announceVs(`Đáp án: ${cur.item.meaning}`);
 }
 
 function vsGrade(grade) {
-  if (!vs.revealed || !vs.queue[vs.index]) return;
-  const cur = vs.queue[vs.index];
+  if (!vs.revealed) return;
+  const cur = vs.mode === 'learn' ? vs.queue.find((q) => q.id === vsStep()?.id) : vs.queue[vs.index];
+  if (!cur) return;
   const lang = LV.language;
   const next = SRS.evaluate(vsItemState(lang, cur.id), grade);
   next.lastGrade = grade;
@@ -596,7 +766,13 @@ function vsGrade(grade) {
   const label = SRS.GRADE_LABELS[grade] || grade;
   $('#vsInterval').textContent = `Đã ghi nhận: ${label} — ôn lại sau ${SRS.intervalLabel(next.intervalMs)}`;
   announceVs(`${label} — ôn lại sau ${SRS.intervalLabel(next.intervalMs)}`);
-  setTimeout(() => {
+  // Tích lũy: quên trong phiên (Lại) -> xếp thêm 1 lần kiểm tra cuối phiên (ngân sách giới hạn để phiên không kéo vô hạn)
+  if (vs.mode === 'learn' && grade <= 1 && vs.recheckBudget > 0) {
+    vs.steps.push({ t: 'check', id: cur.id });
+    vs.recheckBudget -= 1;
+  }
+  if (vs.mode === 'learn') vsAdvance();
+  else setTimeout(() => {
     vs.index += 1;
     if (vs.index >= vs.queue.length) vsFinish();
     else { vsPersist(); vsShowCard(); }
@@ -606,19 +782,36 @@ function vsGrade(grade) {
 function vsFinish() {
   vsClearSession();
   const sum = SRS.summarize(vs.records);
-  recordActivity(vs.records.length, vs.records.length); // ~1 phút/từ
-  document.getElementById('vstudio-session').hidden = true;
-  document.getElementById('vstudio-home').hidden = false;
-  document.body.classList.remove('studio-session');
-  renderStudioHome();
-  LV.toast(`Phiên xong: ôn ${sum.total}, nhớ tốt ${sum.good}, cần học lại ${sum.again}.`);
-  announceVs(`Kết thúc phiên: ${sum.total} từ, nhớ tốt ${sum.good}, cần học lại ${sum.again}.`);
+  if (vs.mode === 'learn') {
+    const learned = vs.queue.length;
+    const checks = vs.records.length;
+    recordActivity(Math.max(2, Math.round(learned * 0.7 + checks * 0.3)), learned);
+    renderVsSummary(learned, checks, sum.again);
+    hideStudioPanes('summary');
+    LV.toast(`Học xong ${learned} từ mới · ${checks} lần kiểm tra tích lũy · ${sum.again} lần cần học lại.`);
+    announceVs(`Kết thúc phiên: học ${learned} từ mới, ${checks} lần kiểm tra tích lũy, ${sum.again} lần cần học lại.`);
+  } else {
+    recordActivity(vs.records.length, vs.records.length); // ~1 phút/từ
+    hideStudioPanes('home');
+    renderStudioHome();
+    LV.toast(`Phiên xong: ôn ${sum.total}, nhớ tốt ${sum.good}, cần học lại ${sum.again}.`);
+    announceVs(`Kết thúc phiên: ${sum.total} từ, nhớ tốt ${sum.good}, cần học lại ${sum.again}.`);
+  }
 }
+
+function renderVsSummary(learned, checks, again) {
+  $('#vsSumTitle').textContent = `Học xong ${learned} từ mới`;
+  $('#vsSumWords').textContent = String(learned);
+  $('#vsSumChecks').textContent = String(checks);
+  $('#vsSumAgain').textContent = String(again);
+  $('#vsSumNote').textContent = again > 0
+    ? `${again} lần quên — các từ này đã được kiểm tra lại trong phiên và có trong lịch SRS để ôn tiếp.`
+    : 'Mọi từ đều nhớ tốt — lịch SRS sẽ nhắc bạn ôn lại đúng thời điểm.';
+}
+
 function vsExit() {
   vsPersist(); // giữ trạng thái để lần sau "Tiếp tục bài đang dở"
-  document.getElementById('vstudio-session').hidden = true;
-  document.getElementById('vstudio-home').hidden = false;
-  document.body.classList.remove('studio-session');
+  hideStudioPanes('home');
   renderStudioHome();
 }
 
@@ -2490,21 +2683,39 @@ function learningInit() {
   $('#vsLearnQuick').addEventListener('click', vsStartLearn);
   $('#vsExit').addEventListener('click', vsExit);
   $('#vsReveal').addEventListener('click', vsReveal);
-  $('#vsPlay').addEventListener('click', () => { const cur = vs.queue[vs.index]; if (cur) LV.playText(cur.item.example, LV.language, { announceFallback: false }); });
-  $('#vsPlaySlow').addEventListener('click', () => { const cur = vs.queue[vs.index]; if (cur) LV.playText(cur.item.example, LV.language, { speed: 0.75, announceFallback: false }); });
+  $('#vsUnderstood').addEventListener('click', vsUnderstood);
+  $('#vsBriefExit').addEventListener('click', vsCloseBrief);
+  $('#vsBriefStart').addEventListener('click', vsBriefBegin);
+  document.querySelectorAll('#vsBriefBatch button').forEach((b) => b.addEventListener('click', () => {
+    if (b.disabled) return;
+    vs.batchSize = Number(b.dataset.batch);
+    saveLearnBatch(vs.batchSize);
+    renderVsBrief(vsNewWords());
+  }));
+  $('#vsSumNext').addEventListener('click', vsOpenBrief);
+  $('#vsSumHome').addEventListener('click', () => { hideStudioPanes('home'); renderStudioHome(); });
+  $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { announceFallback: false }); });
+  $('#vsPlaySlow').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { speed: 0.75, announceFallback: false }); });
   document.querySelectorAll('#vsGrades .grade').forEach((b) => b.addEventListener('click', () => vsGrade(Number(b.dataset.grade))));
   document.querySelectorAll('#studioTabs button').forEach((b) => b.addEventListener('click', () => vsShowView(b.dataset.vview)));
 
-  // Keyboard: Space = hiện đáp án, 1–4 = đánh giá, Esc = thoát
+  // Keyboard: Space = hiện đáp án / đã hiểu, 1–4 = đánh giá, Esc = thoát
   document.addEventListener('keydown', (e) => {
-    if (document.getElementById('vstudio-session').hidden) return;
+    const studioPane = ['vstudio-brief', 'vstudio-session', 'vstudio-summary'].find((id) => !document.getElementById(id).hidden);
+    if (!studioPane) return;
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === 'Escape') {
+      if (studioPane === 'vstudio-brief') vsCloseBrief();
+      else if (studioPane === 'vstudio-summary') { hideStudioPanes('home'); renderStudioHome(); }
+      else vsExit();
+      return;
+    }
+    if (studioPane !== 'vstudio-session') return;
     if (e.code === 'Space') { e.preventDefault(); vsReveal(); }
     else if (e.key === '1') vsGrade(1);
     else if (e.key === '2') vsGrade(2);
     else if (e.key === '3') vsGrade(3);
     else if (e.key === '4') vsGrade(5);
-    else if (e.key === 'Escape') vsExit();
   });
 
   // Word Bank

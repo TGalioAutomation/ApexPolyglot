@@ -34,3 +34,20 @@ test('prepared JSON is primary and inline vocabulary is fallback only', () => {
   assert.match(learning, /Chỉ render danh sách sau khi đã biết chính xác trạng thái dataset/);
   assert.match(learning, /Xem \$\{available\} từ \$\{l\.code\} đang có/);
 });
+
+test('phiên học từ mới nêu rõ số lượng ngay từ đầu + câu mẫu + kiểm tra tích lũy', () => {
+  // briefing hiện số từ trước khi vào phiên
+  assert.match(html, /id="vstudio-brief"/);
+  assert.match(html, /id="vsBriefCount"/);
+  assert.match(html, /id="vsBriefBatch"/);
+  assert.match(html, /id="vsBriefStart"/);
+  assert.ok(html.indexOf('id="vstudio-brief"') < html.indexOf('id="vstudio-session"'), 'briefing phải trước phiên học');
+  // trong phiên: mỗi từ mới kèm câu mẫu, có bước kiểm tra tích lũy và màn tổng kết
+  assert.match(html, /id="vsUnderstood"/);
+  assert.match(html, /id="vsStepBadge"/);
+  assert.match(html, /id="vstudio-summary"/);
+  assert.match(learning, /SRS\.buildLearnSteps/);
+  assert.match(learning, /Kiểm tra tích lũy/);
+  assert.match(learning, /lv-learn-batch/);
+  assert.match(learning, /Mỗi từ kèm 1 câu mẫu/);
+});

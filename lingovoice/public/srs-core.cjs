@@ -78,6 +78,30 @@
     return out;
   }
 
+  // Dựng chuỗi bước cho phiên học từ mới theo kỹ thuật tích lũy (cumulative):
+  // mỗi từ mới được giới thiệu (learn) rồi xen kẽ 1 lần kiểm tra ngẫu nhiên
+  // một từ ĐÃ học trước đó trong phiên (ưu tiên từ chưa được kiểm tra lần nào),
+  // để kho từ tích lũy dần thay vì học từ sau quên từ trước.
+  // rand injectable để test xác định được.
+  function buildLearnSteps(ids, rand) {
+    rand = rand || Math.random;
+    const steps = [];
+    const learned = [];
+    const checks = Object.create(null);
+    for (const id of ids) {
+      steps.push({ t: 'learn', id });
+      learned.push(id);
+      if (learned.length < 2) continue;
+      const pool = learned.filter((x) => x !== id);
+      const unchecked = pool.filter((x) => !checks[x]);
+      const from = unchecked.length ? unchecked : pool;
+      const pick = from[Math.min(from.length - 1, Math.floor(rand() * from.length))];
+      checks[pick] = (checks[pick] || 0) + 1;
+      steps.push({ t: 'check', id: pick });
+    }
+    return steps;
+  }
+
   // Tóm tắt một phiên học (dùng khi kết thúc session)
   function summarize(records) {
     const total = records.length;
@@ -86,5 +110,5 @@
     return { total, good, again, relearn: again };
   }
 
-  return { GRADES, GRADE_LABELS, intervalMs, intervalLabel, gradeIntervalLabel, evaluate, initial, stats, summarize, MINUTE, DAY };
+  return { GRADES, GRADE_LABELS, intervalMs, intervalLabel, gradeIntervalLabel, evaluate, initial, stats, summarize, buildLearnSteps, MINUTE, DAY };
 });

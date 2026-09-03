@@ -248,7 +248,7 @@
           </div>
           <div class="hero-actions">
             <button class="btn primary btn-lg" id="vsReviewStart">Bắt đầu phiên ôn tập</button>
-            <button class="btn ghost" id="vsLearnStart">Học 3 từ mới</button>
+            <button class="btn ghost" id="vsLearnStart">Học từ mới</button>
           </div>
           <p class="hint" id="vsSuggest" hidden></p>
         </div>
@@ -326,6 +326,26 @@
         </div>
       </div>
 
+      <!-- BRIEFING: học từ mới — nói rõ số lượng ngay từ đầu -->
+      <div id="vstudio-brief" hidden>
+        <div class="session-top">
+          <button class="btn ghost sm" id="vsBriefExit">← Thoát</button>
+          <span class="session-progress">Phiên học từ mới</span>
+        </div>
+        <div class="card brief-card">
+          <span class="section-kicker">HỌC TỪ MỚI</span>
+          <p class="brief-count" id="vsBriefCount" aria-live="polite">5 từ mới</p>
+          <p class="hint" id="vsBriefDetail">Mỗi từ kèm 1 câu mẫu · ôn tích lũy xen kẽ ngay trong phiên</p>
+          <div class="seg" id="vsBriefBatch" role="group" aria-label="Số từ mỗi phiên">
+            <button type="button" data-batch="3">3 từ</button>
+            <button type="button" data-batch="5">5 từ</button>
+            <button type="button" data-batch="7">7 từ</button>
+          </div>
+          <div id="vsBriefList" class="review-list brief-list" aria-label="Danh sách từ sẽ học"></div>
+          <button class="btn primary btn-lg" id="vsBriefStart">Bắt đầu học 5 từ mới</button>
+        </div>
+      </div>
+
       <!-- FOCUSED SESSION (Learn / Review) -->
       <div id="vstudio-session" hidden>
         <div class="session-top">
@@ -335,6 +355,7 @@
         <div class="progress-track"><span id="vsProgressBar"></span></div>
 
         <div class="session-card" id="vsCard" role="region" aria-live="polite" aria-label="Thẻ từ vựng">
+          <span class="step-badge" id="vsStepBadge" hidden></span>
           <div class="vs-front">
             <span class="vocab-topic" id="vsTopic"></span>
             <h3 id="vsTerm"></h3>
@@ -362,6 +383,7 @@
 
         <div class="session-actions">
           <button class="btn primary btn-lg" id="vsReveal">Hiện đáp án <kbd class="kbd">Space</kbd></button>
+          <button class="btn primary btn-lg" id="vsUnderstood" hidden>Đã hiểu — sang bước tiếp <kbd class="kbd">Space</kbd></button>
           <div class="vs-grades" id="vsGrades" hidden>
             <button type="button" class="grade grade-again" data-grade="1">Lại <small>1 phút</small></button>
             <button type="button" class="grade grade-hard" data-grade="2">Khó <small>1 ngày</small></button>
@@ -369,7 +391,25 @@
             <button type="button" class="grade grade-easy" data-grade="5">Dễ <small>10 ngày</small></button>
           </div>
         </div>
-        <p class="session-hint" id="vsKeyHint">Phím: Space = hiện đáp án · 1–4 = đánh giá</p>
+        <p class="session-hint" id="vsKeyHint">Phím: Space = hiện đáp án / đã hiểu · 1–4 = đánh giá</p>
+      </div>
+
+      <!-- SUMMARY: tổng kết phiên học từ mới -->
+      <div id="vstudio-summary" hidden>
+        <div class="card summary-card">
+          <span class="section-kicker">TỔNG KẾT PHIÊN</span>
+          <h2 id="vsSumTitle">Học xong 5 từ mới</h2>
+          <div class="summary-grid">
+            <div class="sum-tile"><b id="vsSumWords">5</b><span>từ mới</span></div>
+            <div class="sum-tile"><b id="vsSumChecks">4</b><span>lần kiểm tra tích lũy</span></div>
+            <div class="sum-tile"><b id="vsSumAgain">0</b><span>lần cần học lại</span></div>
+          </div>
+          <p class="hint" id="vsSumNote"></p>
+          <div class="hero-actions">
+            <button class="btn primary" id="vsSumNext">Học tiếp từ mới</button>
+            <button class="btn ghost" id="vsSumHome">Về kho từ</button>
+          </div>
+        </div>
       </div>
 
       <!-- WORD BANK detail -->

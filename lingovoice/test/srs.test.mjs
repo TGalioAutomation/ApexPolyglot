@@ -84,3 +84,36 @@ test('SRS: stats đếm trạng thái + due', () => {
   assert.equal(st.difficult, 1);
   assert.equal(st.due, 2); // a (due null) + b (quá hạn); d due tương lai không đếm
 });
+
+test('buildLearnSteps: xen kẽ mỗi từ mới với 1 lần kiểm tra tích lũy', () => {
+  const ids = ['w1', 'w2', 'w3', 'w4', 'w5'];
+  const steps = SRS.buildLearnSteps(ids, () => 0); // luôn chọn phần tử đầu pool
+  assert.equal(steps.length, 2 * ids.length - 1, 'N từ -> N bước learn + (N-1) bước check');
+  assert.equal(steps[0].t, 'learn');
+  assert.equal(steps[0].id, 'w1');
+
+  // mỗi từ đúng 1 bước learn, đúng thứ tự
+  const learnIds = steps.filter((s) => s.t === 'learn').map((s) => s.id);
+  assert.deepEqual(learnIds, ids);
+
+  // mỗi bước check phải nhắm vào từ ĐÃ được giới thiệu trước đó (tích lũy)
+  const seen = new Set();
+  for (const step of steps) {
+    if (step.t === 'check') assert.ok(seen.has(step.id), `check ${step.id} phải là từ đã học trước đó`);
+    else seen.add(step.id);
+  }
+  // ưu tiên từ chưa được kiểm tra: w1..w4 mỗi từ được check 1 lần trước khi ai đó được check 2 lần
+  const checkIds = steps.filter((s) => s.t === 'check').map((s) => s.id);
+  assert.deepEqual(checkIds, ['w1', 'w2', 'w3', 'w4']);
+});
+
+test('buildLearnSteps: 1 từ -> chỉ 1 bước learn, không check', () => {
+  const steps = SRS.buildLearnSteps(['only'], () => 0.5);
+  assert.deepEqual(steps, [{ t: 'learn', id: 'only' }]);
+});
+
+test('buildLearnSteps: rand ngoài [0,1) không làm trượt chỉ số', () => {
+  const steps = SRS.buildLearnSteps(['a', 'b', 'c'], () => 1); // rand=1 -> floor(1*n) clamp về n-1
+  assert.equal(steps.length, 5);
+  assert.ok(steps.every((s) => ['a', 'b', 'c'].includes(s.id)));
+});

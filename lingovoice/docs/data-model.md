@@ -230,6 +230,10 @@ Payload đúng **bản đồ key localStorage cũ**: `lv-srs`, `lv-mistakes`, `l
 `lv-custom-vocab`, `lv-mined`, `lv-days`, `lingovoice-progress`, `lv-teacher-profile`.
 Server map sang schema sync trên. Idempotent — gọi lại không nhân đôi.
 
+Key localStorage client-only (không sync): `lv-learn-batch` (số từ mỗi phiên học mới:
+3/5/7) và `lv-session` (phiên học dở — mode learn lưu thêm `steps` learn/check tích lũy
+và `stepIndex` để resume đúng bước).
+
 ## 3. Từ điển dữ liệu chuẩn
 
 | Khái niệm | Kiểu | Ghi chú |
