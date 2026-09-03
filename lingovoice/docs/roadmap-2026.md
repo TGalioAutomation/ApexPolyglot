@@ -19,9 +19,10 @@
 **Giá trị:** khác biệt cạnh tranh lớn nhất so với app flashcard thông thường.
 **Công sức:** L (GPU/ASR server cần hạ tầng). **Phụ thuộc:** OpenVox mở rộng ASR hoặc thêm engine.
 
-## #4 — Gamification + Dashboard phụ huynh
+## #4 — Gamification + Dashboard phụ huynh ✅ (9/2026)
 **Vấn đề:** stage 3–12 (trọng tâm sản phẩm) cần động lực + phụ huynh theo dõi; hiện chưa có streak/XP và không có góc nhìn cho phụ huynh.
 **Giải pháp:** streak ngày học, XP theo attempt, huy hiệu mốc (10 từ đầu tiên, 7 ngày liền...); role `parent` đăng ký với mã liên kết con → dashboard tiến độ tuần (thời gian học, từ đã thuộc, lỗi sai hay gặp) + gợi ý đồng hành.
+**Đã làm:** rollup `daily_activity` (migration 006) + `/api/activity` + `/api/gamification/summary`; 8 huy hiệu + 7 cấp độ là code thuần (`db/gamification.mjs`); card Đà học tập hiển thị XP/cấp/huy hiệu khi đăng nhập; đăng ký vai phụ huynh, mã liên kết 1-lần dùng hạn 7 ngày, dashboard 14 ngày trong modal; gợi ý đồng hành rule-based (không AI). Hợp đồng: `docs/api-spec.md` §1b.
 **Giá trị:** tăng retention nhóm nhỏ tuổi — nhóm khó giữ nhất; phụ huynh là người quyết trả tiền.
 **Công sức:** M (1–2 tuần). **Phụ thuộc:** #1 (bảng users có sẵn role parent, attempts để tính XP).
 
@@ -32,4 +33,4 @@
 **Công sức:** M. **Phụ thuộc:** #1 (sync), #4 (streak).
 
 ## Thứ tự gợi ý
-#1 ✅ → #4 (retention trẻ, công sức vừa) → #2 (nội dung là fuel) → #5 → #3 (hạ tầng nặng nhất, làm khi các nền tảng ổn).
+#1 ✅ → #4 ✅ (9/2026) → #2 (nội dung là fuel) → #5 → #3 (hạ tầng nặng nhất, làm khi các nền tảng ổn).

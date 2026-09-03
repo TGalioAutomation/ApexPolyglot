@@ -225,6 +225,170 @@ export class Store {
     );
     return rows;
   }
+
+  // ---- gamification (roadmap #4) ----
+  // Cộng dồn rollup ngày; day là khóa địa phương của người học (client gửi lên)
+  async bumpDailyActivity(userId, day, { minutes = 0, words = 0, xp = 0, attempts = 0, correct = 0 } = {}) {
+    const { rows } = await this.query(
+      `INSERT INTO daily_activity (user_id, day, minutes, words, xp, attempts, correct)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (user_id, day) DO UPDATE SET
+         minutes    = daily_activity.minutes + EXCLUDED.minutes,
+         words      = daily_activity.words + EXCLUDED.words,
+         xp         = daily_activity.xp + EXCLUDED.xp,
+         attempts   = daily_activity.attempts + EXCLUDED.attempts,
+         correct    = daily_activity.correct + EXCLUDED.correct,
+         updated_at = now()
+       RETURNING day::text AS day, minutes, words, xp, attempts, correct`,
+      [userId, day, minutes, words, xp, attempts, correct]
+    );
+    return rows[0];
+  }
+
+  async listDailyActivity(userId, sinceDays = 400) {
+    const { rows } = await this.query(
+      `SELECT day::text AS day, minutes, words, xp, attempts, correct
+       FROM daily_activity
+       WHERE user_id = $1 AND day >= CURRENT_DATE - $2::int
+       ORDER BY day ASC`,
+      [userId, Math.min(400, Math.max(1, sinceDays))]
+    );
+    return rows;
+  }
+
+  async recordAttempts(userId, attempts = []) {
+    let count = 0;
+    for (const a of attempts) {
+      const { rowCount } = await this.query(
+        `INSERT INTO attempts (user_id, kind, item_ref, correct, grade, payload)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, a.kind, a.itemRef || null, typeof a.correct === 'boolean' ? a.correct : null,
+         Number.isFinite(a.grade) ? a.grade : null, JSON.stringify({ lang: a.lang || null })]
+      );
+      count += rowCount;
+    }
+    return count;
+  }
+
+  async attemptsBreakdown(userId, days = 14) {
+    const { rows } = await this.query(
+      `SELECT kind, count(*)::int AS total, count(*) FILTER (WHERE correct)::int AS correct
+       FROM attempts
+       WHERE user_id = $1 AND created_at > now() - ($2::text || ' days')::interval
+       GROUP BY kind ORDER BY total DESC`,
+      [userId, String(Math.min(365, Math.max(1, days)))]
+    );
+    return rows;
+  }
+
+  async srsCounts(userId) {
+    const { rows } = await this.query(
+      `SELECT count(*)::int AS total, count(*) FILTER (WHERE mastered)::int AS mastered
+       FROM srs_items WHERE user_id = $1`, [userId]
+    );
+    return rows[0] || { total: 0, mastered: 0 };
+  }
+
+  async srsDueCount(userId) {
+    const { rows } = await this.query(
+      `SELECT count(*)::int AS due FROM srs_items
+       WHERE user_id = $1 AND NOT mastered AND (due_at IS NULL OR due_at <= now())`, [userId]
+    );
+    return rows[0]?.due || 0;
+  }
+
+  async addEarnedBadge(userId, badgeId) {
+    const { rows } = await this.query(
+      `INSERT INTO earned_badges (user_id, badge_id) VALUES ($1, $2)
+       ON CONFLICT DO NOTHING RETURNING earned_at`, [userId, badgeId]
+    );
+    return rows[0] || null; // null = đã có từ trước
+  }
+
+  async listEarnedBadges(userId) {
+    const { rows } = await this.query(
+      `SELECT badge_id, earned_at FROM earned_badges WHERE user_id = $1 ORDER BY earned_at ASC`, [userId]
+    );
+    return rows;
+  }
+
+  // ---- phụ huynh ----
+  async createParentInvite(parentId, code, expiresAt) {
+    await this.query(
+      `INSERT INTO parent_invites (code, parent_id, expires_at) VALUES ($1, $2, $3)`,
+      [code, parentId, expiresAt]
+    );
+    return { code, expiresAt };
+  }
+
+  // Con nhập mã: UPDATE có điều kiện (chưa dùng, chưa hết hạn) là nguyên tố — 2 trẻ
+  // quét cùng mã thì chỉ một bên thắng. Trả về user phụ huynh hoặc null.
+  async redeemParentInvite(childId, code) {
+    const { rows } = await this.query(
+      `UPDATE parent_invites SET child_id = $1, used_at = now()
+       WHERE code = $2 AND child_id IS NULL AND expires_at > now()
+       RETURNING parent_id`, [childId, String(code).toUpperCase()]
+    );
+    if (!rows.length) return null;
+    const parentId = rows[0].parent_id;
+    await this.query(
+      `INSERT INTO parent_links (parent_id, child_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [parentId, childId]
+    );
+    return await this.findUserById(parentId);
+  }
+
+  async listParentInvites(parentId) {
+    const { rows } = await this.query(
+      `SELECT code, expires_at, used_at FROM parent_invites
+       WHERE parent_id = $1 AND child_id IS NULL AND expires_at > now()
+       ORDER BY created_at DESC LIMIT 5`, [parentId]
+    );
+    return rows;
+  }
+
+  async listChildrenForParent(parentId) {
+    const { rows } = await this.query(
+      `SELECT u.id, u.username, u.display_name, l.created_at AS linked_at
+       FROM parent_links l JOIN users u ON u.id = l.child_id
+       WHERE l.parent_id = $1 ORDER BY l.created_at ASC`, [parentId]
+    );
+    return rows;
+  }
+
+  async listParentsForChild(childId) {
+    const { rows } = await this.query(
+      `SELECT u.id, u.username, u.display_name, l.created_at AS linked_at
+       FROM parent_links l JOIN users u ON u.id = l.parent_id
+       WHERE l.child_id = $1 ORDER BY l.created_at ASC`, [childId]
+    );
+    return rows;
+  }
+
+  async isLinked(parentId, childId) {
+    const { rowCount } = await this.query(
+      `SELECT 1 FROM parent_links WHERE parent_id = $1 AND child_id = $2`, [parentId, childId]
+    );
+    return rowCount > 0;
+  }
+
+  async unlinkParentChild(parentId, childId) {
+    const { rowCount } = await this.query(
+      `DELETE FROM parent_links WHERE parent_id = $1 AND child_id = $2`, [parentId, childId]
+    );
+    return rowCount > 0;
+  }
+
+  async topMistakes(userId, days = 14, limit = 5) {
+    const { rows } = await this.query(
+      `SELECT pattern, max(correct) AS correct, count(*)::int AS count
+       FROM mistakes
+       WHERE user_id = $1 AND created_at > now() - ($2::text || ' days')::interval
+       GROUP BY pattern ORDER BY count DESC, pattern ASC LIMIT $3`,
+      [userId, String(Math.min(365, Math.max(1, days))), Math.min(20, limit)]
+    );
+    return rows;
+  }
 }
 
 function mapSrsRow(row) {

@@ -30,6 +30,16 @@
     me: () => call('GET', '/api/auth/me'),
     push: (payload) => call('POST', '/api/sync/push', payload),
     pull: () => call('GET', '/api/sync/pull'),
-    importLocal: (payload) => call('POST', '/api/sync/import-local', payload)
+    importLocal: (payload) => call('POST', '/api/sync/import-local', payload),
+    // Gamification (roadmap #4)
+    activity: (payload) => call('POST', '/api/activity', payload),
+    summary: (day) => call('GET', '/api/gamification/summary' + (day ? `?day=${encodeURIComponent(day)}` : '')),
+    parentInvite: () => call('POST', '/api/parent/invite', {}),
+    parentChildren: (day) => call('GET', '/api/parent/children' + (day ? `?day=${encodeURIComponent(day)}` : '')),
+    parentDashboard: (childId, day) => call('GET', `/api/parent/children/${encodeURIComponent(childId)}/dashboard` + (day ? `?day=${encodeURIComponent(day)}` : '')),
+    parentUnlinkChild: (childId) => call('DELETE', `/api/parent/children/${encodeURIComponent(childId)}`),
+    parentLink: (code) => call('POST', '/api/parent/link', { code }),
+    parentLinks: () => call('GET', '/api/parent/links'),
+    parentUnlink: (parentId) => call('DELETE', `/api/parent/link/${encodeURIComponent(parentId)}`)
   };
 })();

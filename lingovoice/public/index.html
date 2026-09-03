@@ -183,7 +183,10 @@
           <div class="stat"><b id="habitTodayMin">0</b><span id="habitTodayGoal">phút hôm nay</span></div>
           <div class="stat"><b id="habitWordsWeek">0</b><span>từ học tuần này</span></div>
           <div class="stat"><b id="habitMissed">0</b><span>ngày chưa học</span></div>
+          <div class="stat"><b><span id="xpTotalVal">0</span> XP</b><span id="levelName">Đăng nhập để nhận XP</span></div>
         </div>
+        <div class="level-track" role="img" aria-label="Tiến độ lên cấp theo XP"><span id="levelBarFill"></span></div>
+        <div class="badge-row" id="badgeRow" aria-label="Huy hiệu đã đạt"></div>
         <div class="week-bars" id="habitWeek" role="img" aria-label="Phút học 7 ngày gần nhất"></div>
         <p class="hint" id="habitNote" aria-live="polite"></p>
       </div>
@@ -591,6 +594,7 @@
         <button type="button" data-target="profileCard">Hồ sơ</button>
         <button type="button" data-target="placementBox">Test đầu vào</button>
         <button type="button" data-target="accountCard">Tài khoản</button>
+        <button type="button" data-target="parentCard">Phụ huynh</button>
         <button type="button" data-target="teacherCustomCard">Cô Linh</button>
       </nav>
       <div class="card" id="profileCard">
@@ -676,6 +680,10 @@
                 <input id="accountPass" name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Tối thiểu 8 ký tự" required />
               </label>
             </div>
+            <label class="check parent-role-check" for="registerParent">
+              <input type="checkbox" id="registerParent" name="registerParent" />
+              Tôi là phụ huynh — tạo tài khoản để theo dõi con học
+            </label>
             <div class="hero-actions">
               <button class="btn primary" id="loginBtn" type="submit">Đăng nhập</button>
               <button class="btn ghost" id="registerBtn" type="submit">Tạo tài khoản mới</button>
@@ -690,6 +698,39 @@
           </div>
         </form>
         <p class="account-message" id="accountMessage" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="card" id="parentCard">
+        <div class="section-head">
+          <div><span class="section-kicker">GIA ĐÌNH ĐỒNG HÀNH</span><h2>Phụ huynh &amp; người thân</h2></div>
+        </div>
+        <p class="hint" id="parentGuestHint" hidden>Phụ huynh tạo mã liên kết, con nhập mã để chia sẻ tiến độ học — chỉ tiến độ, không ai thấy mật khẩu hay nội dung trò chuyện.</p>
+
+        <div id="parentRoleBox" hidden>
+          <h3>Bạn là phụ huynh</h3>
+          <p class="hint">Tạo mã và gửi cho con. Sau khi con nhập mã, tiến độ tuần của con hiện ở đây.</p>
+          <div class="hero-actions">
+            <button class="btn primary" id="parentInviteBtn" type="button">Tạo mã liên kết con</button>
+            <button class="btn ghost sm" id="parentInviteCopy" type="button" hidden>Copy mã</button>
+          </div>
+          <p class="invite-code" id="parentInviteCode" hidden></p>
+          <p class="hint" id="parentInviteHint" hidden></p>
+          <div id="parentChildrenList" class="parent-children"></div>
+        </div>
+
+        <div id="childLinkBox" hidden>
+          <h3>Nhập mã của phụ huynh</h3>
+          <div class="account-fields">
+            <label class="account-field"><span>Mã liên kết</span>
+              <input id="parentLinkCode" maxlength="8" autocomplete="off" placeholder="8 ký tự, ví dụ K7MPQ2XA" />
+            </label>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary" id="parentLinkBtn" type="button">Liên kết</button>
+          </div>
+          <p class="account-message" id="parentLinkMsg" role="status" aria-live="polite"></p>
+          <div id="parentLinksList" class="parent-children"></div>
+        </div>
       </div>
 
       <div class="card teacher-custom-card" id="teacherCustomCard" tabindex="-1">
@@ -844,6 +885,29 @@
       <div class="hero-actions">
         <button class="btn primary" id="placeNext">Câu tiếp theo →</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal" id="parentDashModal" role="dialog" aria-modal="true" aria-labelledby="pdTitle" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="section-kicker">DASHBOARD PHỤ HUYNH</span>
+        <button type="button" class="teacher-close" id="pdClose" aria-label="Đóng">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <h3 id="pdTitle">Tiến độ của con</h3>
+      <p class="hint" id="pdSub"></p>
+      <div class="habit-grid" id="pdStats"></div>
+      <div class="week-bars pd-bars" id="pdBars" role="img" aria-label="Phút học 14 ngày gần nhất"></div>
+      <h4>Kỹ năng 14 ngày</h4>
+      <div id="pdSkills"></div>
+      <h4>Lỗi hay gặp</h4>
+      <div id="pdMistakes"></div>
+      <h4>Huy hiệu</h4>
+      <div class="badge-row" id="pdBadges"></div>
+      <h4>Gợi ý đồng hành</h4>
+      <ul class="pd-suggestions" id="pdSuggestions"></ul>
     </div>
   </div>
 

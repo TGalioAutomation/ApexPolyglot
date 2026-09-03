@@ -60,8 +60,9 @@ import { loadMemory, saveMemory, addMemoryNote, buildMemoryPrompt } from './memo
 import { AdminService } from './admin.mjs';
 import { initializeStore } from './db/store.mjs';
 import { hashPassword, verifyPassword, passwordStrengthOk, newSessionToken, tokenHash, sessionExpiry, sessionCookie, clearSessionCookie, parseSessionCookie, resolveSession, publicUser } from './db/auth.mjs';
-import { normalizeSyncPayload, mapLegacyLocalState, validAgeGroup } from './db/sync.mjs';
+import { normalizeSyncPayload, mapLegacyLocalState, validAgeGroup, validRegisterRole } from './db/sync.mjs';
 import { loadMemoryFromStore, saveMemoryToStore, buildSyncSnapshot } from './db/memory-adapter.mjs';
+import { normalizeActivityPayload, xpForActivity, computeStreaks, levelOf, badgeStats, newlyEarnedBadges, BADGES, newInviteCode, validInviteCode, parentSuggestions, utcDayKey, shiftDayKey } from './db/gamification.mjs';
 
 function sendJson(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -168,6 +169,77 @@ const apiError = (message, statusCode, code) => Object.assign(new Error(message)
 function requireDb() {
   if (!store) throw apiError('Server chưa cấu hình PostgreSQL (thiếu DATABASE_URL).', 503, 'DB_UNAVAILABLE');
 }
+function requireRole(session, role) {
+  if (session.user.role !== role) throw apiError('Tài khoản này không dùng được tính năng đó.', 403, 'ROLE_REQUIRED');
+}
+
+// ---- Gamification helpers (roadmap #4) ----
+// day do client gửi (múi giờ người học có thể trước UTC tối đa ~14h → cho phép +1 ngày)
+function learnerDayKey(raw) {
+  const today = utcDayKey();
+  if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)
+    && raw >= shiftDayKey(today, -400) && raw <= shiftDayKey(today, 1)) return raw;
+  return today;
+}
+
+function sumRecent(rows, dayKey, days, field) {
+  const from = shiftDayKey(dayKey, -(days - 1));
+  return rows.filter((r) => r.day >= from && r.day <= dayKey).reduce((a, r) => a + (r[field] || 0), 0);
+}
+
+// Tính summary + phát huy hiệu mới (ghi earned_badges). Dùng cho cả /api/activity và summary.
+async function gamificationSummary(userId, dayKey) {
+  const rows = await store.listDailyActivity(userId, 400);
+  const streaks = computeStreaks(rows.map((r) => r.day), dayKey);
+  const srs = await store.srsCounts(userId);
+  const stats = badgeStats({ activityRows: rows, streak: streaks.current, srsTotal: srs.total, srsMastered: srs.mastered });
+  const earned = await store.listEarnedBadges(userId);
+  const fresh = newlyEarnedBadges(stats, new Set(earned.map((e) => e.badge_id)));
+  const newBadges = [];
+  for (const b of fresh) {
+    const at = await store.addEarnedBadge(userId, b.id);
+    if (at) newBadges.push({ id: b.id, name: b.name, icon: b.icon, desc: b.desc, earnedAt: at });
+  }
+  const earnedAtOf = (id) => earned.find((e) => e.badge_id === id)?.earned_at
+    || newBadges.find((n) => n.id === id)?.earnedAt || null;
+  return {
+    day: dayKey,
+    xp: {
+      total: stats.totalXp,
+      today: rows.find((r) => r.day === dayKey)?.xp || 0,
+      week: sumRecent(rows, dayKey, 7, 'xp')
+    },
+    streak: streaks,
+    level: levelOf(stats.totalXp),
+    badges: BADGES.map((b) => ({
+      id: b.id, name: b.name, icon: b.icon, desc: b.desc,
+      earned: Boolean(earnedAtOf(b.id)), earnedAt: earnedAtOf(b.id)
+    })),
+    newBadges,
+    srs: { total: srs.total, mastered: srs.mastered },
+    // Đủ 14 cột kể cả ngày không học — biểu đồ tuần không bị lệch nhịp
+    days: Array.from({ length: 14 }, (_, i) => {
+      const day = shiftDayKey(dayKey, i - 13);
+      const row = rows.find((r) => r.day === day);
+      return { day, minutes: row?.minutes || 0, words: row?.words || 0, xp: row?.xp || 0 };
+    }),
+    activity: {
+      daysActive: stats.daysActive,
+      minutes7d: sumRecent(rows, dayKey, 7, 'minutes'),
+      words7d: sumRecent(rows, dayKey, 7, 'words'),
+      lastActiveDay: rows.length ? rows[rows.length - 1].day : null,
+      missedDays: missedDaysUpTo(new Set(rows.map((r) => r.day)), dayKey)
+    }
+  };
+}
+
+// Số ngày nghỉ liên tiếp tính đến HÔM QUA (hôm nay chưa học không tính là nghỉ)
+function missedDaysUpTo(daySet, dayKey) {
+  let missed = 0;
+  let cursor = shiftDayKey(dayKey, -1);
+  while (!daySet.has(cursor)) { missed += 1; cursor = shiftDayKey(cursor, -1); if (missed > 90) break; }
+  return missed;
+}
 
 const server = createServer(async (request, response) => {
   const url = request.url || '/';
@@ -226,7 +298,8 @@ const server = createServer(async (request, response) => {
         username,
         passwordHash: hashPassword(payload.password),
         displayName: typeof payload.displayName === 'string' ? payload.displayName.trim().slice(0, 60) : '',
-        ageGroup: validAgeGroup(payload.ageGroup)
+        ageGroup: validAgeGroup(payload.ageGroup),
+        role: validRegisterRole(payload.role)
       });
       const token = newSessionToken();
       await store.createSession({ userId: user.id, tokenHash: tokenHash(token), expiresAt: sessionExpiry() });
@@ -314,6 +387,153 @@ const server = createServer(async (request, response) => {
       }
       await store.patchProfile(session.user.id, profilePatch);
       return sendJson(response, 200, { imported: { srs: srsAccepted, mistakes: mistakesAccepted } });
+    }
+
+    // ---- Gamification + phụ huynh (roadmap #4, hợp đồng docs/api-spec.md §2) ----
+    if (request.method === 'POST' && pathname === '/api/activity') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const payload = normalizeActivityPayload(JSON.parse((await readBody(request)) || '{}'));
+      const xp = xpForActivity(payload);
+      const correct = payload.attempts.filter((a) => a.correct === true).length;
+      await store.bumpDailyActivity(session.user.id, payload.day, {
+        minutes: payload.minutes, words: payload.words, xp,
+        attempts: payload.attempts.length, correct
+      });
+      if (payload.attempts.length) await store.recordAttempts(session.user.id, payload.attempts);
+      return sendJson(response, 200, { ...(await gamificationSummary(session.user.id, payload.day)), added: { xp, minutes: payload.minutes, words: payload.words, attempts: payload.attempts.length } });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/gamification/summary') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const day = learnerDayKey(new URL(request.url, 'http://local').searchParams.get('day'));
+      return sendJson(response, 200, await gamificationSummary(session.user.id, day));
+    }
+
+    if (request.method === 'POST' && pathname === '/api/parent/invite') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      requireRole(session, 'parent');
+      const code = newInviteCode();
+      const expiresAt = new Date(Date.now() + 7 * 86400000);
+      await store.createParentInvite(session.user.id, code, expiresAt);
+      return sendJson(response, 201, { code, expiresAt });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/parent/invites') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      requireRole(session, 'parent');
+      return sendJson(response, 200, { invites: await store.listParentInvites(session.user.id) });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/parent/children') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      requireRole(session, 'parent');
+      const day = learnerDayKey(new URL(request.url, 'http://local').searchParams.get('day'));
+      const children = [];
+      for (const row of await store.listChildrenForParent(session.user.id)) {
+        const summary = await gamificationSummary(row.id, day);
+        children.push({
+          id: row.id, username: row.username, displayName: row.display_name || row.username,
+          linkedAt: row.linked_at, ageGroup: undefined,
+          streak: summary.streak.current, xp: summary.xp.total,
+          minutes7d: summary.activity.minutes7d, words7d: summary.activity.words7d,
+          lastActiveDay: summary.activity.lastActiveDay
+        });
+      }
+      return sendJson(response, 200, { children });
+    }
+
+    if (request.method === 'GET' && pathname.startsWith('/api/parent/children/') && pathname.endsWith('/dashboard')) {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      requireRole(session, 'parent');
+      const childId = decodeURIComponent(pathname.slice('/api/parent/children/'.length, -'/dashboard'.length));
+      if (!(await store.isLinked(session.user.id, childId))) {
+        throw apiError('Chưa liên kết với học viên này.', 404, 'CHILD_NOT_LINKED');
+      }
+      const child = await store.findUserById(childId);
+      if (!child) throw apiError('Không tìm thấy học viên.', 404, 'CHILD_NOT_FOUND');
+      const day = learnerDayKey(new URL(request.url, 'http://local').searchParams.get('day'));
+      const summary = await gamificationSummary(childId, day);
+      const profile = await store.getProfile(childId);
+      const dueCount = await store.srsDueCount(childId);
+      const topMistakes = await store.topMistakes(childId, 14, 5);
+      const attempts = await store.attemptsBreakdown(childId, 14);
+      const missed = summary.activity.missedDays;
+      return sendJson(response, 200, {
+        child: { id: child.id, username: child.username, displayName: child.display_name || child.username, ageGroup: child.age_group },
+        day,
+        streak: summary.streak,
+        xp: summary.xp,
+        level: summary.level,
+        srs: { ...summary.srs, due: dueCount },
+        days: summary.days,
+        activity: summary.activity,
+        attempts,
+        topMistakes,
+        badges: summary.badges.filter((b) => b.earned),
+        dailyMinutes: profile?.daily_minutes || 25,
+        suggestions: parentSuggestions({
+          missedDays: missed, dueCount, topMistakes,
+          minutes7d: summary.activity.minutes7d,
+          dailyMinutes: profile?.daily_minutes || 25,
+          streak: summary.streak.current
+        })
+      });
+    }
+
+    if (request.method === 'DELETE' && pathname.startsWith('/api/parent/children/')) {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      requireRole(session, 'parent');
+      const childId = decodeURIComponent(pathname.slice('/api/parent/children/'.length));
+      const removed = await store.unlinkParentChild(session.user.id, childId);
+      if (!removed) throw apiError('Chưa liên kết với học viên này.', 404, 'CHILD_NOT_LINKED');
+      return sendJson(response, 200, { ok: true });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/parent/link') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      if (session.user.role === 'parent') throw apiError('Tài khoản phụ huynh không tự liên kết với mình.', 400, 'ROLE_REQUIRED');
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const code = typeof payload.code === 'string' ? payload.code.trim().toUpperCase() : '';
+      if (!validInviteCode(code)) throw apiError('Mã liên kết gồm 8 ký tự (bỏ qua 0/O và 1/I).', 400, 'INVITE_CODE_INVALID');
+      const parent = await store.redeemParentInvite(session.user.id, code);
+      if (!parent) throw apiError('Mã không đúng, đã dùng hoặc đã hết hạn.', 404, 'INVITE_CODE_INVALID');
+      return sendJson(response, 200, { parent: publicUser(parent) });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/parent/links') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const parents = (await store.listParentsForChild(session.user.id)).map((p) => ({
+        id: p.id, displayName: p.display_name || p.username, linkedAt: p.linked_at
+      }));
+      return sendJson(response, 200, { parents });
+    }
+
+    if (request.method === 'DELETE' && pathname.startsWith('/api/parent/link/')) {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const parentId = decodeURIComponent(pathname.slice('/api/parent/link/'.length));
+      const removed = await store.unlinkParentChild(parentId, session.user.id);
+      if (!removed) throw apiError('Chưa liên kết với phụ huynh này.', 404, 'LINK_NOT_FOUND');
+      return sendJson(response, 200, { ok: true });
     }
 
     if (request.method === 'GET' && pathname === '/healthz') {

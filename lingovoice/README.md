@@ -66,6 +66,8 @@ Khu vực "Từ mới" là một **Vocabulary Studio** chuyên biệt:
 
 - **Đà học tập** trên màn Hôm nay: streak (ngày liên tiếp, hôm nay chưa học vẫn tính chờ), **phút hôm nay / mục tiêu**, **từ học tuần này**, biểu đồ **7 ngày gần nhất**, và nhắc nhẹ khi nghỉ ≥1 ngày ("Đã N ngày chưa học — quay lại với 5 phút nhé!").
 - Hoạt động được ghi nhận tự động: khi **kết thúc phiên học từ** và **hoàn thành bài luyện nghe** (lưu `lv-days` theo ngày).
+- **Gamification khi đăng nhập** (server là nguồn chuẩn): **XP** theo lượt luyện tập (đúng +10, sai +2, từ mới +3, mỗi phút +1 tối đa 60 XP/ngày), **cấp độ** Hạt giống → Khu rừng nhỏ, **8 huy hiệu** mốc (Ngày đầu tiên, 10 từ đầu tiên, 7 ngày liền…) với toast chúc mừng khi đạt mới; streak/phút/từ trên card lấy từ rollup `daily_activity` để nhất quán giữa các thiết bị.
+- **Khu phụ huynh** (tab Thêm → Phụ huynh): đăng ký tài khoản với checkbox "Tôi là phụ huynh", tạo **mã liên kết 8 ký tự** (dùng 1 lần, hạn 7 ngày); con nhập mã để chia sẻ tiến độ (chỉ số liệu, không có mật khẩu/chat); phụ huynh xem **dashboard 14 ngày** của con — streak, XP, từ đã học/cần ôn, biểu đồ phút học, kỹ năng yếu, lỗi hay gặp, huy hiệu và **gợi ý đồng hành**; hai bên đều gỡ được liên kết.
 
 ## Trải nghiệm bắt đầu
 

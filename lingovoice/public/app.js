@@ -516,7 +516,7 @@ function handleQuizNext() {
   const btn = $('#quizNext');
   if (btn.dataset.action === 'finish') {
     // Kết thúc bài: thêm cụm đã nghe vào SRS để ôn
-    quizRound.heard.forEach((s) => { try { window.srsRecord(s.id, language, 3); } catch {} });
+    quizRound.heard.forEach((s) => { try { window.srsRecord(s.id, language, 3, 'listening'); } catch {} });
     try { window.recordActivity(5, quizRound.heard.length); } catch {} // ghi nhận 5 phút luyện nghe
     quizRound = { done: 0, correct: 0, heard: [] };
     delete btn.dataset.action;

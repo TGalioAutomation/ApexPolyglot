@@ -9,7 +9,7 @@
 
 | Method | Path | Mô tả |
 |---|---|---|
-| POST | `/api/auth/register` | Đăng ký learner: `{ username, password, displayName?, ageGroup? }` → `{ user, token? }`; set cookie `lv_session` HttpOnly. Lỗi: `USERNAME_TAKEN`, `WEAK_PASSWORD` (≥8 ký tự) |
+| POST | `/api/auth/register` | Đăng ký learner/parent: `{ username, password, displayName?, ageGroup?, role? ("learner"\|"parent", mặc định learner) }` → `{ user, token? }`; set cookie `lv_session` HttpOnly. Lỗi: `USERNAME_TAKEN`, `WEAK_PASSWORD` (≥8 ký tự) |
 | POST | `/api/auth/login` | `{ username, password }` → `{ user }` + cookie. Lỗi: `INVALID_CREDENTIALS` |
 | POST | `/api/auth/logout` | Xóa session (cookie + dòng `sessions`) → `{ ok: true }` |
 | GET | `/api/auth/me` | `[account]` → `{ user: { id, username, displayName, role, ageGroup } }` hoặc 401 `NO_SESSION` |
@@ -19,6 +19,28 @@
 
 Session: token HMAC-SHA256 (`SESSION_SECRET`), cookie `HttpOnly; SameSite=Lax`, TTL 30 ngày.
 Server thiếu `DATABASE_URL` → các route trên trả 503 `DB_UNAVAILABLE`.
+
+## 1b. Gamification & phụ huynh — MỚI (roadmap #4)
+
+XP: lượt đúng +10, lượt sai +2, từ học mới +3, mỗi phút học +1 (tối đa 60 XP/ngày từ phút).
+Cấp độ theo tổng XP: Hạt giống 0 → Mầm non 100 → Chồi xanh 300 → Cây nhỏ 600 → Cây vững 1000 → Cây cổ thụ 2000 → Khu rừng nhỏ 3500.
+Định nghĩa huy hiệu/cấp độ là code thuần trong `db/gamification.mjs`; DB chỉ lưu huy hiệu đã đạt (`earned_badges`).
+`day` là khóa NGÀY THEO MÚI GIỜ CỦA NGƯỜI HỌC (`YYYY-MM-DD`, client gửi; server chấp nhận lệch tối đa +1 ngày so UTC, lùi xa tối đa 400 ngày).
+
+| Method | Path | Mô tả |
+|---|---|---|
+| POST | `/api/activity` | `[account]` Ghi nhận hoạt động: `{ day?, minutes ≤240, words ≤500, attempts ≤200: [{ kind: vocab\|listening\|writing\|speaking\|reading\|quiz, itemRef?, correct?, grade 1-5?, lang? }] }` → cộng dồn `daily_activity`, chấm XP, phát huy hiệu mới → summary (như GET summary) + `{ added: { xp, minutes, words, attempts } }` |
+| GET | `/api/gamification/summary?day=` | `[account]` → `{ xp: { total, today, week }, streak: { current, longest }, level, badges: [{ id, name, icon, desc, earned, earnedAt }], newBadges, srs: { total, mastered }, days: 14 ngày gần nhất, activity: { daysActive, minutes7d, words7d, lastActiveDay, missedDays } }` |
+| POST | `/api/parent/invite` | `[parent]` Tạo mã liên kết 8 ký tự (1 lần dùng, hạn 7 ngày) → `{ code, expiresAt }` |
+| GET | `/api/parent/invites` | `[parent]` Mã còn hiệu lực chưa dùng |
+| GET | `/api/parent/children` | `[parent]` Con đã liên kết + tóm tắt: streak, XP, phút/7 ngày, ngày học gần nhất |
+| GET | `/api/parent/children/{id}/dashboard?day=` | `[parent]` Nhánh liên kết bắt buộc (404 `CHILD_NOT_LINKED`) → dashboard 14 ngày: days[], streak, xp, srs (+`due`), attempts theo kỹ năng, topMistakes, badges, suggestions[] (rule-based, không AI) |
+| DELETE | `/api/parent/children/{id}` | `[parent]` Gỡ liên kết |
+| POST | `/api/parent/link` | `[account]` Con nhập mã: `{ code }` → `{ parent }`. Lỗi 404 `INVITE_CODE_INVALID` |
+| GET | `/api/parent/links` | `[account]` Danh sách phụ huynh đang chia sẻ |
+| DELETE | `/api/parent/link/{parentId}` | `[account]` Con ngừng chia sẻ |
+
+Sai vai trò → 403 `ROLE_REQUIRED` (ví dụ learner gọi `/api/parent/invite`).
 
 ## 2. Giọng nói
 

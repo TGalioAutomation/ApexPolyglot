@@ -123,3 +123,9 @@ export function mapLegacyLocalState(legacy = {}) {
 export function validAgeGroup(value) {
   return AGE_GROUPS.has(value) ? value : 'young-adult';
 }
+
+// Đăng ký mở cho ai tự đăng ký — chỉ learner và parent; teacher/admin cấp bằng DB thủ công.
+const REGISTER_ROLES = new Set(['learner', 'parent']);
+export function validRegisterRole(value) {
+  return REGISTER_ROLES.has(value) ? value : 'learner';
+}

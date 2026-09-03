@@ -268,7 +268,7 @@ function srsNext(difficulty, grade) {
 function srsState(id, lang) {
   return store.srs.items[lang]?.[id] || { state: 'new', difficulty: 0.3, dueAt: null, lastGrade: null, reps: 0 };
 }
-function srsRecord(id, lang, grade) {
+function srsRecord(id, lang, grade, kind = 'vocab') {
   const s = store.srs;
   const cur = s.items[lang]?.[id] || { state: 'new', difficulty: 0.3, dueAt: null, lastGrade: null, reps: 0 };
   const next = srsNext(cur.difficulty, grade);
@@ -281,6 +281,8 @@ function srsRecord(id, lang, grade) {
   s.items[lang] = s.items[lang] || {};
   s.items[lang][id] = { state, difficulty: next.difficulty, dueAt, lastGrade: grade, reps: cur.reps + 1 };
   store.srs = s;
+  // Gamification: gửi lượt làm lên server khi có tài khoản (guest chỉ lưu máy)
+  if (window.LVShell) window.LVShell.queueAttempt({ kind, itemRef: id, correct: passed, grade, lang });
   return s.items[lang][id];
 }
 function dueItems(lang, limit = 10) {
@@ -590,6 +592,7 @@ function vsGrade(grade) {
   next.lastGrade = grade;
   vsSave(lang, cur.id, next);
   vs.records.push({ id: cur.id, grade, item: cur.item });
+  if (window.LVShell) window.LVShell.queueAttempt({ kind: 'vocab', itemRef: cur.id, correct: grade >= 3, grade, lang });
   const label = SRS.GRADE_LABELS[grade] || grade;
   $('#vsInterval').textContent = `Đã ghi nhận: ${label} — ôn lại sau ${SRS.intervalLabel(next.intervalMs)}`;
   announceVs(`${label} — ôn lại sau ${SRS.intervalLabel(next.intervalMs)}`);
@@ -1381,7 +1384,7 @@ function mineWord(word) {
   const dict = buildDict(lang);
   const meaning = dict[lang === 'zh' ? word : word.toLowerCase()];
   const id = `w:${lang}:${word.toLowerCase()}`;
-  srsRecord(id, lang, 3); // mặc định vào review
+  srsRecord(id, lang, 3, 'reading'); // mặc định vào review
   const m = store.mined;
   if (!m[lang].some((x) => x.term === word)) {
     m[lang].push({ term: word, meaning: meaning || '… (chưa có nghĩa — hỏi cô giáo)' });
@@ -1769,7 +1772,12 @@ function recordActivity(minutes, words) {
   d[k] = { minutes: (d[k]?.minutes || 0) + (minutes || 0), words: (d[k]?.words || 0) + (words || 0) };
   saveDays(d);
   renderHabits();
+  // Gamification: đẩy rollup phút/từ lên server (fire-and-forget, debounce trong lv-shell)
+  if (window.LVShell) window.LVShell.logActivity({ minutes: minutes || 0, words: words || 0 });
 }
+// app.js gọi qua window.* trong try/catch — trước đây chưa export nên luồng quiz no-op thầm
+window.srsRecord = srsRecord;
+window.recordActivity = recordActivity;
 function habitStats() {
   const d = loadDays();
   const today = d[todayKey()];
@@ -1797,7 +1805,8 @@ function habitStats() {
 }
 function toKey(dt) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`; }
 function renderHabits() {
-  const h = habitStats();
+  // Đã đăng nhập: số từ server (lv-shell) là nguồn chuẩn — tránh nhảy ngược về số local cũ
+  const h = (window.LVShell && window.LVShell.habitStats && window.LVShell.habitStats()) || habitStats();
   const goal = store.profile.dailyMinutes || 25;
   const sEl = document.getElementById('habitStreak');
   if (sEl) sEl.textContent = `${h.streak} ngày liên tiếp`;

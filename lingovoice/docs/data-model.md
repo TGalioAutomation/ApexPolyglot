@@ -14,6 +14,10 @@ erDiagram
   users ||--o{ memory_notes : "nhớ dài hạn"
   users ||--o{ learning_sessions : "buổi học"
   learning_sessions ||--o{ attempts : "lượt làm"
+  users ||--o{ daily_activity : "rollup theo ngày"
+  users ||--o{ earned_badges : "huy hiệu đã đạt"
+  users ||--o{ parent_links : "liên kết gia đình"
+  parent_invites }o--|| users : "mã mời của phụ huynh"
   lessons ||--o{ lesson_items : "gồm"
   vocab_items ||--o{ srs_items : "tham chiếu (tuỳ chọn)"
 
@@ -146,6 +150,34 @@ erDiagram
     jsonb payload
     timestamptz created_at
   }
+  daily_activity {
+    uuid user_id PK,FK
+    date day PK "khóa ngày của người học"
+    int minutes
+    int words
+    int xp
+    int attempts
+    int correct
+    timestamptz updated_at
+  }
+  earned_badges {
+    uuid user_id PK,FK
+    text badge_id PK "định nghĩa trong db/gamification.mjs"
+    timestamptz earned_at
+  }
+  parent_links {
+    uuid id PK
+    uuid parent_id FK
+    uuid child_id FK
+    timestamptz created_at
+  }
+  parent_invites {
+    text code PK "8 ký tự, bỏ 0/O và 1/I"
+    uuid parent_id FK
+    uuid child_id FK "NULL = chưa dùng"
+    timestamptz expires_at
+    timestamptz used_at
+  }
   jobs {
     text id PK
     text type "pregen|audit|vocab"
@@ -209,9 +241,14 @@ Server map sang schema sync trên. Idempotent — gọi lại không nhân đôi
 | Placement level | 1–7 | overall 0–100, kèm skills con |
 | teacherProfile.personality | `warm` \| `strict` \| `energetic` | speed 0.75–1.15 |
 | vocab id | `en-{cefr}-{term}` \| `zh-{topic}-{term}` | khớp `docs/data-preparation.md` |
+| attempt kind | `vocab` \| `listening` \| `writing` \| `speaking` \| `reading` \| `quiz` | nguồn gamification (XP: đúng +10, sai +2) |
+| activity day | `YYYY-MM-DD` | múi giờ người học; lệch UTC tối đa +1 ngày |
+| badge id | `first-day` `words-10` `words-50` `streak-7` `streak-30` `correct-50` `xp-500` `master-10` | test điều kiện là code thuần |
 
 ## 4. Chính sách dữ liệu
 
 - Xóa account → xóa cascade toàn bộ dữ liệu learner (FK ON DELETE CASCADE).
 - Dữ liệu trẻ em: chỉ lưu phục vụ học tập, không PII beyond username/display name.
 - `audio_cache` có thể truncate lại bất cứ lúc nào (regenerate từ manifest).
+- Phụ huynh chỉ thấy số liệu tiến độ (activity/SRS/mistakes tổng hợp) — không thấy mật khẩu,
+  session, nội dung chat; liên kết do CON chủ động nhập mã.
