@@ -612,9 +612,12 @@ button:active:not(:disabled) { transform: scale(0.97); }
 /* ===== Main tabs & panels ===== */
 .main-tabs {
   display: flex; gap: 8px; flex-wrap: wrap;
-  margin: 20px 0 4px;
+  /* Nav nằm ngoài main.container trong DOM — tự căn theo cùng trục nội dung
+     (width + padding-inline khớp .container) để không dính mép trái trên desktop */
+  width: min(980px, 100%);
+  margin: 20px auto 4px;
   position: sticky; top: 70px; z-index: 15;
-  background: var(--background); padding: 6px 0; border-radius: 14px;
+  background: color-mix(in srgb, var(--background) 85%, transparent); padding: 6px clamp(16px, 4vw, 40px); border-radius: 14px;
 }
 .main-tab {
   border: 1px solid var(--border); background: var(--card); color: var(--muted-fg);
