@@ -307,12 +307,14 @@ export async function pronunciationFeedback({ target, heard, language, level }) 
     : 'Với tiếng Anh: chú ý âm cuối (ed/s), cặp âm dễ nhầm (sh/s, th/t, v/w, iː/ɪ) và trọng âm từ.';
   const fb = await runStructured({
     system: `Bạn là giáo viên phát âm ${langName} cho người Việt. Học viên đọc một câu mục tiêu; hệ thống nhận dạng giọng nói (STT) ghi lại những gì nghe được. Từ bị STT ghi sai/thiếu so với câu mục tiêu nhiều khả năng là chỗ học viên phát âm sai. Nhiệm vụ: chỉ ra TỪNG từ phát âm chưa đúng kèm mẹo sửa cụ thể (vị trí lưỡi/môi, âm cuối, thanh điệu), bằng tiếng Việt, ngắn gọn và khích lệ. ${zhNote} Nếu transcript khớp hoàn toàn, hãy khen và đưa câu khó hơn để luyện. Trình độ học viên: mức ${level} (1-7), mẹo phải phù hợp trình độ. KHÔNG bịa ra lỗi nếu không thấy chênh lệch rõ.`,
-    user: `Câu mục tiêu: "${target}"\nSTT nghe được: "${heard}"\n\nTrả JSON chỉ gồm: score (số nguyên 0-100: điểm phát âm ước lượng, 100 là khớp hoàn toàn), praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), issues (mảng TỐI ĐA 4 từ phát âm chưa đúng, mỗi phần tử là object chỉ gồm: word (từ/Chữ Hán trong câu mục tiêu), heardAs (STT nghe thành gì; chuỗi rỗng "" nếu từ bị bỏ qua hẳn), tip (mẹo sửa 1 câu tiếng Việt)). CHỈ đưa những từ STT nghe KHÁC với câu mục tiêu hoặc bị thiếu hẳn — tuyệt đối không đưa từ mà STT nghe trùng nguyên văn; drill (1 câu luyện tiếp bằng ${langName} nhắm đúng các âm bị lỗi, kèm phiên âm IPA hoặc pinyin trong ngoặc nếu phù hợp). Nếu không có từ nào sai, issues là mảng rỗng [].`,
+    user: `Câu mục tiêu: "${target}"\nSTT nghe được: "${heard}"\n\nTrả JSON chỉ gồm: score (số nguyên 0-100: điểm phát âm ước lượng, 100 là khớp hoàn toàn), praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), issues (mảng TỐI ĐA 4 từ phát âm chưa đúng, mỗi phần tử là object chỉ gồm: word (từ/Chữ Hán trong câu mục tiêu), heardAs (STT nghe thành gì; chuỗi rỗng "" nếu từ bị bỏ qua hẳn), tip (mẹo sửa 1 câu tiếng Việt)). CHỈ đưa những từ STT nghe KHÁC với câu mục tiêu hoặc bị thiếu hẳn — tuyệt đối không đưa từ mà STT nghe trùng nguyên văn; drill (1 câu luyện tiếp bằng ${langName} nhắm đúng các âm bị lỗi, kèm phiên âm IPA hoặc pinyin trong ngoặc nếu phù hợp, KHÔNG kèm nhãn mở đầu kiểu "Luyện tập:"/"Luyện tiếp:"). Nếu không có từ nào sai, issues là mảng rỗng []. QUAN TRỌNG: praise, tip phải là tiếng Việt TỰ NHIÊN, đúng chính tả, dễ hiểu cho người mới — không viết cụm chữ vô nghĩa, không ghép âm theo kiểu máy móc.`,
     validator: (obj) => {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
       if (Object.keys(obj).sort().join('|') !== 'drill|issues|praise|score') return null;
       const praise = str(obj.praise, 300);
-      const drill = str(obj.drill, 300);
+      // Model đôi khi mở đầu drill bằng nhãn riêng → cắt để không bị "Luyện tiếp: Luyện tập: ..."
+      const drillRaw = str(obj.drill, 300);
+      const drill = drillRaw ? drillRaw.replace(/^\s*(luyện tập|luyện tiếp|luyện|practice|try)\s*:\s*/i, '') : null;
       const scoreNum = Number(obj.score);
       if (!praise || !drill || !Number.isInteger(scoreNum) || scoreNum < 0 || scoreNum > 100) return null;
       if (!Array.isArray(obj.issues) || obj.issues.length > 4) return null;

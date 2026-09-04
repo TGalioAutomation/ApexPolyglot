@@ -840,6 +840,18 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
   .pron-score-bar span { transition: none; }
 }
 
+/* --- Luyện đọc/nói ngay trong thẻ từ (phiên học từ mới) --- */
+.vs-pron { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: grid; gap: 6px; }
+.vs-pron-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.vs-pron-targets { margin: 0; }
+.vs-pron-targets button { padding: 6px 14px; min-height: 36px; }
+.vs-pron-line { margin: 0; font-size: 18px; }
+.vs-pron-score { margin: 0; font-size: 14px; }
+#vsPronMic[aria-pressed="true"] { border-color: var(--destructive); box-shadow: 0 0 0 3px var(--destructive-soft); }
+@media (prefers-reduced-motion: reduce) {
+  #vsPronMic { transition: none; }
+}
+
 
 /* ===== Reading ===== */
 .read-list { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }

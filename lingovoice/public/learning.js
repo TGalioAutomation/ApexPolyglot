@@ -760,6 +760,7 @@ function vsShowLearnCard(v, done, total) {
   $('#vsUnderstood').hidden = false;
   $('#vsProgressText').textContent = `${done}/${total} từ mới`;
   $('#vsProgressBar').style.width = `${(vs.stepIndex / Math.max(1, vs.steps.length)) * 100}%`;
+  vsPronReset(v); // luyện đọc/nói ngay trên thẻ giới thiệu
   announceVs(`Từ mới ${done} trên ${total}: ${v.term}. Nghĩa: ${v.meaning}. Câu mẫu: ${v.example || ''}`);
 }
 
@@ -837,6 +838,7 @@ function vsReveal() {
   if (vs.revealed || !cur || !cur.item) return;
   vs.revealed = true;
   vsRenderBack(cur.item);
+  vsPronReset(cur.item); // sau khi lật đáp án cũng có thể luyện đọc/nói
   $('#vsBack').hidden = false;
   $('#vsReveal').hidden = true;
   $('#vsGrades').hidden = false;
@@ -1392,14 +1394,16 @@ function pronPick() {
   $('#pronWords').replaceChildren();
 }
 function pronRenderDiff(aligned) {
-  const wrap = $('#pronWords');
-  wrap.replaceChildren();
+  pronRenderDiffInto($('#pronWords'), aligned);
+}
+function pronRenderDiffInto(el, aligned) {
+  el.replaceChildren();
   for (const a of aligned) {
     const chip = document.createElement('span');
     chip.className = `pron-word pron-${a.status}`;
     chip.textContent = a.word;
     chip.title = a.status === 'wrong' ? `Nghe thành “${a.heard}”` : a.status === 'missing' ? 'Không nghe được từ này' : 'Đúng';
-    wrap.appendChild(chip);
+    el.appendChild(chip);
   }
 }
 function pronScoreLabel(s) {
@@ -1474,24 +1478,7 @@ async function pronAskAi(it, heard) {
     }
     $('#pronScoreFill').style.width = `${d.score}%`;
     $('#pronScoreText').textContent = `${d.score}/100`;
-    const praise = document.createElement('p');
-    praise.className = 'pron-praise';
-    praise.textContent = d.praise;
-    fbEl.appendChild(praise);
-    for (const issue of d.issues || []) {
-      const row = document.createElement('div');
-      row.className = 'pron-issue';
-      const head = document.createElement('b');
-      head.textContent = issue.heardAs ? `“${issue.word}” nghe thành “${issue.heardAs}”` : `Thiếu từ “${issue.word}”`;
-      const tip = document.createElement('span');
-      tip.textContent = issue.tip;
-      row.append(head, tip);
-      fbEl.appendChild(row);
-    }
-    const drill = document.createElement('p');
-    drill.className = 'pron-drill';
-    drill.textContent = `Luyện tiếp: ${d.drill}`;
-    fbEl.appendChild(drill);
+    pronFeedbackInto(fbEl, d);
     pronCredit(it, d.score);
   } catch {
     fbEl.replaceChildren();
@@ -1501,6 +1488,27 @@ async function pronAskAi(it, heard) {
     fbEl.appendChild(p);
   }
 }
+// Nhận xét AI dùng chung cho cả tab Nói và thẻ từ trong phiên học
+function pronFeedbackInto(el, d) {
+  const praise = document.createElement('p');
+  praise.className = 'pron-praise';
+  praise.textContent = d.praise;
+  el.appendChild(praise);
+  for (const issue of d.issues || []) {
+    const row = document.createElement('div');
+    row.className = 'pron-issue';
+    const head = document.createElement('b');
+    head.textContent = issue.heardAs ? `“${issue.word}” nghe thành “${issue.heardAs}”` : `Thiếu từ “${issue.word}”`;
+    const tip = document.createElement('span');
+    tip.textContent = issue.tip;
+    row.append(head, tip);
+    el.appendChild(row);
+  }
+  const drill = document.createElement('p');
+  drill.className = 'pron-drill';
+  drill.textContent = `Luyện tiếp: ${d.drill}`;
+  el.appendChild(drill);
+}
 // Ghi nhận kết quả: sai thì vào sổ lỗi; luyện từ đã học thì chấm SRS theo điểm
 function pronCredit(it, scoreNum) {
   if (scoreNum < 90) addMistake('speaking', `Phát âm: “${it.text}”`, it.text);
@@ -1509,6 +1517,117 @@ function pronCredit(it, scoreNum) {
   }
   recordActivity(1, 1);
   renderMistakes();
+}
+
+/* ---- Luyện đọc/nói NGAY TRONG thẻ từ của phiên học (từ hoặc câu mẫu) ---- */
+const vsPronState = { item: null, target: 'word', busy: false };
+function vsPronReset(v) {
+  vsPronState.item = v;
+  vsPronState.target = 'word';
+  vsPronState.busy = false;
+  for (const b of document.querySelectorAll('#vsPronTargets button')) {
+    const on = b.dataset.target === 'word';
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  }
+  vsPronShowTarget();
+  document.getElementById('vsPronStatus').textContent = '';
+  document.getElementById('vsPronResult').hidden = true;
+  document.getElementById('vsPronFeedback').replaceChildren();
+  document.getElementById('vsPronWords').replaceChildren();
+}
+function vsPronShowTarget() {
+  const v = vsPronState.item;
+  if (!v) return;
+  const isZh = LV.language === 'zh';
+  const word = vsPronState.target === 'word';
+  document.getElementById('vsPronText').textContent = word ? v.term : (v.example || v.term);
+  document.getElementById('vsPronIpa').textContent = word
+    ? (isZh ? (v.pinyin || '') : (v.ipa || ''))
+    : (isZh ? (v.examplePinyin || '') : '');
+}
+function vsPronSetTarget(target) {
+  if (vsPronState.busy || vsPronState.target === target) return;
+  vsPronState.target = target;
+  for (const b of document.querySelectorAll('#vsPronTargets button')) {
+    const on = b.dataset.target === target;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  }
+  vsPronShowTarget();
+  document.getElementById('vsPronStatus').textContent = '';
+  document.getElementById('vsPronResult').hidden = true;
+}
+async function vsPronRecord() {
+  if (vsPronState.busy || !vsPronState.item) return;
+  const v = vsPronState.item;
+  const target = vsPronState.target === 'sentence' ? (v.example || v.term) : v.term;
+  const mic = document.getElementById('vsPronMic');
+  vsPronState.busy = true;
+  mic.disabled = true;
+  mic.setAttribute('aria-pressed', 'true');
+  const resultEl = document.getElementById('vsPronResult');
+  resultEl.hidden = true;
+  const statusEl = document.getElementById('vsPronStatus');
+  statusEl.textContent = 'Đang nghe bạn đọc…';
+  const heard = await LV.listenOnce({
+    language: LV.SPEECH_LANG[LV.language],
+    timeoutMs: 10000,
+    onListening: () => { statusEl.textContent = 'Đang nghe bạn đọc…'; },
+    onProcessing: () => { statusEl.textContent = 'Đang nhận dạng…'; },
+    onError: () => { statusEl.textContent = 'Không nghe rõ — thử lại ở nơi yên tĩnh nhé.'; }
+  });
+  mic.disabled = false;
+  mic.setAttribute('aria-pressed', 'false');
+  vsPronState.busy = false;
+  if (!heard) return;
+  const aligned = window.Pron.align(target, heard, LV.language);
+  const scoreNum = window.Pron.score(aligned);
+  pronRenderDiffInto(document.getElementById('vsPronWords'), aligned);
+  resultEl.hidden = false;
+  document.getElementById('vsPronScore').textContent = `${scoreNum}/100 — ${pronScoreLabel(scoreNum)}`;
+  statusEl.textContent = `Bạn đọc: “${heard}”`;
+  if (scoreNum < 90) addMistake('speaking', `Đọc từ: “${v.term}”`, v.term);
+  renderMistakes();
+  const fbEl = document.getElementById('vsPronFeedback');
+  fbEl.replaceChildren();
+  if (scoreNum >= 100) {
+    const praise = document.createElement('p');
+    praise.className = 'pron-praise';
+    praise.textContent = 'Chuẩn không cần chỉnh! Bấm “Đã hiểu” để sang từ tiếp theo.';
+    fbEl.appendChild(praise);
+    return;
+  }
+  const loading = document.createElement('p');
+  loading.className = 'hint';
+  loading.textContent = 'Cô Linh đang nghe cách bạn đọc…';
+  fbEl.appendChild(loading);
+  const level = store.profile.placement?.[LV.language]?.level || 2;
+  try {
+    const res = await fetch('/api/pronunciation/feedback', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, heard, language: LV.language, level })
+    });
+    const d = await res.json();
+    fbEl.replaceChildren();
+    if (!res.ok) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = d.code === 'NO_AI'
+        ? 'Chưa cấu hình AI nên chưa có mẹo chi tiết — so từng từ phía trên vẫn dùng được.'
+        : 'Chưa phân tích được lúc này — bạn vẫn xem được so từng từ phía trên.';
+      fbEl.appendChild(p);
+      return;
+    }
+    document.getElementById('vsPronScore').textContent = `${d.score}/100 — ${d.praise}`;
+    pronFeedbackInto(fbEl, d);
+  } catch {
+    fbEl.replaceChildren();
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'Mất kết nối tới AI — bạn vẫn xem được so từng từ phía trên.';
+    fbEl.appendChild(p);
+  }
 }
 
 const rpState = { scenario: null, history: [], running: false };
@@ -2943,6 +3062,8 @@ function learningInit() {
   $('#vsSumHome').addEventListener('click', () => { hideStudioPanes('home'); renderStudioHome(); });
   $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { announceFallback: false }); });
   $('#vsPlaySlow').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { speed: 0.75, announceFallback: false }); });
+  $('#vsPronMic').addEventListener('click', vsPronRecord);
+  document.querySelectorAll('#vsPronTargets button').forEach((b) => b.addEventListener('click', () => vsPronSetTarget(b.dataset.target)));
   document.querySelectorAll('#vsGrades .grade').forEach((b) => b.addEventListener('click', () => vsGrade(Number(b.dataset.grade))));
   document.querySelectorAll('#studioTabs button').forEach((b) => b.addEventListener('click', () => vsShowView(b.dataset.vview)));
 
@@ -2950,7 +3071,7 @@ function learningInit() {
   document.addEventListener('keydown', (e) => {
     const studioPane = ['vstudio-brief', 'vstudio-session', 'vstudio-summary'].find((id) => !document.getElementById(id).hidden);
     if (!studioPane) return;
-    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.target && /INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName)) return; // nút đang focus tự xử phím (vd mic) — không bắn Space/1-4 trùng
     if (e.key === 'Escape') {
       if (studioPane === 'vstudio-brief') vsCloseBrief();
       else if (studioPane === 'vstudio-summary') { hideStudioPanes('home'); renderStudioHome(); }

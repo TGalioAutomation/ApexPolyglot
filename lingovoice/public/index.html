@@ -387,6 +387,25 @@
             <p class="vocab-pinyin" id="vsExamplePinyin"></p>
             <p class="vocab-trans" id="vsTranslation"></p>
             <p class="vs-note" id="vsNote"></p>
+            <div class="vs-pron" id="vsPron" aria-label="Luyện đọc nói từ này">
+              <div class="vs-pron-bar">
+                <div class="seg vs-pron-targets" id="vsPronTargets" role="group" aria-label="Chọn nội dung luyện đọc">
+                  <button type="button" class="active" data-target="word" aria-pressed="true">Từ</button>
+                  <button type="button" data-target="sentence" aria-pressed="false">Câu mẫu</button>
+                </div>
+                <button type="button" class="btn ghost sm" id="vsPronMic" aria-pressed="false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg>
+                  Đọc thử
+                </button>
+              </div>
+              <p class="pron-target vs-pron-line"><span id="vsPronText"></span><small id="vsPronIpa"></small></p>
+              <p class="hint" id="vsPronStatus" role="status"></p>
+              <div id="vsPronResult" hidden>
+                <div class="pron-words" id="vsPronWords" aria-label="So từng từ với nội dung mục tiêu"></div>
+                <p class="vs-pron-score"><strong id="vsPronScore" aria-live="polite"></strong></p>
+                <div id="vsPronFeedback"></div>
+              </div>
+            </div>
             <p class="vs-interval" id="vsInterval" aria-live="polite"></p>
           </div>
         </div>

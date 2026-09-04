@@ -52,3 +52,21 @@ test('CSS phát âm dùng design token, có trạng thái đúng/sai/thiếu và
   assert.match(css, /\.pron-score-bar span \{[^}]+var\(--stage-accent\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]+\.pron-score-bar span \{ transition: none/);
 });
+
+test('thẻ từ trong phiên học có khu luyện đọc/nói (từ hoặc câu mẫu) + AI sửa', () => {
+  assert.match(html, /<div class="vs-pron" id="vsPron"/);
+  assert.match(html, /id="vsPronTargets"[^>]+role="group"/);
+  assert.match(html, /<button type="button" class="active" data-target="word" aria-pressed="true">Từ<\/button>/);
+  assert.match(html, /<button type="button" data-target="sentence" aria-pressed="false">Câu mẫu<\/button>/);
+  assert.match(html, /id="vsPronMic"[^>]+aria-pressed="false"/);
+  assert.match(html, /id="vsPronWords"[^>]+aria-label="So từng từ với nội dung mục tiêu"/);
+  assert.match(learningJs, /vsPronReset\(v\); \/\/ luyện đọc\/nói ngay trên thẻ giới thiệu/);
+  assert.match(learningJs, /vsPronReset\(cur\.item\); \/\/ sau khi lật đáp án cũng có thể luyện đọc\/nói/);
+  assert.match(learningJs, /async function vsPronRecord\(\)[\s\S]+LV\.listenOnce/);
+  assert.match(learningJs, /window\.Pron\.align\(target, heard, LV\.language\)/);
+  assert.match(learningJs, /fetch\('\/api\/pronunciation\/feedback'/);
+  assert.match(learningJs, /\$\('#vsPronMic'\)\.addEventListener\('click', vsPronRecord\)/);
+  // Space trên nút mic đang focus không được lột thành "Đã hiểu"
+  assert.match(learningJs, /INPUT\|TEXTAREA\|SELECT\|BUTTON/);
+  assert.match(css, /\.vs-pron\s*\{[^}]+var\(--border\)/);
+});

@@ -51,7 +51,12 @@ trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
    `#vsStepBadge` "Từ mới x/N", nút `#vsUnderstood`) với **kiểm tra tích lũy** (flashcard đoán
    nghĩa, badge "Kiểm tra tích lũy", chấm 4 mức SRS như ôn tập). Từ ghi "Lại" được xếp
    thêm 1 lần kiểm tra cuối phiên (ngân sách `recheckBudget` = 3). Progress text
-   `#vsProgressText` luôn theo dạng "x/N từ mới".
+   `#vsProgressText` luôn theo dạng "x/N từ mới". **Mỗi thẻ (cả giới thiệu lẫn sau khi lật
+   đáp án) có khu luyện đọc/nói `#vsPron` (mới)**: chọn mục tiêu "Từ" hoặc "Câu mẫu"
+   (`#vsPronTargets`), bấm `#vsPronMic` đọc qua micro → so từng từ tại chỗ (pron-core,
+   chip xanh/đỏ + điểm) → AI trả mẹo sửa (`POST /api/pronunciation/feedback`); đọc <90 điểm
+   thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. Phím Space khi
+   đang focus trên nút trong thẻ không lột thành "Đã hiểu".
 3. **Tổng kết** `#vstudio-summary` — 3 ô số liệu (từ mới / lần kiểm tra tích lũy / lần cần
    học lại) + CTA "Học tiếp từ mới" / "Về kho từ".
 
