@@ -484,6 +484,7 @@
       <h1 class="sr-only" id="ps-title">Luyện nói</h1>
       <div class="seg speaking-modes" id="speakingModes">
         <button type="button" data-mode="shadowing" class="active">Shadowing</button>
+        <button type="button" data-mode="pron">Phát âm</button>
         <button type="button" data-mode="roleplay">Gọi thoại</button>
         <button type="button" data-mode="qa">Trò chuyện</button>
       </div>
@@ -499,6 +500,42 @@
           <button class="btn ghost" id="shadowNext">Câu tiếp theo</button>
         </div>
         <p id="shadowTranscript" class="shadow-transcript" role="status"></p>
+      </div>
+      <div class="card" id="speak-pron" hidden>
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">PHÁT ÂM</span>
+            <h2>Luyện phát âm — AI chỉ từ sai</h2>
+            <p class="hint">Nghe mẫu, nói lại qua micro. AI so với câu mục tiêu và chỉ từng từ phát âm chưa đúng kèm mẹo sửa.</p>
+          </div>
+          <select id="pronSource" class="select" aria-label="Nguồn câu luyện phát âm">
+            <option value="sentences">Câu mẫu</option>
+            <option value="words">Từ đã học</option>
+          </select>
+        </div>
+        <p class="pron-target" id="pronTarget" lang="en">
+          <span id="pronText">Bấm “Câu khác” để bắt đầu luyện.</span>
+          <small id="pronIpa"></small>
+        </p>
+        <p class="hint" id="pronMeaning"></p>
+        <div class="hero-actions">
+          <button class="btn primary" id="pronPlay">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe mẫu
+          </button>
+          <button class="btn ghost" id="pronMic" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg> Nói thử
+          </button>
+          <button class="btn ghost" id="pronNext">Câu khác</button>
+        </div>
+        <p id="pronStatus" class="shadow-transcript" role="status"></p>
+        <div id="pronResult" hidden>
+          <div class="pron-score" role="status">
+            <div class="pron-score-bar" aria-hidden="true"><span id="pronScoreFill"></span></div>
+            <strong id="pronScoreText" aria-live="polite"></strong>
+          </div>
+          <div id="pronWords" class="pron-words" aria-label="So từng từ với câu mục tiêu"></div>
+          <div id="pronFeedback"></div>
+        </div>
       </div>
       <div class="card" id="speak-roleplay" hidden>
         <div class="section-head">
@@ -1049,6 +1086,7 @@
   <script src="app.js"></script>
   <script src="srs-core.cjs"></script>
   <script src="writing-core.cjs"></script>
+  <script src="pron-core.cjs"></script>
   <script src="learning.js"></script>
   <script src="lv-api.js"></script>
   <script src="lv-shell.js"></script>

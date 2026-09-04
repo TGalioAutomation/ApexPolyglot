@@ -298,3 +298,37 @@ export async function roleplayFeedback({ scenario, language, history }) {
   });
   return fb;
 }
+
+// ---- P3: sửa lỗi phát âm (so transcript STT với câu mục tiêu) ----
+export async function pronunciationFeedback({ target, heard, language, level }) {
+  const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';
+  const zhNote = language === 'zh'
+    ? 'Với tiếng Trung: chú ý thanh điệu (tone) của từng chữ, các âm khởi đầu zh/ch/sh/r/z/c/s và âm cuối -n/-ng.'
+    : 'Với tiếng Anh: chú ý âm cuối (ed/s), cặp âm dễ nhầm (sh/s, th/t, v/w, iː/ɪ) và trọng âm từ.';
+  const fb = await runStructured({
+    system: `Bạn là giáo viên phát âm ${langName} cho người Việt. Học viên đọc một câu mục tiêu; hệ thống nhận dạng giọng nói (STT) ghi lại những gì nghe được. Từ bị STT ghi sai/thiếu so với câu mục tiêu nhiều khả năng là chỗ học viên phát âm sai. Nhiệm vụ: chỉ ra TỪNG từ phát âm chưa đúng kèm mẹo sửa cụ thể (vị trí lưỡi/môi, âm cuối, thanh điệu), bằng tiếng Việt, ngắn gọn và khích lệ. ${zhNote} Nếu transcript khớp hoàn toàn, hãy khen và đưa câu khó hơn để luyện. Trình độ học viên: mức ${level} (1-7), mẹo phải phù hợp trình độ. KHÔNG bịa ra lỗi nếu không thấy chênh lệch rõ.`,
+    user: `Câu mục tiêu: "${target}"\nSTT nghe được: "${heard}"\n\nTrả JSON chỉ gồm: score (số nguyên 0-100: điểm phát âm ước lượng, 100 là khớp hoàn toàn), praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), issues (mảng TỐI ĐA 4 từ phát âm chưa đúng, mỗi phần tử là object chỉ gồm: word (từ/Chữ Hán trong câu mục tiêu), heardAs (STT nghe thành gì; chuỗi rỗng "" nếu từ bị bỏ qua hẳn), tip (mẹo sửa 1 câu tiếng Việt)). CHỈ đưa những từ STT nghe KHÁC với câu mục tiêu hoặc bị thiếu hẳn — tuyệt đối không đưa từ mà STT nghe trùng nguyên văn; drill (1 câu luyện tiếp bằng ${langName} nhắm đúng các âm bị lỗi, kèm phiên âm IPA hoặc pinyin trong ngoặc nếu phù hợp). Nếu không có từ nào sai, issues là mảng rỗng [].`,
+    validator: (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      if (Object.keys(obj).sort().join('|') !== 'drill|issues|praise|score') return null;
+      const praise = str(obj.praise, 300);
+      const drill = str(obj.drill, 300);
+      const scoreNum = Number(obj.score);
+      if (!praise || !drill || !Number.isInteger(scoreNum) || scoreNum < 0 || scoreNum > 100) return null;
+      if (!Array.isArray(obj.issues) || obj.issues.length > 4) return null;
+      const norm = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+      const issues = obj.issues.map((it) => {
+        if (!it || typeof it !== 'object' || Array.isArray(it)) return null;
+        if (Object.keys(it).sort().join('|') !== 'heardAs|tip|word') return null;
+        const word = str(it.word, 60);
+        const tip = str(it.tip, 300);
+        if (!word || !tip) return null;
+        const heardAs = typeof it.heardAs === 'string' && it.heardAs.length <= 60 ? it.heardAs.trim() : null;
+        if (heardAs === null) return null;
+        return { word, heardAs, tip };
+      }).filter((it) => it && norm(it.heardAs) !== norm(it.word)); // model đôi khi vẫn trả heardAs trùng từ mục tiêu — loại bỏ thay vì từ chối cả phản hồi
+      return { score: scoreNum, praise, issues, drill };
+    }
+  });
+  return fb;
+}

@@ -22,7 +22,7 @@ Toàn bộ màu/bo/shadow đi qua CSS variables, không hardcode hex:
 | Lộ trình | `#tab-path` | Roadmap 3 chặng, next-best-action | — |
 | Từ vựng | `#tab-vocab` | Flashcard SRS, **phiên học từ mới tích lũy (mới)**, quiz, sổ lỗi sai | hết từ mới → toast + gợi ý thêm từ |
 | Viết | `#tab-writing` | Xếp chunk, chính tả, dịch ngược, viết tự do | — |
-| Nói | `#tab-speaking` | Shadowing ASR + gọi điện roleplay | mất mic → hướng dẫn mở quyền |
+| Nói | `#tab-speaking` | 4 mode: Shadowing ASR, **Luyện phát âm (mới)**, gọi điện roleplay, trò chuyện Cô Linh | mất mic → hướng dẫn mở quyền; AI lỗi → vẫn xem được so-từng-từ ở client |
 | Đọc | `#tab-reading` | Graded readers 3 mức, đọc theo câu | — |
 | Nghe | `#tab-listening` | Nghe–chọn, nghe–viết | audio lỗi → `offline-audio.webp` |
 | Thiết lập | `#tab-setup` | Profile, stage tuổi, giọng Cô Linh, **tài khoản + đồng bộ (mới)** | — |

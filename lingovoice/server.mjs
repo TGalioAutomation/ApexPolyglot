@@ -52,7 +52,7 @@ const MIME = {
   '.jpeg': 'image/jpeg'
 };
 
-import { teacherSystem, normalizeTeacherProfile, runTeacher, configuredProviders, providerOrder, generateVocabCard, writingFeedback, roleplayTurn, roleplayFeedback } from './ai.mjs';
+import { teacherSystem, normalizeTeacherProfile, runTeacher, configuredProviders, providerOrder, generateVocabCard, writingFeedback, roleplayTurn, roleplayFeedback, pronunciationFeedback } from './ai.mjs';
 import { publicQuestions, scorePlacement } from './placement.mjs';
 import { VoiceClient, speakWithCache, OPENVOX_API, audioCacheKey, hasCachedAudio, readCachedAudio, writeCachedAudio, readPreparedAudio, preparedAudioStats } from './voice.mjs';
 import { pregenAll } from './pregen.mjs';
@@ -816,6 +816,25 @@ const server = createServer(async (request, response) => {
         if (error.code === 'NO_AI') return sendJson(response, 503, { error: 'NO_AI', code: 'NO_AI' });
         console.error('[roleplay-fb]', error.message);
         return sendJson(response, 502, { error: 'Không chấm được cuộc gọi, thử lại sau.', code: 'AI_ERROR' });
+      }
+    }
+
+    // ---- P3: sửa lỗi phát âm (so transcript STT với câu mục tiêu) ----
+    if (request.method === 'POST' && pathname === '/api/pronunciation/feedback') {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const target = typeof payload.target === 'string' ? payload.target.trim() : '';
+      const heard = typeof payload.heard === 'string' ? payload.heard.trim() : '';
+      if (!target || target.length > 300) throw Object.assign(new Error('target is required (max 300)'), { statusCode: 400 });
+      if (!heard || heard.length > 300) throw Object.assign(new Error('heard is required (max 300)'), { statusCode: 400 });
+      const language = payload.language === 'zh' ? 'zh' : 'en';
+      const level = Math.min(7, Math.max(1, Number(payload.level) || 2));
+      try {
+        const fb = await pronunciationFeedback({ target, heard, language, level });
+        return sendJson(response, 200, { ...fb, language });
+      } catch (error) {
+        if (error.code === 'NO_AI') return sendJson(response, 503, { error: 'NO_AI', code: 'NO_AI' });
+        console.error('[pron]', error.message);
+        return sendJson(response, 502, { error: 'Không phân tích được phát âm, thử lại sau.', code: 'AI_ERROR' });
       }
     }
 

@@ -1368,6 +1368,149 @@ function shadowRecord() {
   $('#shadowTranscript').textContent = 'Đang nghe…';
 }
 
+/* ---- PHÁT ÂM: nghe mẫu → nói → so từng từ + AI chỉ lỗi ---- */
+const pronState = { item: null, busy: false };
+function pronPool(source) {
+  if (source === 'words') {
+    const items = vocabItems(LV.language).filter((v) => v.term);
+    return items.map((v) => ({ kind: 'word', id: v.id, text: v.term, ipa: v.ipa || '', vi: v.meaning || '' }));
+  }
+  return LV.allSentences(LV.language).map((s) => ({ kind: 'sentence', id: s.id, text: s.text, ipa: '', vi: s.vi || '' }));
+}
+function pronPick() {
+  const pool = pronPool($('#pronSource').value);
+  if (!pool.length) { pronState.item = null; $('#pronText').textContent = 'Chưa có nội dung để luyện.'; return; }
+  pronState.item = pool[Math.floor(Math.random() * pool.length)];
+  const it = pronState.item;
+  $('#pronTarget').lang = LV.language === 'zh' ? 'zh-CN' : 'en';
+  $('#pronText').textContent = it.text;
+  $('#pronIpa').textContent = it.ipa || '';
+  $('#pronMeaning').textContent = it.vi ? `Nghĩa: ${it.vi}` : '';
+  $('#pronStatus').textContent = '';
+  $('#pronResult').hidden = true;
+  $('#pronFeedback').replaceChildren();
+  $('#pronWords').replaceChildren();
+}
+function pronRenderDiff(aligned) {
+  const wrap = $('#pronWords');
+  wrap.replaceChildren();
+  for (const a of aligned) {
+    const chip = document.createElement('span');
+    chip.className = `pron-word pron-${a.status}`;
+    chip.textContent = a.word;
+    chip.title = a.status === 'wrong' ? `Nghe thành “${a.heard}”` : a.status === 'missing' ? 'Không nghe được từ này' : 'Đúng';
+    wrap.appendChild(chip);
+  }
+}
+function pronScoreLabel(s) {
+  if (s >= 90) return 'Tuyệt vời!';
+  if (s >= 70) return 'Khá tốt, còn vài chỗ cần sửa.';
+  if (s >= 40) return 'Cố lên chút nữa nhé.';
+  return 'Thử nghe mẫu lại rồi nói chậm hơn nhé.';
+}
+async function pronRecord() {
+  if (pronState.busy) return;
+  const it = pronState.item;
+  if (!it) { pronPick(); return; }
+  pronState.busy = true;
+  $('#pronMic').disabled = true;
+  $('#pronMic').setAttribute('aria-pressed', 'true');
+  $('#pronResult').hidden = true;
+  $('#pronStatus').textContent = 'Đang nghe bạn nói…';
+  const heard = await LV.listenOnce({
+    language: LV.SPEECH_LANG[LV.language],
+    timeoutMs: 12000,
+    onListening: () => { $('#pronStatus').textContent = 'Đang nghe bạn nói…'; },
+    onProcessing: () => { $('#pronStatus').textContent = 'Đang nhận dạng câu nói…'; },
+    onError: () => { $('#pronStatus').textContent = 'Không nhận diện được. Hãy thử lại ở nơi yên tĩnh.'; }
+  });
+  $('#pronMic').disabled = false;
+  $('#pronMic').setAttribute('aria-pressed', 'false');
+  pronState.busy = false;
+  if (!heard) return;
+  const aligned = window.Pron.align(it.text, heard, LV.language);
+  const localScore = window.Pron.score(aligned);
+  pronRenderDiff(aligned);
+  $('#pronResult').hidden = false;
+  $('#pronScoreFill').style.width = `${localScore}%`;
+  $('#pronScoreText').textContent = `${localScore}/100`;
+  $('#pronStatus').textContent = `Bạn nói: “${heard}”`;
+  // Nghe khớp hoàn toàn theo client thì không cần AI; có lệch mới nhờ AI chỉ mẹo sửa
+  if (localScore >= 100) {
+    const fbEl = $('#pronFeedback');
+    fbEl.replaceChildren();
+    const praise = document.createElement('p');
+    praise.className = 'pron-praise';
+    praise.textContent = pronScoreLabel(100);
+    fbEl.appendChild(praise);
+    pronCredit(it, 100);
+    return;
+  }
+  await pronAskAi(it, heard);
+}
+async function pronAskAi(it, heard) {
+  const fbEl = $('#pronFeedback');
+  fbEl.replaceChildren();
+  const loading = document.createElement('p');
+  loading.className = 'hint';
+  loading.textContent = 'Cô Linh đang phân tích chỗ phát âm chưa đúng…';
+  fbEl.appendChild(loading);
+  const level = store.profile.placement?.[LV.language]?.level || 2;
+  try {
+    const res = await fetch('/api/pronunciation/feedback', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target: it.text, heard, language: LV.language, level })
+    });
+    const d = await res.json();
+    fbEl.replaceChildren();
+    if (!res.ok) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = d.code === 'NO_AI'
+        ? 'Chưa cấu hình AI nên chưa có mẹo sửa chi tiết. So từng từ phía trên vẫn dùng được.'
+        : 'Chưa phân tích được phát âm lúc này — bạn vẫn xem được so từng từ phía trên.';
+      fbEl.appendChild(p);
+      return;
+    }
+    $('#pronScoreFill').style.width = `${d.score}%`;
+    $('#pronScoreText').textContent = `${d.score}/100`;
+    const praise = document.createElement('p');
+    praise.className = 'pron-praise';
+    praise.textContent = d.praise;
+    fbEl.appendChild(praise);
+    for (const issue of d.issues || []) {
+      const row = document.createElement('div');
+      row.className = 'pron-issue';
+      const head = document.createElement('b');
+      head.textContent = issue.heardAs ? `“${issue.word}” nghe thành “${issue.heardAs}”` : `Thiếu từ “${issue.word}”`;
+      const tip = document.createElement('span');
+      tip.textContent = issue.tip;
+      row.append(head, tip);
+      fbEl.appendChild(row);
+    }
+    const drill = document.createElement('p');
+    drill.className = 'pron-drill';
+    drill.textContent = `Luyện tiếp: ${d.drill}`;
+    fbEl.appendChild(drill);
+    pronCredit(it, d.score);
+  } catch {
+    fbEl.replaceChildren();
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = 'Mất kết nối tới AI — bạn vẫn xem được so từng từ phía trên.';
+    fbEl.appendChild(p);
+  }
+}
+// Ghi nhận kết quả: sai thì vào sổ lỗi; luyện từ đã học thì chấm SRS theo điểm
+function pronCredit(it, scoreNum) {
+  if (scoreNum < 90) addMistake('speaking', `Phát âm: “${it.text}”`, it.text);
+  if (it.kind === 'word' && it.id) {
+    srsRecord(it.id, LV.language, scoreNum >= 85 ? 3 : scoreNum >= 60 ? 2 : 1, 'speaking');
+  }
+  recordActivity(1, 1);
+  renderMistakes();
+}
+
 const rpState = { scenario: null, history: [], running: false };
 function rpAdd(role, text, opts = {}) {
   const chat = $('#rpChat');
@@ -2858,12 +3001,18 @@ function learningInit() {
     const mode = b.dataset.mode;
     document.body.classList.toggle('teacher-conversation', mode === 'qa');
     $('#speak-shadowing').hidden = mode !== 'shadowing';
+    $('#speak-pron').hidden = mode !== 'pron';
     $('#speak-roleplay').hidden = mode !== 'roleplay';
     $('#speak-qa').hidden = mode !== 'qa';
+    if (mode === 'pron' && !pronState.item) pronPick();
   }));
   $('#shadowPlay').addEventListener('click', () => { const s = shadowState.queue[shadowState.index]; if (s) LV.playText(s.text, LV.language, { announceFallback: false }); });
   $('#shadowRecord').addEventListener('click', shadowRecord);
   $('#shadowNext').addEventListener('click', () => shadowNext());
+  $('#pronPlay').addEventListener('click', () => { if (pronState.item) LV.playText(pronState.item.text, LV.language, { announceFallback: false }); });
+  $('#pronMic').addEventListener('click', pronRecord);
+  $('#pronNext').addEventListener('click', pronPick);
+  $('#pronSource').addEventListener('change', pronPick);
   $('#scenarioSelect').replaceChildren();
   ROLEPLAY_SCENARIOS.forEach((s) => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.vi; $('#scenarioSelect').append(o); });
   $('#rpSend').addEventListener('click', rpSend);
@@ -2921,6 +3070,8 @@ function learningInit() {
     if (!document.getElementById('tab-writing').hidden) startWriting(writingState.mode);
     shadowState.queue = [];
     shadowNext();
+    pronState.item = null; // câu/từ cũ thuộc ngôn ngữ trước — chọn lại theo ngôn ngữ mới
+    if (!document.getElementById('speak-pron').hidden) pronPick();
   };
   document.getElementById('langEn').addEventListener('click', () => LV.setLanguage('en'));
   document.getElementById('langZh').addEventListener('click', () => LV.setLanguage('zh'));

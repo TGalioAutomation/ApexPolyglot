@@ -76,6 +76,8 @@ const deepseek = createServer((req, res) => {
       content = JSON.stringify({ reply: 'Good evening! How can I help you?', hint: 'Hãy chào khách và hỏi họ cần gì.' });
     } else if (sys.includes('chấm một cuộc hội thoại')) {
       content = JSON.stringify({ praise: 'Bạn nói rõ ràng và lịch sự.', topFix: 'Thiếu từ xin phép khi chưa hiểu.', corrected: 'Could you repeat that, please?', next: 'Luyện cách hỏi lại lịch sự.' });
+    } else if (sys.includes('giáo viên phát âm')) {
+      content = JSON.stringify({ score: 82, praise: 'Bạn đọc nguyên câu rõ ràng, chỉ còn một âm cần chỉnh.', issues: [{ word: 'schedule', heardAs: 'skedule', tip: '“sch” đọc là /ʃ/ như “s” mềm: “SHE-dule”, không đọc “ske”.' }], drill: 'I have a busy schedule. (/ˈʃedʒuːl/)' });
     } else {
       content = 'Cô sẽ giúp bạn. Nghe lại nhé: 【Good morning! How are you today?】';
     }
@@ -513,6 +515,39 @@ test('roleplay feedback trả nhận xét cuộc gọi (praise/topFix/next)', as
   const d = await r.json();
   assert.ok(d.praise && d.topFix && d.next);
   assert.ok(typeof d.corrected === 'string');
+});
+
+// ---------- P3 pronunciation feedback (LLM mock) ----------
+test('pronunciation feedback trả score + mẹo sửa từng từ', async () => {
+  const r = await fetch(`http://127.0.0.1:${port1}/api/pronunciation/feedback`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: 'I have a busy schedule today.', heard: 'I have a busy skedule today', language: 'en', level: 3 })
+  });
+  assert.equal(r.status, 200);
+  const d = await r.json();
+  assert.equal(d.language, 'en');
+  assert.ok(Number.isInteger(d.score) && d.score >= 0 && d.score <= 100);
+  assert.ok(d.praise && d.drill);
+  assert.ok(Array.isArray(d.issues) && d.issues.length >= 1);
+  assert.deepEqual(Object.keys(d.issues[0]).sort(), ['heardAs', 'tip', 'word']);
+});
+
+test('pronunciation feedback lỗi khi thiếu transcript -> 400', async () => {
+  const r = await fetch(`http://127.0.0.1:${port1}/api/pronunciation/feedback`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: 'Good morning' })
+  });
+  assert.equal(r.status, 400);
+});
+
+test('pronunciation feedback 503 NO_AI khi chưa cấu hình key', async () => {
+  const r = await fetch(`http://127.0.0.1:${port2}/api/pronunciation/feedback`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: 'Good morning', heard: 'good morning', language: 'en' })
+  });
+  assert.equal(r.status, 503);
+  const d = await r.json();
+  assert.equal(d.code, 'NO_AI');
 });
 
 test('data route phục vụ vocab JSON đã chuẩn bị', async () => {
