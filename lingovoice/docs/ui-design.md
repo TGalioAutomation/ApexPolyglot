@@ -35,10 +35,17 @@ Avatar mặc định: `default-learner-avatar.webp` trong profile và topbar.
 Vào từ nút "Học từ mới" (`#vsLearnStart` / `#vsLearnQuick` / next-best-action), luồng 3 màn
 trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
 
+0. **Gói từ vựng** `#vs-packs` (tab "Gói từ vựng" trong studioTabs) — card từng chủ đề
+   (`vsTopicStats`: tổng từ / số từ mới / thanh tiến độ đã học), nút "Học gói này" chọn gói
+   rồi mở briefing. Gói đang chọn lưu `lv-learn-topic` ('all' hoặc tên chủ đề), áp dụng cho
+   cả nút Học từ mới ở mọi nơi; gói không tồn tại ở ngôn ngữ hiện tại thì tự về 'all'.
 1. **Briefing** `#vstudio-brief` — nói rõ số lượng ngay từ đầu: số to `#vsBriefCount`
-   ("N từ mới"), mỗi từ kèm 1 câu mẫu trong danh sách preview `#vsBriefList` (chỉ hiện
-   term + câu gốc, giấu nghĩa để không lộ đáp án), chọn liều lượng 3/5/7 qua `#vsBriefBatch`
-   (lưu `localStorage lv-learn-batch`), ước lượng thời gian, CTA `#vsBriefStart`.
+   ("N từ mới"), hàng chip gói `#vsBriefTopic` ("Tất cả (143)" / "Công việc (89)"… chip
+   gói hết từ mới bị disable), mỗi từ kèm 1 câu mẫu trong danh sách preview `#vsBriefList`
+   (chỉ hiện term + câu gốc, giấu nghĩa để không lộ đáp án), chọn liều lượng 3/5/7 qua
+   `#vsBriefBatch` (lưu `localStorage lv-learn-batch`), ước lượng thời gian, CTA
+   `#vsBriefStart`. Từ lấy từ `vsNewWords()` = từ mới của gói đang chọn, xếp theo mục tiêu
+   công việc rồi tần suất.
 2. **Phiên** `#vstudio-session` — bước dựng từ `SRS.buildLearnSteps` (`public/srs-core.cjs`):
    xen kẽ **giới thiệu từ mới** (thẻ hiện ngay nghĩa + câu mẫu + audio, badge
    `#vsStepBadge` "Từ mới x/N", nút `#vsUnderstood`) với **kiểm tra tích lũy** (flashcard đoán

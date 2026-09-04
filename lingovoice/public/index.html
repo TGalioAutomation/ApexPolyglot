@@ -256,6 +256,7 @@
         <div class="seg studio-tabs" id="studioTabs" role="tablist" aria-label="Khu vực kho từ">
           <button type="button" class="active" data-vview="review" role="tab" aria-selected="true">Ôn tập</button>
           <button type="button" data-vview="learn" role="tab" aria-selected="false">Học mới</button>
+          <button type="button" data-vview="packs" role="tab" aria-selected="false">Gói từ vựng</button>
           <button type="button" data-vview="bank" role="tab" aria-selected="false">Kho từ</button>
           <button type="button" data-vview="mistakes" role="tab" aria-selected="false">Lỗi</button>
         </div>
@@ -274,6 +275,14 @@
             <button class="btn primary sm" id="vsLearnQuick">Học từ mới</button>
           </div>
           <div id="vsLearnList" class="review-list"></div>
+        </div>
+
+        <div id="vs-packs" class="vs-pane" hidden>
+          <div class="section-head">
+            <div><span class="section-kicker">GÓI TỪ VỰNG</span><h3>Chọn gói theo chủ đề</h3></div>
+          </div>
+          <p class="hint">Mỗi gói là một chủ đề — học gói nào, kho từ mới của bạn sẽ ưu tiên gói đó.</p>
+          <div id="vsPackGrid" class="pack-grid"></div>
         </div>
 
         <div id="vs-bank" class="vs-pane" hidden>
@@ -341,6 +350,7 @@
             <button type="button" data-batch="5">5 từ</button>
             <button type="button" data-batch="7">7 từ</button>
           </div>
+          <div class="seg topic-seg" id="vsBriefTopic" role="group" aria-label="Gói từ vựng"></div>
           <div id="vsBriefList" class="review-list brief-list" aria-label="Danh sách từ sẽ học"></div>
           <button class="btn primary btn-lg" id="vsBriefStart">Bắt đầu học 5 từ mới</button>
         </div>

@@ -366,7 +366,10 @@ function loadLearnBatch() {
   return LEARN_BATCHES.includes(n) ? n : 5;
 }
 function saveLearnBatch(n) { try { localStorage.setItem(LEARN_BATCH_KEY, String(n)); } catch {} }
-const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null, steps: [], stepIndex: 0, batchSize: 5, recheckBudget: 0 };
+const LEARN_TOPIC_KEY = 'lv-learn-topic'; // gói từ vựng đang chọn ('all' hoặc tên chủ đề)
+function loadLearnTopic() { try { return localStorage.getItem(LEARN_TOPIC_KEY) || 'all'; } catch { return 'all'; } }
+function saveLearnTopic(t) { try { localStorage.setItem(LEARN_TOPIC_KEY, t); } catch {} }
+const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null, steps: [], stepIndex: 0, batchSize: 5, recheckBudget: 0, topic: loadLearnTopic() };
 
 function vsItemState(lang, id) { return store.srs.items[lang]?.[id] || SRS.initial(); }
 function vsSave(lang, id, next) {
@@ -465,13 +468,28 @@ function renderStudioHome() {
   renderVsBank();
 }
 
-// Danh sách từ mới chưa học, xếp theo mục tiêu (công việc) rồi tần suất phổ biến
+// Thống kê gói theo chủ đề cho một ngôn ngữ: tổng số từ + số từ chưa học
+function vsTopicStats(lang) {
+  const s = store.srs.items[lang] || {};
+  const map = new Map();
+  for (const v of vocabItems(lang)) {
+    const t = v.topic || 'Khác';
+    if (!map.has(t)) map.set(t, { topic: t, total: 0, news: 0 });
+    const rec = map.get(t);
+    rec.total += 1;
+    if (!s[v.id] || s[v.id].state === 'new') rec.news += 1;
+  }
+  return [...map.values()].sort((a, b) => b.news - a.news || b.total - a.total);
+}
+
+// Danh sách từ mới chưa học, lọc theo gói đang chọn, xếp theo mục tiêu (công việc) rồi tần suất
 function vsNewWords() {
   const lang = LV.language;
   const s = store.srs.items[lang] || {};
+  const topic = vs.topic === 'all' ? null : vs.topic;
   const goalWork = (store.profile.goals || []).includes('cong-viec');
   return vocabItems(lang)
-    .filter((v) => !s[v.id] || s[v.id].state === 'new')
+    .filter((v) => (!s[v.id] || s[v.id].state === 'new') && (!topic || v.topic === topic))
     .sort((a, b) => {
       if (goalWork) { const aw = (b.workplace ? 1 : 0) - (a.workplace ? 1 : 0); if (aw) return aw; }
       return (a.freq || 3) - (b.freq || 3); // tần suất phổ biến (freq thấp) học trước
@@ -518,11 +536,17 @@ function vsStartSession(mode) {
 
 /* --- Briefing: nói rõ số lượng từ cần học ngay từ đầu --- */
 function vsOpenBrief() {
+  // Gói đang chọn có thể không tồn tại ở ngôn ngữ vừa đổi — trả về "Tất cả"
+  const stats = vsTopicStats(LV.language);
+  if (vs.topic !== 'all' && !stats.some((t) => t.topic === vs.topic)) {
+    vs.topic = 'all'; saveLearnTopic('all');
+  }
   const words = vsNewWords();
   if (!words.length) {
     hideStudioPanes('home');
     renderStudioHome();
-    LV.toast('Đã học hết từ mới. Thêm từ để học tiếp!');
+    const hint = vs.topic === 'all' ? 'Đã học hết từ mới. Thêm từ để học tiếp!' : `Gói “${vs.topic}” đã học hết từ mới — chọn gói khác hoặc ôn tập nhé!`;
+    LV.toast(hint);
     return;
   }
   vs.batchSize = Math.min(loadLearnBatch(), words.length);
@@ -534,8 +558,10 @@ function renderVsBrief(words) {
   const n = Math.min(vs.batchSize, words.length);
   vs.batchSize = n;
   const picked = words.slice(0, n);
+  renderVsTopicChips();
+  const packLabel = vs.topic === 'all' ? '' : `Gói “${vs.topic}” — `;
   $('#vsBriefCount').textContent = `${n} từ mới`;
-  $('#vsBriefDetail').textContent = `Mỗi từ kèm 1 câu mẫu · kiểm tra tích lũy xen kẽ ngay trong phiên · ~${Math.max(2, Math.round(n * 0.8))} phút`;
+  $('#vsBriefDetail').textContent = `${packLabel}mỗi từ kèm 1 câu mẫu · kiểm tra tích lũy xen kẽ ngay trong phiên · ~${Math.max(2, Math.round(n * 0.8))} phút`;
   document.querySelectorAll('#vsBriefBatch button').forEach((b) => {
     const val = Number(b.dataset.batch);
     b.classList.toggle('active', val === n);
@@ -556,6 +582,65 @@ function renderVsBrief(words) {
   });
   $('#vsBriefStart').textContent = `Bắt đầu học ${n} từ mới`;
   announceVs(`Phiên học từ mới: ${n} từ, mỗi từ kèm một câu mẫu.`);
+}
+
+// Hàng chip gói trong briefing: "Tất cả" + từng chủ đề kèm số từ mới
+function renderVsTopicChips() {
+  const stats = vsTopicStats(LV.language);
+  const wrap = $('#vsBriefTopic');
+  wrap.replaceChildren();
+  const mkChip = (topic, label, count, disabled) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.topic = topic;
+    b.textContent = count === null ? label : `${label} (${count})`;
+    b.setAttribute('aria-pressed', String(vs.topic === topic));
+    b.classList.toggle('active', vs.topic === topic);
+    if (disabled) b.disabled = true;
+    return b;
+  };
+  wrap.append(mkChip('all', 'Tất cả', stats.reduce((a, t) => a + t.news, 0), false));
+  stats.forEach((t) => wrap.append(mkChip(t.topic, t.topic, t.news, t.news === 0)));
+}
+
+// --- Packs pane: card từng chủ đề với tiến độ + nút học gói ---
+function renderVsPacks() {
+  const grid = document.getElementById('vsPackGrid');
+  if (!grid) return;
+  const lang = LV.language;
+  const stats = vsTopicStats(lang);
+  grid.replaceChildren();
+  if (!stats.length) {
+    const p = document.createElement('p'); p.className = 'hint';
+    p.textContent = vocabDataState[lang].status === 'loading' ? 'Đang nạp dữ liệu từ vựng…' : 'Chưa có dữ liệu gói từ vựng.';
+    grid.append(p); return;
+  }
+  const mkCard = (name, total, news, topic) => {
+    const card = document.createElement('div');
+    card.className = 'pack-card' + (vs.topic === topic ? ' active' : '');
+    const h = document.createElement('b'); h.textContent = name;
+    const meta = document.createElement('span'); meta.className = 'pack-meta';
+    meta.textContent = news > 0 ? `${news} từ mới · ${total - news} đã học` : `Đã học hết ${total} từ`;
+    const track = document.createElement('div'); track.className = 'pack-track';
+    const bar = document.createElement('span');
+    bar.style.width = `${total ? Math.round(((total - news) / total) * 100) : 0}%`;
+    track.append(bar);
+    const actions = document.createElement('div'); actions.className = 'hero-actions pack-actions';
+    if (news > 0) {
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn primary sm';
+      btn.textContent = 'Học gói này';
+      btn.addEventListener('click', () => { vs.topic = topic; saveLearnTopic(topic); vsOpenBrief(); });
+      actions.append(btn);
+    } else {
+      const done = document.createElement('span'); done.className = 'pack-done';
+      done.textContent = '✓ Hoàn thành — ôn tập để giữ nhớ';
+      actions.append(done);
+    }
+    card.append(h, meta, track, actions);
+    return card;
+  };
+  grid.append(mkCard('Tất cả chủ đề', stats.reduce((a, t) => a + t.total, 0), stats.reduce((a, t) => a + t.news, 0), 'all'));
+  stats.forEach((t) => grid.append(mkCard(t.topic, t.total, t.news, t.topic)));
 }
 
 function vsBriefBegin() {
@@ -1021,6 +1106,7 @@ function vsSavePreview() {
 function renderVocabAll() {
   vsFillTopicFilter();
   renderStudioHome();
+  renderVsPacks();
 }
 
 function vsShowView(view) {
@@ -1030,9 +1116,10 @@ function vsShowView(view) {
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', String(on));
   });
-  ['review', 'learn', 'bank', 'mistakes'].forEach((v) => {
+  ['review', 'learn', 'packs', 'bank', 'mistakes'].forEach((v) => {
     document.getElementById('vs-' + v).hidden = v !== view;
   });
+  if (view === 'packs') renderVsPacks();
   if (view === 'bank') { vsFillTopicFilter(); renderVsBank(); }
   if (view === 'mistakes') renderMistakes();
 }
@@ -2692,6 +2779,16 @@ function learningInit() {
     saveLearnBatch(vs.batchSize);
     renderVsBrief(vsNewWords());
   }));
+  // Chip gói trong briefing: đổi gói -> danh sách từ preview đổi theo
+  $('#vsBriefTopic').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-topic]');
+    if (!b || b.disabled) return;
+    vs.topic = b.dataset.topic;
+    saveLearnTopic(vs.topic);
+    const words = vsNewWords();
+    vs.batchSize = Math.min(loadLearnBatch(), Math.max(1, words.length));
+    renderVsBrief(words);
+  });
   $('#vsSumNext').addEventListener('click', vsOpenBrief);
   $('#vsSumHome').addEventListener('click', () => { hideStudioPanes('home'); renderStudioHome(); });
   $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { announceFallback: false }); });

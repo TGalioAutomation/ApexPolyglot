@@ -49,5 +49,18 @@ test('phiên học từ mới nêu rõ số lượng ngay từ đầu + câu m�
   assert.match(learning, /SRS\.buildLearnSteps/);
   assert.match(learning, /Kiểm tra tích lũy/);
   assert.match(learning, /lv-learn-batch/);
-  assert.match(learning, /Mỗi từ kèm 1 câu mẫu/);
+  assert.match(learning, /mỗi từ kèm 1 câu mẫu/);
+});
+
+test('trang gói từ vựng: chọn gói theo chủ đề trước khi học', () => {
+  assert.match(html, /id="vs-packs"/);
+  assert.match(html, /id="vsPackGrid"/);
+  assert.match(html, /data-vview="packs"/);
+  assert.match(html, /id="vsBriefTopic"/, 'briefing phải có hàng chip gói');
+  assert.match(learning, /vsTopicStats/);
+  assert.match(learning, /renderVsPacks/);
+  assert.match(learning, /lv-learn-topic/);
+  assert.match(learning, /Học gói này/);
+  // lọc từ mới theo gói đang chọn
+  assert.match(learning, /\(!topic \|\| v\.topic === topic\)/);
 });
