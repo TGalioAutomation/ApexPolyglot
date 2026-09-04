@@ -843,6 +843,7 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 /* --- Luyện đọc/nói ngay trong thẻ từ (phiên học từ mới) --- */
 .vs-pron { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: grid; gap: 6px; }
 .vs-pron-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.vs-pron-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .vs-pron-targets { margin: 0; }
 .vs-pron-targets button { padding: 6px 14px; min-height: 36px; }
 .vs-pron-line { margin: 0; font-size: 18px; }

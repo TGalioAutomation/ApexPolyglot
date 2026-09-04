@@ -53,9 +53,13 @@ trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
    thêm 1 lần kiểm tra cuối phiên (ngân sách `recheckBudget` = 3). Progress text
    `#vsProgressText` luôn theo dạng "x/N từ mới". **Mỗi thẻ (cả giới thiệu lẫn sau khi lật
    đáp án) có khu luyện đọc/nói `#vsPron` (mới)**: chọn mục tiêu "Từ" hoặc "Câu mẫu"
-   (`#vsPronTargets`), bấm `#vsPronMic` đọc qua micro → so từng từ tại chỗ (pron-core,
+   (`#vsPronTargets`), bấm `#vsPronPlay` "Nghe mẫu" để nghe đúng phát âm của mục tiêu đang
+   chọn (audio pregen theo từ, thiếu thì fallback giọng thiết bị), bấm `#vsPronMic` đọc qua
+   micro → so từng từ tại chỗ (pron-core,
    chip xanh/đỏ + điểm) → AI trả mẹo sửa (`POST /api/pronunciation/feedback`); đọc <90 điểm
-   thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. Phím Space khi
+   thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. Nút "Nghe từ" /
+   "Nghe từ chậm" trên thẻ đọc TỪ (term), không phải câu mẫu — từ vựng đều được pregen audio.
+   Phím Space khi
    đang focus trên nút trong thẻ không lột thành "Đã hiểu".
 3. **Tổng kết** `#vstudio-summary` — 3 ô số liệu (từ mới / lần kiểm tra tích lũy / lần cần
    học lại) + CTA "Học tiếp từ mới" / "Về kho từ".

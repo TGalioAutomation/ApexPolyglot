@@ -1539,12 +1539,17 @@ function vsPronReset(v) {
 function vsPronShowTarget() {
   const v = vsPronState.item;
   if (!v) return;
+  document.getElementById('vsPronText').textContent = vsPronTargetText();
   const isZh = LV.language === 'zh';
   const word = vsPronState.target === 'word';
-  document.getElementById('vsPronText').textContent = word ? v.term : (v.example || v.term);
   document.getElementById('vsPronIpa').textContent = word
     ? (isZh ? (v.pinyin || '') : (v.ipa || ''))
     : (isZh ? (v.examplePinyin || '') : '');
+}
+function vsPronTargetText() {
+  const v = vsPronState.item;
+  if (!v) return '';
+  return vsPronState.target === 'sentence' ? (v.example || v.term) : v.term;
 }
 function vsPronSetTarget(target) {
   if (vsPronState.busy || vsPronState.target === target) return;
@@ -1561,7 +1566,7 @@ function vsPronSetTarget(target) {
 async function vsPronRecord() {
   if (vsPronState.busy || !vsPronState.item) return;
   const v = vsPronState.item;
-  const target = vsPronState.target === 'sentence' ? (v.example || v.term) : v.term;
+  const target = vsPronTargetText();
   const mic = document.getElementById('vsPronMic');
   vsPronState.busy = true;
   mic.disabled = true;
@@ -3060,9 +3065,11 @@ function learningInit() {
   });
   $('#vsSumNext').addEventListener('click', vsOpenBrief);
   $('#vsSumHome').addEventListener('click', () => { hideStudioPanes('home'); renderStudioHome(); });
-  $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { announceFallback: false }); });
-  $('#vsPlaySlow').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.example, LV.language, { speed: 0.75, announceFallback: false }); });
+  // "Nghe" đọc TỪ (kể cả chậm) — nhu cầu nghe phát âm đúng từ mới; câu mẫu nghe qua khu luyện nói
+  $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.term, LV.language, { announceFallback: false }); });
+  $('#vsPlaySlow').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.term, LV.language, { speed: 0.75, announceFallback: false }); });
   $('#vsPronMic').addEventListener('click', vsPronRecord);
+  $('#vsPronPlay').addEventListener('click', () => { const t = vsPronTargetText(); if (t) LV.playText(t, LV.language, { announceFallback: false }); });
   document.querySelectorAll('#vsPronTargets button').forEach((b) => b.addEventListener('click', () => vsPronSetTarget(b.dataset.target)));
   document.querySelectorAll('#vsGrades .grade').forEach((b) => b.addEventListener('click', () => vsGrade(Number(b.dataset.grade))));
   document.querySelectorAll('#studioTabs button').forEach((b) => b.addEventListener('click', () => vsShowView(b.dataset.vview)));

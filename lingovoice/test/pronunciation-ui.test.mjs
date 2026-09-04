@@ -66,6 +66,11 @@ test('thẻ từ trong phiên học có khu luyện đọc/nói (từ hoặc câ
   assert.match(learningJs, /window\.Pron\.align\(target, heard, LV\.language\)/);
   assert.match(learningJs, /fetch\('\/api\/pronunciation\/feedback'/);
   assert.match(learningJs, /\$\('#vsPronMic'\)\.addEventListener\('click', vsPronRecord\)/);
+  // Nghe mẫu đọc theo mục tiêu đang chọn (từ hoặc câu mẫu); "Nghe từ" đọc từ đơn
+  assert.match(html, /id="vsPronPlay"[^>]+aria-label="Nghe mẫu nội dung đang luyện"/);
+  assert.match(learningJs, /\$\('#vsPronPlay'\)\.addEventListener\('click'[\s\S]+vsPronTargetText\(\)/);
+  assert.match(learningJs, /const target = vsPronTargetText\(\);/);
+  assert.match(learningJs, /LV\.playText\(cur\.item\.term, LV\.language/);
   // Space trên nút mic đang focus không được lột thành "Đã hiểu"
   assert.match(learningJs, /INPUT\|TEXTAREA\|SELECT\|BUTTON/);
   assert.match(css, /\.vs-pron\s*\{[^}]+var\(--border\)/);

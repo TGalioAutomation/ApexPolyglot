@@ -33,17 +33,23 @@ export function collectContent() {
     for (const t of topics) for (const s of t.sentences) jobs.push({ lang, text: s.text });
   }
 
-  // Thẻ từ vựng (VOCAB_BASE examples)
+  // Thẻ từ vựng (VOCAB_BASE: từ + câu mẫu — từ cần audio để "Nghe từ" phát giọng chuẩn)
   const vocab = extractLiteral(learningJs, 'const VOCAB_BASE = {', 'const WORKPLACE_PACK');
   for (const [lang, items] of Object.entries(vocab)) {
-    for (const it of items) if (it.example) jobs.push({ lang, text: it.example });
+    for (const it of items) {
+      if (it.term) jobs.push({ lang, text: it.term });
+      if (it.example) jobs.push({ lang, text: it.example });
+    }
   }
 
   // Kho JSON đã chuẩn bị là nguồn dữ liệu chính khi có mặt.
   for (const lang of ['en', 'zh']) {
     try {
       const prepared = JSON.parse(readFileSync(join(ROOT, 'data', `vocab-${lang}.json`), 'utf8'));
-      for (const item of prepared.items || []) if (item.example) jobs.push({ lang, text: item.example });
+      for (const item of prepared.items || []) {
+        if (item.term) jobs.push({ lang, text: item.term });
+        if (item.example) jobs.push({ lang, text: item.example });
+      }
     } catch { /* giữ fallback nội tuyến khi file chưa tồn tại */ }
   }
 
