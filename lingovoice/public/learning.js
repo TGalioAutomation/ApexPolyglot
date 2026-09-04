@@ -288,7 +288,7 @@ function srsRecord(id, lang, grade, kind = 'vocab') {
 function dueItems(lang, limit = 10) {
   const s = store.srs.items[lang] || {};
   return Object.entries(s)
-    .filter(([, it]) => it.state !== 'mastered' && (it.dueAt === null || it.dueAt <= Date.now()))
+    .filter(([id, it]) => findVocab(lang, id) && it.state !== 'mastered' && (it.dueAt === null || it.dueAt <= Date.now())) // bỏ từ mồ côi khỏi đếm/ôn
     .slice(0, limit)
     .map(([id, it]) => ({ id, ...it, item: findVocab(lang, id) }));
 }
@@ -392,7 +392,7 @@ function vsHomeStats() {
   const items = vocabItems(lang);
   const s = store.srs.items[lang] || {};
   const newCount = items.filter((v) => !s[v.id] || s[v.id].state === 'new').length;
-  const due = Object.values(s).filter((it) => it.state !== 'mastered' && (it.dueAt === null || it.dueAt <= Date.now())).length;
+  const due = dueItems(lang, 999).length; // chỉ đếm từ còn tồn tại trong kho
   const freqHigh = items.filter((v) => (v.freq || 3) <= 2).length;
   const workplace = items.filter((v) => v.workplace).length;
   const goalWork = (store.profile.goals || []).includes('cong-viec');
@@ -508,7 +508,8 @@ function vsBuildQueue(mode) {
     .filter(([, it]) => it.state !== 'mastered' && (it.dueAt === null || it.dueAt <= Date.now()))
     .sort((a, b) => (a[1].dueAt || 0) - (b[1].dueAt || 0))
     .slice(0, 10)
-    .map(([id]) => ({ id, item: findVocab(lang, id) }));
+    .map(([id]) => ({ id, item: findVocab(lang, id) }))
+    .filter((q) => q.item); // từ mồ côi (id không còn trong kho dữ liệu) không được vào phiên
 }
 
 // Hiện đúng 1 pane studio (home/brief/session/summary), ẩn phần còn lại
@@ -673,7 +674,12 @@ function vsClearSession() {
   try { localStorage.removeItem('lv-session'); } catch {}
 }
 function hasUnfinishedSession() {
-  try { return !!localStorage.getItem('lv-session'); } catch { return false; }
+  try {
+    const raw = localStorage.getItem('lv-session');
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    return Array.isArray(s.ids) && s.ids.length > 0; // phiên rỗng không tính là đang dở
+  } catch { return false; }
 }
 function resumeSession() {
   let raw = null;
@@ -775,7 +781,7 @@ function vsAdvance(delay = 450) {
 
 function vsShowCard() {
   const cur = vs.mode === 'learn' ? vs.queue.find((q) => q.id === vsStep().id) : vs.queue[vs.index];
-  if (!cur) return;
+  if (!cur || !cur.item) return; // không bao giờ render thẻ trống
   vs.revealed = false;
   const v = cur.item;
   const isZh = LV.language === 'zh';
@@ -828,7 +834,7 @@ function vsReveal() {
     if (step.t === 'learn') return vsUnderstood(); // Space trên thẻ giới thiệu = đã hiểu
   }
   const cur = vs.mode === 'learn' ? vs.queue.find((q) => q.id === vsStep()?.id) : vs.queue[vs.index];
-  if (vs.revealed || !cur) return;
+  if (vs.revealed || !cur || !cur.item) return;
   vs.revealed = true;
   vsRenderBack(cur.item);
   $('#vsBack').hidden = false;
@@ -895,7 +901,8 @@ function renderVsSummary(learned, checks, again) {
 }
 
 function vsExit() {
-  vsPersist(); // giữ trạng thái để lần sau "Tiếp tục bài đang dở"
+  if (vs.queue.length) vsPersist(); // chỉ giữ lại phiên khi thực sự có nội dung đang dở
+  else vsClearSession();
   hideStudioPanes('home');
   renderStudioHome();
 }

@@ -64,3 +64,14 @@ test('trang gói từ vựng: chọn gói theo chủ đề trước khi học', 
   // lọc từ mới theo gói đang chọn
   assert.match(learning, /\(!topic \|\| v\.topic === topic\)/);
 });
+
+test('chống từ mồ côi SRS: không vào phiên, không đếm, không phiên dở ảo', () => {
+  // queue review phải loại thẻ không còn trong kho dữ liệu
+  assert.match(learning, /\.filter\(\(q\) => q\.item\); \/\/ từ mồ côi/);
+  // đếm "X từ cần ôn" chỉ tính từ còn tồn tại
+  assert.match(learning, /const due = dueItems\(lang, 999\)\.length; \/\/ chỉ đếm từ còn tồn tại trong kho/);
+  assert.match(learning, /findVocab\(lang, id\) && it\.state !== 'mastered'/);
+  // thoát khi phiên rỗng không được ghi lv-session; phiên rỗng không tính là đang dở
+  assert.match(learning, /if \(vs\.queue\.length\) vsPersist\(\); \/\/ chỉ giữ lại phiên khi thực sự có nội dung đang dở/);
+  assert.match(learning, /Array\.isArray\(s\.ids\) && s\.ids\.length > 0/);
+});
