@@ -7,8 +7,9 @@ services:
       POSTGRES_USER: lingovoice
       POSTGRES_PASSWORD: lingovoice
       POSTGRES_DB: lingovoice
+    # Chỉ mở trên loopback của VPS — app nối qua mạng nội bộ compose, không lộ PG ra internet
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -28,6 +29,10 @@ services:
         required: false
     ports:
       - "4174:4174"
+    # Audio pregen (859 WAV + manifest) bị .dockerignore loại khỏi image — mount từ host,
+    # rsync kèm thư mục cache/ khi deploy; owner 1000:1000 để user `node` ghi được manifest
+    volumes:
+      - ./cache:/app/cache
     depends_on:
       postgres:
         condition: service_healthy
