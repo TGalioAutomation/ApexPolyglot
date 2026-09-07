@@ -83,6 +83,7 @@ graph TB
 - `docker compose up -d` dựng cả app + PostgreSQL; `npm run migrate` chạy trong app container khi khởi động (bật bằng `MIGRATE_ON_START=1`).
 - Không có PG → app vẫn chạy với tính năng trí nhớ/sync tắt (`DB_AVAILABLE=false`), trả 503 `DB_UNAVAILABLE` cho các route DB.
 - Deploy VPS công khai: rsync kèm `cache/` (audio pregen) và mount `./cache:/app/cache` (`.dockerignore` loại cache khỏi image; owner `1000:1000` để user `node` ghi manifest). PostgreSQL chỉ map `127.0.0.1:5432`. Đặt `APP_ACCESS_PASSWORD` trong `.env` để bật Basic Auth cho toàn app (mặc định user `student`); admin không đặt mật khẩu thì chỉ truy cập được từ loopback VPS (tunnel `ssh -L`).
+- Trên macOS (colima): bind `./cache` không thấy dữ liệu vì colima không mount `/Volumes` vào VM — `docker-compose.override.yml` thay bằng named volume `audio_cache`, nạp một lần bằng `tar -C cache -c audio | docker run -i --rm -v lingovoice_audio_cache:/data alpine sh -c 'tar -x -C /data && chown -R 1000:1000 /data'` rồi restart app container. File override chỉ dùng trên Mac, không rsync lên VPS.
 
 ## 6. Sơ đồ module backend
 
