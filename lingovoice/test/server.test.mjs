@@ -95,6 +95,10 @@ function startApp({ port, ai, envOverrides = {} }) {
     PORT: String(port),
     OPENVOX_API: `http://127.0.0.1:${openvoxPort}`,
     PREGEN_DISABLED: '1', // không pregen trong test (tránh gọi mock loạt)
+    // Cô lập khỏi .env của máy dev (server.mjs tự nạp .env; đặt key rỗng để nó không ghi đè) —
+    // không thì APP_ACCESS_PASSWORD trong .env bật Basic Auth lên mọi instance test.
+    APP_ACCESS_PASSWORD: '',
+    ADMIN_ACCESS_PASSWORD: '',
     ...envOverrides
   };
   if (ai) {
@@ -115,7 +119,7 @@ function startApp({ port, ai, envOverrides = {} }) {
   });
 }
 
-let openvoxPort, deepseekPort, app1, app2, app3, app4, port1 = 4181, port2 = 4182, port3 = 4183, port4 = 4184;
+let openvoxPort, deepseekPort, app1, app2, app3, app4, app5, port1 = 4181, port2 = 4182, port3 = 4183, port4 = 4184, port5 = 4185;
 
 test.before(async () => {
   openvoxPort = await listen(openvox);
@@ -132,8 +136,14 @@ test.before(async () => {
     ai: false,
     envOverrides: { ADMIN_ACCESS_USER: 'operator', ADMIN_ACCESS_PASSWORD: 'admin-test-pass' }
   });
+  // app5: DATABASE_URL trỏ port chết -> store null deterministic (test route DB không phụ thuộc máy dev)
+  app5 = await startApp({
+    port: port5,
+    ai: false,
+    envOverrides: { DATABASE_URL: 'postgres://nobody:x@127.0.0.1:9/none' }
+  });
 });
-test.after(() => { app1?.kill(); app2?.kill(); app3?.kill(); app4?.kill(); openvox.close(); deepseek.close(); });
+test.after(() => { app1?.kill(); app2?.kill(); app3?.kill(); app4?.kill(); app5?.kill(); openvox.close(); deepseek.close(); });
 
 test('healthz trả 200', async () => {
   const r = await fetch(`http://127.0.0.1:${port1}/healthz`);
@@ -600,4 +610,26 @@ test('memory note lưu và đọc lại', async () => {
   const g = await fetch(`http://127.0.0.1:${port1}/api/memory?learner=${LID}`);
   const d = await g.json();
   assert.ok(d.notes.some((n) => n.text === 'Học viên muốn tự tin phỏng vấn.'));
+});
+
+// ---------- Thi thử TOEIC cuối buổi ----------
+test('toeic submit/history: thiếu PostgreSQL -> 503 DB_UNAVAILABLE, không phụ thuộc session', async () => {
+  const r = await fetch(`http://127.0.0.1:${port5}/api/toeic/submit`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ form: 1, durationMin: 10, usedSec: 300, attempts: [{ kind: 'vocab', correct: true }] })
+  });
+  assert.equal(r.status, 503);
+  assert.equal((await r.json()).code, 'DB_UNAVAILABLE');
+  const h = await fetch(`http://127.0.0.1:${port5}/api/toeic/history`);
+  assert.equal(h.status, 503);
+  assert.equal((await h.json()).code, 'DB_UNAVAILABLE');
+});
+
+test('toeic submit: body rỗng trên máy có DB vẫn không tạo kết quả (chặn ở DB_UNAVAILABLE trước khi đọc body)', async () => {
+  // app5 không có DB -> mọi payload (kể cả rác) đều chặn 503 thống nhất, không 500
+  const r = await fetch(`http://127.0.0.1:${port5}/api/toeic/submit`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ attempts: [] })
+  });
+  assert.equal(r.status, 503);
 });

@@ -165,7 +165,7 @@ test('gamification: luồng API phụ huynh ↔ con end-to-end qua HTTP', async 
   const port = 4199;
   const child = spawn(process.execPath, ['server.mjs'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(port), DATABASE_URL: url, OPENVOX_API: 'http://127.0.0.1:9', PREGEN_DISABLED: '1', MIGRATE_ON_START: '1' },
+    env: { ...process.env, PORT: String(port), DATABASE_URL: url, OPENVOX_API: 'http://127.0.0.1:9', PREGEN_DISABLED: '1', MIGRATE_ON_START: '1', APP_ACCESS_PASSWORD: '', ADMIN_ACCESS_PASSWORD: '' },
     stdio: 'ignore'
   });
   const wait = async () => {
@@ -266,5 +266,92 @@ test('gamification: luồng API phụ huynh ↔ con end-to-end qua HTTP', async 
     await client.connect();
     await client.query('DELETE FROM users WHERE LOWER(username) LIKE $1 OR LOWER(username) LIKE $2', [`e2e-parent-${stamp}`, `e2e-kid-${stamp}`]);
     await client.end();
+  }
+});
+
+test('toeic: nộp bài end-to-end — session + attempts gắn session_id + XP + history (HTTP)', async (t) => {
+  const url = process.env.TEST_DATABASE_URL;
+  if (!url) return t.skip('Thiếu TEST_DATABASE_URL — bỏ qua integration DB');
+
+  const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const port = 4198;
+  const app = spawn(process.execPath, ['server.mjs'], {
+    cwd: ROOT,
+    env: { ...process.env, PORT: String(port), DATABASE_URL: url, OPENVOX_API: 'http://127.0.0.1:9', PREGEN_DISABLED: '1', MIGRATE_ON_START: '1', APP_ACCESS_PASSWORD: '', ADMIN_ACCESS_PASSWORD: '' },
+    stdio: 'ignore'
+  });
+  const wait = async () => {
+    for (let i = 0; i < 100; i++) {
+      try { await fetch(`http://127.0.0.1:${port}/healthz`); return; }
+      catch { await new Promise((r) => setTimeout(r, 150)); }
+    }
+    throw new Error('server test không lên được (port 4198 bận?)');
+  };
+  await wait();
+
+  const call = async (method, path, body, cookie) => {
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) },
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+    const setCookie = res.headers.get('set-cookie');
+    return { status: res.status, body: await res.json().catch(() => ({})), cookie: setCookie ? setCookie.split(';')[0] : cookie };
+  };
+
+  const pool = new pg.Pool({ connectionString: url });
+  const store = new Store(pool);
+  const stamp = Date.now();
+  const name = `it-toeic-${stamp}`;
+
+  try {
+    const reg = await call('POST', '/api/auth/register', { username: name, password: 'password-123' });
+    assert.equal(reg.status, 201);
+
+    // nộp bài 12 câu (8 đúng, 4 sai) — 8*10 + 4*2 + 6 phút = 94 XP
+    const attempts = Array.from({ length: 12 }, (_, i) => ({
+      kind: i % 3 === 0 ? 'listening' : i % 3 === 1 ? 'vocab' : 'reading',
+      itemRef: `en-b1-word-${i}`,
+      correct: i < 8
+    }));
+    const submit = await call('POST', '/api/toeic/submit', {
+      day: new Date().toISOString().slice(0, 10),
+      form: 7, durationMin: 10, usedSec: 360, attempts
+    }, reg.cookie);
+    assert.equal(submit.status, 200);
+    assert.equal(submit.body.result.score, 67);
+    assert.equal(submit.body.result.total, 12);
+    assert.equal(submit.body.result.correct, 8);
+    assert.deepEqual(submit.body.result.byKind.vocab, { total: 4, correct: 3 });
+    assert.equal(submit.body.added.xp, 94, '8 đúng*10 + 4 sai*2 + 6 phút');
+
+    // rác: 0 câu hợp lệ -> 400 TOEIC_INVALID
+    const bad = await call('POST', '/api/toeic/submit', { form: 1, attempts: [] }, reg.cookie);
+    assert.equal(bad.status, 400);
+    assert.equal(bad.body.code, 'TOEIC_INVALID');
+    // không đăng nhập -> 401
+    const anon = await call('POST', '/api/toeic/submit', { attempts });
+    assert.equal(anon.status, 401);
+
+    // history: 1 đề, kỹ năng cộng dồn đúng thứ tự kinds
+    const history = await call('GET', '/api/toeic/history', undefined, reg.cookie);
+    assert.equal(history.status, 200);
+    assert.equal(history.body.stats.tests, 1);
+    assert.equal(history.body.stats.avgScore, 67);
+    assert.equal(history.body.history[0].form, 7);
+    assert.equal(history.body.skills.listening.total, 4);
+
+    // store: attempts gắn đúng session_id của buổi thi
+    const user = await store.findUserByUsername(name);
+    const sessions = await store.listSessionsBySkill(user.id, 'toeic', 10);
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].stats.total, 12);
+    const { rows } = await pool.query('SELECT session_id, count(*)::int AS n FROM attempts WHERE user_id = $1 GROUP BY session_id', [user.id]);
+    assert.equal(rows[0].session_id, sessions[0].id);
+    assert.equal(rows[0].n, 12);
+  } finally {
+    app.kill();
+    await pool.query('DELETE FROM users WHERE LOWER(username) = $1', [name]);
+    await pool.end();
   }
 });

@@ -256,18 +256,38 @@ export class Store {
     return rows;
   }
 
-  async recordAttempts(userId, attempts = []) {
+  async recordAttempts(userId, attempts = [], sessionId = null) {
     let count = 0;
     for (const a of attempts) {
       const { rowCount } = await this.query(
-        `INSERT INTO attempts (user_id, kind, item_ref, correct, grade, payload)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [userId, a.kind, a.itemRef || null, typeof a.correct === 'boolean' ? a.correct : null,
+        `INSERT INTO attempts (user_id, session_id, kind, item_ref, correct, grade, payload)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [userId, sessionId, a.kind, a.itemRef || null, typeof a.correct === 'boolean' ? a.correct : null,
          Number.isFinite(a.grade) ? a.grade : null, JSON.stringify({ lang: a.lang || null })]
       );
       count += rowCount;
     }
     return count;
+  }
+
+  // ---- thi thử TOEIC cuối buổi (learning_sessions skill='toeic' + attempts gắn session) ----
+  async createLearningSession({ userId, lang = 'en', skill = 'toeic', stats = {} }) {
+    const { rows } = await this.query(
+      `INSERT INTO learning_sessions (user_id, lang, skill, ended_at, stats)
+       VALUES ($1, $2, $3, now(), $4)
+       RETURNING id, started_at, stats`,
+      [userId, lang === 'zh' ? 'zh' : 'en', skill, JSON.stringify(stats || {})]
+    );
+    return rows[0];
+  }
+
+  async listSessionsBySkill(userId, skill, limit = 60) {
+    const { rows } = await this.query(
+      `SELECT id, lang, started_at, stats FROM learning_sessions
+       WHERE user_id = $1 AND skill = $2 ORDER BY started_at DESC LIMIT $3`,
+      [userId, skill, Math.min(200, Math.max(1, limit))]
+    );
+    return rows;
   }
 
   async attemptsBreakdown(userId, days = 14) {

@@ -229,6 +229,7 @@
       <button type="button" data-skill="speaking" role="tab" aria-selected="false">Nói</button>
       <button type="button" data-skill="reading" role="tab" aria-selected="false">Đọc</button>
       <button type="button" data-skill="listening" role="tab" aria-selected="false">Nghe</button>
+      <button type="button" data-skill="toeic" role="tab" aria-selected="false">Thi thử</button>
     </div>
 
     <!-- Vocabulary Studio -->
@@ -442,6 +443,7 @@
           <p class="hint" id="vsSumNote"></p>
           <div class="hero-actions">
             <button class="btn primary" id="vsSumNext">Học tiếp từ mới</button>
+            <button class="btn ghost" id="vsSumTest">Thi thử cuối buổi</button>
             <button class="btn ghost" id="vsSumHome">Về kho từ</button>
           </div>
         </div>
@@ -696,6 +698,120 @@
         </div>
         <div class="topic-tabs" id="topicTabs" role="tablist" aria-label="Chọn chủ đề"></div>
         <ul class="sentence-list" id="sentenceList"></ul>
+      </div>
+    </section>
+
+    <!-- ===== THI THỬ TOEIC (bài tập cuối buổi) ===== -->
+    <section id="tab-toeic" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="pt-title">
+      <h1 class="sr-only" id="pt-title">Thi thử TOEIC cuối buổi</h1>
+
+      <!-- HOME: chọn đề + báo cáo kỹ năng tích lũy -->
+      <div id="toeicHome">
+        <div class="card toeic-hero">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">MINI TOEIC · CUỐI BUỔI</span>
+              <h2 id="toeicHomeTitle">Đề luyện từ chính các từ bạn đã học</h2>
+            </div>
+            <span class="score-chip" id="toeicLearnedChip">0 từ đã học</span>
+          </div>
+          <p class="hint" id="toeicHomeNote">Mỗi đề lấy từ vựng trong kho của bạn — ưu tiên từ đang học và đến hạn ôn theo lịch SRS. Không có AI chấm bài: đáp án cố định, chấm ngay khi nộp.</p>
+
+          <div class="toeic-duration" role="group" aria-label="Chọn thời lượng làm bài" id="toeicDuration">
+            <button type="button" data-min="10" aria-pressed="true"><b>10 phút</b><span>12 câu · nghe + đọc + từ vựng</span></button>
+            <button type="button" data-min="15" aria-pressed="false"><b>15 phút</b><span>18 câu · cân bằng đủ kỹ năng</span></button>
+            <button type="button" data-min="30" aria-pressed="false"><b>30 phút</b><span>36 câu · đủ từ đã học</span></button>
+          </div>
+
+          <div class="section-head toeic-forms-head">
+            <div><span class="section-kicker">50 ĐỀ</span><h3>Chọn đề số</h3></div>
+            <button class="btn ghost sm" id="toeicRandom" type="button">Đề ngẫu nhiên</button>
+          </div>
+          <div class="toeic-forms" id="toeicForms" role="listbox" aria-label="Chọn đề số từ 1 đến 50"></div>
+          <div class="hero-actions">
+            <button class="btn primary" id="toeicStart" type="button">Bắt đầu thi thử</button>
+          </div>
+        </div>
+
+        <div class="card" id="toeicSkillsCard" aria-labelledby="toeicSkillsTitle">
+          <div class="section-head">
+            <div><span class="section-kicker">KỸ NĂNG TÍCH LŨY</span><h2 id="toeicSkillsTitle">Đánh giá theo kỹ năng</h2></div>
+          </div>
+          <p class="hint" id="toeicSkillsEmpty">Chưa có bài thi nào — làm đề đầu tiên để bắt đầu theo dõi kỹ năng của bạn.</p>
+          <div class="toeic-skill-grid" id="toeicSkillGrid" hidden></div>
+          <div class="toeic-stats-row" id="toeicStatsRow" hidden></div>
+        </div>
+
+        <div class="card" aria-labelledby="toeicHistoryTitle">
+          <div class="section-head">
+            <div><span class="section-kicker">LỊCH SỬ</span><h2 id="toeicHistoryTitle">Các đề đã làm</h2></div>
+          </div>
+          <p class="hint" id="toeicHistoryEmpty">Chưa có kết quả nào được lưu.</p>
+          <ul class="toeic-history" id="toeicHistoryList" hidden></ul>
+        </div>
+      </div>
+
+      <!-- RUN: làm bài -->
+      <div class="card toeic-run" id="toeicRun" hidden>
+        <div class="toeic-run-head">
+          <div class="toeic-run-meta">
+            <b id="toeicRunForm">Đề 1</b>
+            <span id="toeicRunInfo">12 câu · 10 phút</span>
+          </div>
+          <div class="toeic-timer" id="toeicTimerWrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+            <span id="toeicTimer" aria-hidden="true">10:00</span>
+            <span class="sr-only" id="toeicTimerSr" role="status"></span>
+          </div>
+        </div>
+        <div class="toeic-time-bar" role="presentation"><div class="toeic-time-fill" id="toeicTimeFill"></div></div>
+
+        <div class="toeic-question" id="toeicQuestion">
+          <span class="toeic-q-type" id="toeicQType"></span>
+          <p class="toeic-q-prompt" id="toeicQPrompt"></p>
+          <button class="big-play toeic-play" id="toeicQPlay" type="button" hidden>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <span>Nghe từ</span>
+          </button>
+          <div class="quiz-choices" id="toeicQChoices"></div>
+        </div>
+
+        <div class="toeic-dots" id="toeicDots" aria-label="Tiến độ câu hỏi"></div>
+
+        <div class="hero-actions toeic-run-actions">
+          <button class="btn ghost" id="toeicPrev" type="button">Câu trước</button>
+          <button class="btn ghost" id="toeicSkipNext" type="button">Bỏ qua</button>
+          <button class="btn primary" id="toeicNext" type="button">Câu tiếp</button>
+          <button class="btn primary" id="toeicSubmitBtn" type="button">Nộp bài</button>
+        </div>
+        <button class="btn ghost sm toeic-quit" id="toeicQuit" type="button">Bỏ dở buổi thi</button>
+      </div>
+
+      <!-- RESULT: kết quả -->
+      <div id="toeicResult" hidden>
+        <div class="card summary-card toeic-result-card">
+          <span class="section-kicker">KẾT QUẢ THI THỬ</span>
+          <h2 id="toeicResultTitle">Hoàn thành đề 1</h2>
+          <div class="toeic-score-row">
+            <div class="toeic-score-ring" id="toeicScoreRing"><b id="toeicScoreVal">0</b><span>điểm</span></div>
+            <div class="toeic-score-meta">
+              <p id="toeicScoreLine">Đúng 0/0 câu</p>
+              <p class="hint" id="toeicScoreTime"></p>
+              <p class="hint" id="toeicScoreSaved"></p>
+            </div>
+          </div>
+          <div class="toeic-skill-grid" id="toeicResultSkills"></div>
+          <div class="hero-actions">
+            <button class="btn primary" id="toeicAgain" type="button">Làm đề khác</button>
+            <button class="btn ghost" id="toeicHomeBtn" type="button">Về trang thi thử</button>
+          </div>
+        </div>
+        <div class="card" id="toeicReviewCard" aria-labelledby="toeicReviewTitle" hidden>
+          <div class="section-head">
+            <div><span class="section-kicker">XEM LẠI</span><h2 id="toeicReviewTitle">Câu cần luyện thêm</h2></div>
+          </div>
+          <ul class="toeic-review" id="toeicReviewList"></ul>
+        </div>
       </div>
     </section>
 
@@ -1112,8 +1228,10 @@
   <script src="srs-core.cjs"></script>
   <script src="writing-core.cjs"></script>
   <script src="pron-core.cjs"></script>
+  <script src="toeic-core.cjs"></script>
   <script src="learning.js"></script>
   <script src="lv-api.js"></script>
   <script src="lv-shell.js"></script>
+  <script src="toeic.js"></script>
 </body>
 </html>

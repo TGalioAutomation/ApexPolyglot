@@ -21,7 +21,7 @@ TTS local qua OpenVox, học từ vựng SRS, viết, nói (shadowing + gọi đ
 | `db/` | **Lớp dữ liệu PostgreSQL**: `migrations/*.sql`, `migrate.mjs`, `store.mjs`, `auth.mjs` |
 | `placement.mjs` | Ngân hàng câu hỏi placement + chấm điểm all-định-tuyến (LLM không chấm placement) |
 | `pregen.mjs` | Sinh trước audio cho literal frontend (chạy `npm run pregen`) |
-| `public/` | SPA vanilla JS: `index.html`, `app.js`, `learning.js`, `styles.css`, `srs-core.cjs`, `writing-core.cjs` |
+| `public/` | SPA vanilla JS: `index.html`, `app.js`, `learning.js`, `styles.css`, core dùng chung `srs-core.cjs`/`writing-core.cjs`/`pron-core.cjs`/`toeic-core.cjs` (sinh đề thi thử) + `toeic.js` (UI thi thử cuối buổi) |
 | `public/admin/` | Dashboard quản trị riêng |
 | `public/assets/` | Ảnh minh họa webp (splash, avatar, empty-state, error, offline) |
 | `design-system/` | Thiết kế chuẩn UI: `lingovoice-lifelong/MASTER.md` (app) + `lingovoice-admin/MASTER.md` |

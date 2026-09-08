@@ -63,6 +63,7 @@ import { hashPassword, verifyPassword, passwordStrengthOk, newSessionToken, toke
 import { normalizeSyncPayload, mapLegacyLocalState, validAgeGroup, validRegisterRole } from './db/sync.mjs';
 import { loadMemoryFromStore, saveMemoryToStore, buildSyncSnapshot } from './db/memory-adapter.mjs';
 import { normalizeActivityPayload, xpForActivity, computeStreaks, levelOf, badgeStats, newlyEarnedBadges, BADGES, newInviteCode, validInviteCode, parentSuggestions, utcDayKey, shiftDayKey } from './db/gamification.mjs';
+import { normalizeToeicSubmit, byKindFromAttempts, scoreOf, aggregateToeicHistory } from './db/toeic.mjs';
 
 function sendJson(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -411,6 +412,50 @@ const server = createServer(async (request, response) => {
       if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
       const day = learnerDayKey(new URL(request.url, 'http://local').searchParams.get('day'));
       return sendJson(response, 200, await gamificationSummary(session.user.id, day));
+    }
+
+    // ---- Thi thử TOEIC cuối buổi: nộp bài + lịch sử kỹ năng (docs/api-spec.md §3b) ----
+    if (request.method === 'POST' && pathname === '/api/toeic/submit') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const payload = normalizeToeicSubmit(JSON.parse((await readBody(request)) || '{}'));
+      if (!payload.attempts.length) throw apiError('Bài thi không có câu trả lời hợp lệ.', 400, 'TOEIC_INVALID');
+      const total = payload.attempts.length;
+      const correct = payload.attempts.filter((a) => a.correct === true).length;
+      const byKind = byKindFromAttempts(payload.attempts);
+      const minutes = Math.min(60, Math.round(payload.usedSec / 60));
+      const xp = xpForActivity({ minutes, attempts: payload.attempts });
+      const created = await store.createLearningSession({
+        userId: session.user.id,
+        skill: 'toeic',
+        stats: {
+          version: 1,
+          form: payload.form,
+          durationMin: payload.durationMin,
+          usedSec: payload.usedSec,
+          total, correct,
+          score: scoreOf(correct, total),
+          byKind
+        }
+      });
+      await store.recordAttempts(session.user.id, payload.attempts, created.id);
+      await store.bumpDailyActivity(session.user.id, payload.day, {
+        minutes, words: 0, xp, attempts: total, correct
+      });
+      return sendJson(response, 200, {
+        ...(await gamificationSummary(session.user.id, payload.day)),
+        added: { xp, minutes, attempts: total },
+        result: { id: created.id, score: scoreOf(correct, total), total, correct, byKind }
+      });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/toeic/history') {
+      requireDb();
+      const session = await resolveSession(store, request);
+      if (!session) throw apiError('Chưa đăng nhập.', 401, 'NO_SESSION');
+      const rows = await store.listSessionsBySkill(session.user.id, 'toeic', 60);
+      return sendJson(response, 200, aggregateToeicHistory(rows));
     }
 
     if (request.method === 'POST' && pathname === '/api/parent/invite') {

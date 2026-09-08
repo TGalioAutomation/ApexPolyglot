@@ -2829,7 +2829,7 @@ function renderPlaceResults() {
 }
 
 /* ================= TABS & INIT ================= */
-const SKILLS = ['vocab', 'writing', 'speaking', 'reading', 'listening'];
+const SKILLS = ['vocab', 'writing', 'speaking', 'reading', 'listening', 'toeic'];
 const modalOpeners = new WeakMap();
 
 function modalFocusable(modal) {
@@ -2926,6 +2926,7 @@ function switchTab(name) {
   if (name === 'vocab') renderVocabAll();
   if (name === 'reading') renderReadLibrary();
   if (name === 'writing') startWriting(writingState.mode);
+  if (name === 'toeic') { try { window.LVToeic?.showHome(); } catch {} }
   if (name === 'listening' && (!window.LV.quiz || !window.LV.quiz.sentence)) {
     // Prompt 4: mở trực tiếp tab Nghe -> tự khởi tạo câu đầu tiên, không 0/0
     try { window.startQuiz(); } catch {}
@@ -3064,6 +3065,7 @@ function learningInit() {
     renderVsBrief(words);
   });
   $('#vsSumNext').addEventListener('click', vsOpenBrief);
+  $('#vsSumTest').addEventListener('click', () => switchTab('toeic'));
   $('#vsSumHome').addEventListener('click', () => { hideStudioPanes('home'); renderStudioHome(); });
   // "Nghe" đọc TỪ (kể cả chậm) — nhu cầu nghe phát âm đúng từ mới; câu mẫu nghe qua khu luyện nói
   $('#vsPlay').addEventListener('click', () => { const cur = vsCurrentItem(); if (cur) LV.playText(cur.item.term, LV.language, { announceFallback: false }); });

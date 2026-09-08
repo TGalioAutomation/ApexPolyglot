@@ -27,6 +27,19 @@ Toàn bộ màu/bo/shadow đi qua CSS variables, không hardcode hex:
 | Nghe | `#tab-listening` | Nghe–chọn, nghe–viết | audio lỗi → `offline-audio.webp` |
 | Thiết lập | `#tab-setup` | Profile, stage tuổi, giọng Cô Linh, **tài khoản + đồng bộ (mới)** | — |
 
+Hub **Luyện tập** có 6 kỹ năng (subtab `#practiceSubtabs`): Từ mới, Viết, Nói, Đọc, Nghe
+và **Thi thử** (`#tab-toeic`, logic `public/toeic.js` + `toeic-core.cjs`):
+
+- **Home**: chọn thời lượng 10/15/30 phút (12/18/36 câu) + 1 trong 50 đề (chip hiển thị
+  điểm cao nhất đã đạt của đề đó), thẻ Kỹ năng tích lũy (Từ vựng/Đọc/Nghe theo % đúng
+  cộng dồn + điểm TB/cao nhất/xu hướng), lịch sử các đề đã làm.
+- **Làm bài** (`#toeicRun`): đồng hồ đếm ngược (đỏ + thông báo SR ở mốc 5 phút/1 phút,
+  hết giờ tự nộp), thanh thời gian, 4 lựa chọn A–D (`aria-pressed` qua class selected),
+  dải dot điều hướng câu (đã trả lời/đang làm), nộp hai bước khi còn câu trống.
+- **Kết quả** (`#toeicResult`): vòng điểm %, độ chính xác từng kỹ năng, danh sách câu sai
+  kèm nghe lại từ; CTA từ tổng kết phiên học từ mới (`#vsSumTest`) dẫn sang tab này để
+  làm "bài tập cuối buổi". Khách: lưu `lv-toeic`; có tài khoản: nộp `/api/toeic/submit`.
+
 Splash/onboarding lần đầu: `splash-illustration.webp` + 3 câu giới thiệu → nút bắt đầu.
 Avatar mặc định: `default-learner-avatar.webp` trong profile và topbar.
 

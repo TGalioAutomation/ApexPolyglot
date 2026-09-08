@@ -68,6 +68,22 @@ Sai vai trò → 403 `ROLE_REQUIRED` (ví dụ learner gọi `/api/parent/invite
 | POST | `/api/teacher/chat` | `{ learnerId?, message, history[] }` → câu trả lời Cô Linh có inject trí nhớ dài hạn; câu ví dụ trong `【 】` được đọc TTS |
 | GET | `/api/teacher/status` | Provider AI nào đang cấu hình/active |
 
+## 3b. Thi thử TOEIC cuối buổi
+
+Đề sinh **phía client** bằng `public/toeic-core.cjs` (deterministic theo số đề, không dùng LLM — như placement):
+50 đề × thời lượng 10 phút (12 câu) / 15 phút (18 câu) / 30 phút (36 câu), 5 dạng câu phỏng TOEIC
+(meaning/fill/collocation/listen/translate) ánh xạ sang kỹ năng `vocab` / `reading` / `listening`.
+Từ mục tiêu lấy từ SRS của người học (ưu tiên đang học > đến hạn ôn > chưa đến hạn > đã thành thạo),
+thiếu thì bơm từ kho vocab theo CEFR dễ lên. Audio câu nghe dùng đúng luồng prepared (pregen term).
+
+| Method | Path | Mô tả |
+|---|---|---|
+| POST | `/api/toeic/submit` | `[account]` `{ day?, form 1-50, durationMin 10\|15\|30, usedSec, attempts[] ≤100: [{ kind: vocab\|reading\|listening, itemRef?, correct }] }` — attempts là nguồn chân lý của điểm (mỗi câu 1 lượt, bỏ trống = `correct:false`). Server tự tính lại total/correct/score/byKind, lưu 1 dòng `learning_sessions` (`skill='toeic'`, stats kèm form/thời lượng) + attempts gắn `session_id`, cộng XP/phút vào `daily_activity` (không double với `/api/activity` — client không tự queue các lượt này) → response = gamification summary (như `/api/activity`) + `{ added, result }`. Lỗi: 400 `TOEIC_INVALID` (0 câu hợp lệ), 401 `NO_SESSION`, 503 `DB_UNAVAILABLE` |
+| GET | `/api/toeic/history` | `[account]` → `{ history: [{ id, at, form, durationMin, usedSec, total, correct, score, byKind }] (60 đề gần nhất, mới trước), skills: { vocab/reading/listening: { total, correct } }, stats: { tests, avgScore, bestScore, minutes, recentAvgScore (5 đề gần nhất), previousAvgScore (các đề trước đó) } }` |
+
+Khách chưa đăng nhập: kết quả chỉ lưu localStorage `lv-toeic` (xem `data-model.md`); khi có tài khoản
+client gọi submit và xoá nhãn chưa-đồng-bộ sau khi thành công.
+
 ## 4. Trí nhớ giáo viên
 
 | Method | Path | Mô tả |

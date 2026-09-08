@@ -705,6 +705,9 @@
 
   window.LVShell = {
     showError, showAudioOffline, syncNow, refreshAccount,
-    logActivity, queueAttempt, refreshGamification, habitStats: serverHabitStats
+    logActivity, queueAttempt, refreshGamification, habitStats: serverHabitStats,
+    // Thi thử TOEIC: nộp bài trên server trả kèm summary — áp luôn để XP/huy hiệu lên tức thì
+    isLoggedIn: () => !!gam.user,
+    applySummary: applyGamification
   };
 })();

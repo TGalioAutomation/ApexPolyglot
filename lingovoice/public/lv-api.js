@@ -34,6 +34,9 @@
     // Gamification (roadmap #4)
     activity: (payload) => call('POST', '/api/activity', payload),
     summary: (day) => call('GET', '/api/gamification/summary' + (day ? `?day=${encodeURIComponent(day)}` : '')),
+    // Thi thử TOEIC cuối buổi
+    toeicSubmit: (payload) => call('POST', '/api/toeic/submit', payload),
+    toeicHistory: () => call('GET', '/api/toeic/history'),
     parentInvite: () => call('POST', '/api/parent/invite', {}),
     parentChildren: (day) => call('GET', '/api/parent/children' + (day ? `?day=${encodeURIComponent(day)}` : '')),
     parentDashboard: (childId, day) => call('GET', `/api/parent/children/${encodeURIComponent(childId)}/dashboard` + (day ? `?day=${encodeURIComponent(day)}` : '')),

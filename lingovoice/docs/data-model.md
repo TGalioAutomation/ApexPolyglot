@@ -231,9 +231,17 @@ Payload đúng **bản đồ key localStorage cũ**: `lv-srs`, `lv-mistakes`, `l
 Server map sang schema sync trên. Idempotent — gọi lại không nhân đôi.
 
 Key localStorage client-only (không sync): `lv-learn-batch` (số từ mỗi phiên học mới:
-3/5/7), `lv-learn-topic` (gói từ vựng đang chọn — 'all' hoặc tên chủ đề) và `lv-session`
+3/5/7), `lv-learn-topic` (gói từ vựng đang chọn — 'all' hoặc tên chủ đề), `lv-session`
 (phiên học dở — mode learn lưu thêm `steps` learn/check tích lũy và `stepIndex` để resume
-đúng bước).
+đúng bước) và `lv-toeic` (lịch sử thi thử cuối buổi: tối đa 60 bản ghi
+`{ at, form, durationMin, usedSec, total, correct, score, byKind, synced }` — đã đăng nhập
+thì bản chuẩn nằm ở `learning_sessions` qua `POST /api/toeic/submit`, bản local chỉ là
+bản nháp và được đánh dấu `synced` sau khi nộp thành công).
+
+Bảng `learning_sessions` dùng chung cho analytics buổi học; thi thử TOEIC lưu với
+`skill='toeic'` và `stats` = `{ version:1, form, durationMin, usedSec, total, correct,
+score, byKind: { vocab|reading|listening: { total, correct } } }`; các dòng `attempts`
+tương ứng gắn `session_id` của buổi thi đó.
 
 ## 3. Từ điển dữ liệu chuẩn
 
