@@ -52,6 +52,22 @@ test('phiên học từ mới nêu rõ số lượng ngay từ đầu + câu m�
   assert.match(learning, /mỗi từ kèm 1 câu mẫu/);
 });
 
+test('nhấn giữ từ / câu mẫu trên thẻ mở chi tiết: nghĩa, cách dùng, nghe, đọc thử', () => {
+  // hai vùng chạm trên thẻ đều có hint và được chống chọn chữ/menu hệ thống khi giữ
+  assert.match(html, /id="vsTerm"[^>]+title="Nhấn giữ để xem nghĩa, cách dùng, nghe và đọc thử"/);
+  assert.match(html, /id="vsExample"[^>]+title="Nhấn giữ để xem nghĩa, cách dùng, nghe và đọc thử"/);
+  // helper long-press: 450ms, hủy khi rời tay/di chuyển, rung phản hồi, chặn click sau khi kích hoạt
+  assert.match(learning, /function vsBindLongPress\(el, getItem\)/);
+  assert.match(learning, /setTimeout\([\s\S]{0,200}450\)/);
+  assert.match(learning, /navigator\.vibrate/);
+  assert.match(learning, /contextmenu', \(e\) => e\.preventDefault/);
+  assert.match(learning, /vsBindLongPress\(\$\('#vsTerm'\), \(\) => vs\.currentItem\)/);
+  assert.match(learning, /vsBindLongPress\(\$\('#vsExample'\), \(\) => vs\.currentItem\)/);
+  // từ hiện tại được ghi lại ở cả thẻ giới thiệu lẫn thẻ kiểm tra để mở đúng từ
+  assert.match(learning, /function vsShowLearnCard\(v, done, total\) \{\n  vs\.currentItem = v;/);
+  assert.match(learning, /vs\.revealed = false;\n  const v = cur\.item;\n  vs\.currentItem = v;/);
+});
+
 test('trang gói từ vựng: chọn gói theo chủ đề trước khi học', () => {
   assert.match(html, /id="vs-packs"/);
   assert.match(html, /id="vsPackGrid"/);

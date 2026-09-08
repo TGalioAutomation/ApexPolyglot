@@ -369,7 +369,7 @@ function saveLearnBatch(n) { try { localStorage.setItem(LEARN_BATCH_KEY, String(
 const LEARN_TOPIC_KEY = 'lv-learn-topic'; // gói từ vựng đang chọn ('all' hoặc tên chủ đề)
 function loadLearnTopic() { try { return localStorage.getItem(LEARN_TOPIC_KEY) || 'all'; } catch { return 'all'; } }
 function saveLearnTopic(t) { try { localStorage.setItem(LEARN_TOPIC_KEY, t); } catch {} }
-const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null, steps: [], stepIndex: 0, batchSize: 5, recheckBudget: 0, topic: loadLearnTopic() };
+const vs = { view: 'home', mode: 'review', queue: [], index: 0, revealed: false, records: [], preview: null, steps: [], stepIndex: 0, batchSize: 5, recheckBudget: 0, topic: loadLearnTopic(), currentItem: null };
 
 function vsItemState(lang, id) { return store.srs.items[lang]?.[id] || SRS.initial(); }
 function vsSave(lang, id, next) {
@@ -747,6 +747,7 @@ function vsShowStep() {
 
 // Thẻ giới thiệu từ mới: hiện ngay nghĩa + câu mẫu (không đoán) — làm quen từ trước khi bị kiểm tra
 function vsShowLearnCard(v, done, total) {
+  vs.currentItem = v;
   const isZh = LV.language === 'zh';
   $('#vsTopic').textContent = v.topic || '';
   $('#vsTerm').textContent = v.term;
@@ -785,6 +786,7 @@ function vsShowCard() {
   if (!cur || !cur.item) return; // không bao giờ render thẻ trống
   vs.revealed = false;
   const v = cur.item;
+  vs.currentItem = v;
   const isZh = LV.language === 'zh';
   $('#vsTopic').textContent = v.topic || '';
   $('#vsTerm').textContent = v.term;
@@ -1026,6 +1028,124 @@ function renderVsBank() {
     list.append(row);
   });
 }
+// Nhấn giữ ~0,45s trên từ/câu mẫu để mở chi tiết: nghĩa + cách dùng + nghe + đọc thử.
+// Di chuyển quá 10px hoặc nhả tay là hủy; sau khi kích hoạt sẽ chặn click ngay sau đó.
+function vsBindLongPress(el, getItem) {
+  let timer = null, sx = 0, sy = 0, fired = false;
+  const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  el.classList.add('holdable');
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button && e.button !== 0) return;
+    fired = false;
+    sx = e.clientX; sy = e.clientY;
+    cancel();
+    timer = setTimeout(() => {
+      timer = null;
+      fired = true;
+      if (navigator.vibrate) navigator.vibrate(15);
+      const item = getItem();
+      if (item) vsOpenDetail(item);
+    }, 450);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (timer && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) cancel();
+  });
+  el.addEventListener('pointerup', cancel);
+  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('pointerleave', cancel);
+  el.addEventListener('click', (e) => {
+    if (!fired) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    fired = false;
+  });
+  // giữ lâu trên mobile không được mở menu hệ thống / chọn chữ
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// Khối "Đọc thử" trong popup chi tiết từ: đọc từ, so từng từ + AI mẹo sửa + nghe lại giọng mình
+function vsDetailPronBlock(item) {
+  const lang = item.lang || LV.language;
+  const box = document.createElement('div'); box.className = 'vs-detail-pron';
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn ghost sm';
+  btn.setAttribute('aria-pressed', 'false'); btn.textContent = 'Đọc thử';
+  const status = document.createElement('p'); status.className = 'hint'; status.setAttribute('role', 'status');
+  const result = document.createElement('div'); result.hidden = true;
+  const words = document.createElement('div'); words.className = 'pron-words';
+  words.setAttribute('aria-label', 'So từng từ với từ mục tiêu');
+  const score = document.createElement('p'); score.className = 'vs-pron-score';
+  const scoreText = document.createElement('strong'); scoreText.setAttribute('aria-live', 'polite');
+  score.appendChild(scoreText);
+  const fb = document.createElement('div');
+  const replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn ghost sm';
+  replay.setAttribute('aria-label', 'Nghe lại giọng bạn vừa đọc'); replay.hidden = true; replay.textContent = 'Nghe lại';
+  result.append(words, score, fb, replay);
+  box.append(btn, status, result);
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.setAttribute('aria-pressed', 'true');
+    result.hidden = true;
+    fb.replaceChildren();
+    words.replaceChildren();
+    status.textContent = 'Đang nghe bạn đọc…';
+    const recOn = await LV.selfRecord.start();
+    const heard = await LV.listenOnce({
+      language: LV.SPEECH_LANG[lang],
+      timeoutMs: 10000,
+      onListening: () => { status.textContent = 'Đang nghe bạn đọc…'; },
+      onProcessing: () => { status.textContent = 'Đang nhận dạng…'; },
+      onError: () => { status.textContent = 'Không nghe rõ — thử lại ở nơi yên tĩnh nhé.'; }
+    });
+    const myVoice = recOn ? await LV.selfRecord.stop() : '';
+    pronReplayInto(replay, myVoice);
+    btn.disabled = false;
+    btn.setAttribute('aria-pressed', 'false');
+    if (!heard) return;
+    const aligned = window.Pron.align(item.term, heard, lang);
+    const scoreNum = window.Pron.score(aligned);
+    pronRenderDiffInto(words, aligned);
+    result.hidden = false;
+    scoreText.textContent = `${scoreNum}/100 — ${pronScoreLabel(scoreNum)}`;
+    status.textContent = `Bạn đọc: “${heard}”`;
+    if (scoreNum < 90) addMistake('speaking', `Phát âm: “${item.term}”`, item.term);
+    renderMistakes();
+    if (scoreNum >= 100) return;
+    fb.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'hint';
+    loading.textContent = 'Cô Linh đang nghe cách bạn đọc…';
+    fb.appendChild(loading);
+    const level = store.profile.placement?.[lang]?.level || 2;
+    try {
+      const res = await fetch('/api/pronunciation/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: item.term, heard, language: lang, level })
+      });
+      const d = await res.json();
+      fb.replaceChildren();
+      if (!res.ok) {
+        const p = document.createElement('p');
+        p.className = 'hint';
+        p.textContent = d.code === 'NO_AI'
+          ? 'Chưa cấu hình AI nên chưa có mẹo chi tiết — so từng từ phía trên vẫn dùng được.'
+          : 'Chưa phân tích được lúc này — bạn vẫn xem được so từng từ phía trên.';
+        fb.appendChild(p);
+        return;
+      }
+      scoreText.textContent = `${d.score}/100 — ${d.praise}`;
+      pronFeedbackInto(fb, d);
+    } catch {
+      fb.replaceChildren();
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = 'Mất kết nối tới AI — bạn vẫn xem được so từng từ phía trên.';
+      fb.appendChild(p);
+    }
+  });
+  return box;
+}
+
 function vsOpenDetail(item) {
   const body = document.getElementById('vsDetailBody');
   body.replaceChildren();
@@ -1038,12 +1158,15 @@ function vsOpenDetail(item) {
   const note = document.createElement('p'); note.className = 'vs-note'; note.textContent = isZh ? (item.note || '') : (item.collocations && item.collocations.length ? `Cách dùng: ${item.collocations.join(' · ')}` : '');
   note.hidden = !note.textContent;
   const audio = document.createElement('div'); audio.className = 'hero-actions';
-  const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn ghost sm'; b1.textContent = 'Nghe';
+  const b0 = document.createElement('button'); b0.type = 'button'; b0.className = 'btn ghost sm'; b0.textContent = 'Nghe từ';
+  b0.onclick = () => LV.playText(item.term, item.lang, { announceFallback: false });
+  const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn ghost sm'; b1.textContent = 'Nghe câu';
   b1.onclick = () => LV.playText(item.example, item.lang, { announceFallback: false });
-  const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn ghost sm'; b2.textContent = 'Nghe chậm';
+  const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn ghost sm'; b2.textContent = 'Nghe câu chậm';
   b2.onclick = () => LV.playText(item.example, item.lang, { speed: 0.75, announceFallback: false });
-  audio.append(b1, b2);
+  audio.append(b0, b1, b2);
   body.append(h, py, me, ex, tr, note, audio);
+  body.append(vsDetailPronBlock(item)); // đọc thử ngay trong popup
   if (item.id && item.id.startsWith('c-')) {
     const del = document.createElement('button'); del.type = 'button'; del.className = 'btn ghost sm'; del.textContent = 'Xóa khỏi kho';
     del.onclick = () => {
@@ -1371,8 +1494,8 @@ function shadowRecord() {
 }
 
 /* ---- Nghe lại giọng mình vừa nói: phát blob ghi âm cục bộ (không upload) ---- */
-function pronReplayInto(btnId, url) {
-  const btn = document.getElementById(btnId);
+function pronReplayInto(btnOrId, url) {
+  const btn = typeof btnOrId === 'string' ? document.getElementById(btnOrId) : btnOrId;
   if (!btn) return;
   if (!url) { btn.hidden = true; btn.onclick = null; return; }
   btn.hidden = false;
@@ -3131,6 +3254,9 @@ function learningInit() {
   $('#vsAddBtn').addEventListener('click', vsAddWord);
   $('#vsAddInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') vsAddWord(); });
   $('#vsDetailClose').addEventListener('click', () => closeModal($('#vsDetail')));
+  // Nhấn giữ từ / câu mẫu trên thẻ để xem chi tiết: nghĩa, cách dùng, nghe, đọc thử
+  vsBindLongPress($('#vsTerm'), () => vs.currentItem);
+  vsBindLongPress($('#vsExample'), () => vs.currentItem);
   $('#vsDetail').addEventListener('click', (e) => { if (e.target === $('#vsDetail')) closeModal($('#vsDetail')); });
   document.querySelectorAll('.modal').forEach((modal) => modal.addEventListener('keydown', handleModalKeydown));
   $('#mistakeClear').addEventListener('click', () => {

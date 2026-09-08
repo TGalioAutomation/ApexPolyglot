@@ -75,7 +75,12 @@ trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
    tab Nói dùng `#pronReplay`, cùng helper `LV.selfRecord`); trình duyệt không hỗ trợ thì nút
    ẩn và luồng chính vẫn chạy; đổi mục tiêu Từ/Câu mẫu hoặc sang thẻ khác là gỡ bản ghi;
    đọc <90 điểm
-   thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. Nút "Nghe từ" /
+   thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. **Nhấn giữ ~0,45s
+   trên `#vsTerm` hoặc `#vsExample` (class `holdable`, cấm chọn chữ/menu hệ thống, rung phản
+   hồi trên mobile) mở popup chi tiết từ `#vsDetail` (`vsOpenDetail`): nghĩa + phiên âm/pinyin
+   + câu mẫu + dịch + "Cách dùng" (collocations), hàng nút Nghe từ / Nghe câu / Nghe câu chậm,
+   và khối "Đọc thử" (`vsDetailPronBlock`) — đọc qua micro so từng từ + AI mẹo sửa + nút
+   "Nghe lại" phát lại giọng vừa đọc; đọc <90 điểm vào sổ lỗi như luồng phát âm khác. Nút "Nghe từ" /
    "Nghe từ chậm" trên thẻ đọc TỪ (term), không phải câu mẫu — từ vựng đều được pregen audio.
    Phím Space khi
    đang focus trên nút trong thẻ không lột thành "Đã hiểu".

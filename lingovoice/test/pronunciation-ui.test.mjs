@@ -99,3 +99,21 @@ test('sau khi nói có nút "Nghe lại" phát lại chính giọng vừa ghi (c
   // CSS có trạng thái đang phát
   assert.match(css, /\.vs-pron-actions \.playing, \.hero-actions \.playing/);
 });
+
+test('popup chi tiết từ (nhấn giữ) có đọc thử: mic + so từng từ + AI mẹo + nghe lại', () => {
+  // chi tiết từ mở từ long-press; khối đọc thử dựng động với đủ thành phần
+  assert.match(learningJs, /function vsDetailPronBlock\(item\)/);
+  assert.match(learningJs, /body\.append\(vsDetailPronBlock\(item\)\); \/\/ đọc thử ngay trong popup/);
+  assert.match(learningJs, /btn\.textContent = 'Đọc thử';/);
+  assert.match(learningJs, /'Nghe lại giọng bạn vừa đọc'/);
+  assert.match(learningJs, /window\.Pron\.align\(item\.term, heard, lang\)/);
+  assert.match(learningJs, /const recOn = await LV\.selfRecord\.start\(\);[\s\S]{0,400}?const heard = await LV\.listenOnce/);
+  assert.match(learningJs, /pronReplayInto\(replay, myVoice\)/);
+  assert.match(learningJs, /addMistake\('speaking', `Phát âm: “\$\{item\.term\}”`/);
+  assert.match(learningJs, /fetch\('\/api\/pronunciation\/feedback'/);
+  // nghe trong popup: nghe từ (term) + nghe câu (example) + câu chậm
+  assert.match(learningJs, /b0\.textContent = 'Nghe từ';/);
+  assert.match(learningJs, /LV\.playText\(item\.term, item\.lang/);
+  // chống chọn chữ khi giữ lâu trên thẻ
+  assert.match(css, /\.holdable\s*\{[^}]+user-select: none/);
+});

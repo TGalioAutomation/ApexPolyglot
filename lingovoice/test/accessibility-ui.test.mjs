@@ -8,6 +8,8 @@ const css = await readFile(new URL('../public/styles.css', import.meta.url), 'ut
 
 test('modal chi tiết từ và placement có semantics, nhãn và focus lifecycle', () => {
   assert.match(html, /id="vsDetail"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="vsDetailKind"/);
+  // nút đóng phải thấy được trên modal nền sáng (màu trắng gốc của .teacher-close bị chìm)
+  assert.match(css, /\.modal \.teacher-close\s*\{[^}]+var\(--foreground\)/);
   assert.match(html, /id="placementModal"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="placeTitle"/);
   assert.match(html, /id="placeOpenAnswer"[^>]*aria-label="Câu trả lời bài kiểm tra đầu vào"/);
   assert.match(learning, /function openModal\(/);
