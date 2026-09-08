@@ -1370,6 +1370,22 @@ function shadowRecord() {
   $('#shadowTranscript').textContent = 'Đang nghe…';
 }
 
+/* ---- Nghe lại giọng mình vừa nói: phát blob ghi âm cục bộ (không upload) ---- */
+function pronReplayInto(btnId, url) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (!url) { btn.hidden = true; btn.onclick = null; return; }
+  btn.hidden = false;
+  btn.onclick = () => {
+    const audio = new Audio(url);
+    btn.classList.add('playing');
+    const done = () => btn.classList.remove('playing');
+    audio.onended = done;
+    audio.onerror = done;
+    audio.play().catch(done);
+  };
+}
+
 /* ---- PHÁT ÂM: nghe mẫu → nói → so từng từ + AI chỉ lỗi ---- */
 const pronState = { item: null, busy: false };
 function pronPool(source) {
@@ -1392,6 +1408,7 @@ function pronPick() {
   $('#pronResult').hidden = true;
   $('#pronFeedback').replaceChildren();
   $('#pronWords').replaceChildren();
+  pronReplayInto('pronReplay', '');
 }
 function pronRenderDiff(aligned) {
   pronRenderDiffInto($('#pronWords'), aligned);
@@ -1421,6 +1438,7 @@ async function pronRecord() {
   $('#pronMic').setAttribute('aria-pressed', 'true');
   $('#pronResult').hidden = true;
   $('#pronStatus').textContent = 'Đang nghe bạn nói…';
+  const recOn = await LV.selfRecord.start();
   const heard = await LV.listenOnce({
     language: LV.SPEECH_LANG[LV.language],
     timeoutMs: 12000,
@@ -1428,6 +1446,8 @@ async function pronRecord() {
     onProcessing: () => { $('#pronStatus').textContent = 'Đang nhận dạng câu nói…'; },
     onError: () => { $('#pronStatus').textContent = 'Không nhận diện được. Hãy thử lại ở nơi yên tĩnh.'; }
   });
+  const myVoice = recOn ? await LV.selfRecord.stop() : '';
+  pronReplayInto('pronReplay', myVoice);
   $('#pronMic').disabled = false;
   $('#pronMic').setAttribute('aria-pressed', 'false');
   pronState.busy = false;
@@ -1535,6 +1555,7 @@ function vsPronReset(v) {
   document.getElementById('vsPronResult').hidden = true;
   document.getElementById('vsPronFeedback').replaceChildren();
   document.getElementById('vsPronWords').replaceChildren();
+  pronReplayInto('vsPronReplay', '');
 }
 function vsPronShowTarget() {
   const v = vsPronState.item;
@@ -1562,6 +1583,7 @@ function vsPronSetTarget(target) {
   vsPronShowTarget();
   document.getElementById('vsPronStatus').textContent = '';
   document.getElementById('vsPronResult').hidden = true;
+  pronReplayInto('vsPronReplay', '');
 }
 async function vsPronRecord() {
   if (vsPronState.busy || !vsPronState.item) return;
@@ -1575,6 +1597,7 @@ async function vsPronRecord() {
   resultEl.hidden = true;
   const statusEl = document.getElementById('vsPronStatus');
   statusEl.textContent = 'Đang nghe bạn đọc…';
+  const recOn = await LV.selfRecord.start();
   const heard = await LV.listenOnce({
     language: LV.SPEECH_LANG[LV.language],
     timeoutMs: 10000,
@@ -1582,6 +1605,8 @@ async function vsPronRecord() {
     onProcessing: () => { statusEl.textContent = 'Đang nhận dạng…'; },
     onError: () => { statusEl.textContent = 'Không nghe rõ — thử lại ở nơi yên tĩnh nhé.'; }
   });
+  const myVoice = recOn ? await LV.selfRecord.stop() : '';
+  pronReplayInto('vsPronReplay', myVoice);
   mic.disabled = false;
   mic.setAttribute('aria-pressed', 'false');
   vsPronState.busy = false;

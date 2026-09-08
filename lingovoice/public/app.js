@@ -987,6 +987,52 @@ function listenOnce(options = {}) {
   return listenOnceWithBrowser(lang, options);
 }
 
+// Ghi âm giọng người dùng để nghe lại ngay sau khi nói (blob chỉ ở bộ nhớ máy,
+// không upload đi đâu). Trình duyệt không hỗ trợ hoặc từ chối micro → trả false,
+// luồng nhận dạng chính vẫn chạy bình thường.
+const selfRecorder = { stream: null, recorder: null, chunks: [], url: '' };
+function selfRecordSupported() {
+  return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+}
+async function selfRecordStart() {
+  if (!selfRecordSupported()) return false;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { return false; }
+  let recorder;
+  try { recorder = new MediaRecorder(stream); }
+  catch {
+    stream.getTracks().forEach((t) => t.stop());
+    return false;
+  }
+  selfRecorder.stream = stream;
+  selfRecorder.recorder = recorder;
+  selfRecorder.chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data && e.data.size) selfRecorder.chunks.push(e.data); };
+  recorder.start();
+  return true;
+}
+function selfRecordStop() {
+  return new Promise((resolve) => {
+    const rec = selfRecorder.recorder;
+    if (!rec || rec.state === 'inactive') { selfRecordReset(); resolve(''); return; }
+    rec.onstop = () => {
+      const blob = new Blob(selfRecorder.chunks, { type: rec.mimeType || 'audio/webm' });
+      selfRecordReset();
+      if (selfRecorder.url) URL.revokeObjectURL(selfRecorder.url);
+      selfRecorder.url = blob.size ? URL.createObjectURL(blob) : '';
+      resolve(selfRecorder.url);
+    };
+    try { rec.stop(); } catch { selfRecordReset(); resolve(''); }
+  });
+}
+function selfRecordReset() {
+  selfRecorder.stream?.getTracks().forEach((t) => t.stop());
+  selfRecorder.stream = null;
+  selfRecorder.recorder = null;
+  selfRecorder.chunks = [];
+}
+
 // Fallback cuối cùng khi OpenVox không khả dụng; luồng chính của Cô Linh dùng
 // /api/voice/teacher để giữ một chất giọng thống nhất cho cả tiếng Việt và câu mẫu.
 async function speakBrowserVI(text) {
@@ -1210,6 +1256,7 @@ window.LV = {
   allSentences,
   playText,
   listenOnce,
+  selfRecord: { supported: selfRecordSupported, start: selfRecordStart, stop: selfRecordStop },
   speakTargetSegments,
   speakTeacherReply,
   speakBrowserVI,

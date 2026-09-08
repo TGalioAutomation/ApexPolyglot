@@ -849,6 +849,8 @@ input[type="range"] { width: 100%; accent-color: var(--primary); }
 .vs-pron-line { margin: 0; font-size: 18px; }
 .vs-pron-score { margin: 0; font-size: 14px; }
 #vsPronMic[aria-pressed="true"] { border-color: var(--destructive); box-shadow: 0 0 0 3px var(--destructive-soft); }
+/* Nút "Nghe lại" khi đang phát lại chính giọng người dùng vừa ghi */
+.vs-pron-actions .playing, .hero-actions .playing { background: var(--accent-soft); border-color: var(--stage-accent); }
 @media (prefers-reduced-motion: reduce) {
   #vsPronMic { transition: none; }
 }

@@ -22,7 +22,7 @@ Toàn bộ màu/bo/shadow đi qua CSS variables, không hardcode hex:
 | Lộ trình | `#tab-path` | Roadmap 3 chặng, next-best-action | — |
 | Từ vựng | `#tab-vocab` | Flashcard SRS, **phiên học từ mới tích lũy (mới)**, quiz, sổ lỗi sai | hết từ mới → toast + gợi ý thêm từ |
 | Viết | `#tab-writing` | Xếp chunk, chính tả, dịch ngược, viết tự do | — |
-| Nói | `#tab-speaking` | 4 mode: Shadowing ASR, **Luyện phát âm (mới)**, gọi điện roleplay, trò chuyện Cô Linh | mất mic → hướng dẫn mở quyền; AI lỗi → vẫn xem được so-từng-từ ở client |
+| Nói | `#tab-speaking` | 4 mode: Shadowing ASR, **Luyện phát âm (mới — có "Nghe lại" giọng mình vừa nói)**, gọi điện roleplay, trò chuyện Cô Linh | mất mic → hướng dẫn mở quyền; AI lỗi → vẫn xem được so-từng-từ ở client |
 | Đọc | `#tab-reading` | Graded readers 3 mức, đọc theo câu | — |
 | Nghe | `#tab-listening` | Nghe–chọn, nghe–viết | audio lỗi → `offline-audio.webp` |
 | Thiết lập | `#tab-setup` | Profile, stage tuổi, giọng Cô Linh, **tài khoản + đồng bộ (mới)** | — |
@@ -69,7 +69,12 @@ trong `#tab-vocab`, thay nhau hiển thị bằng `hideStudioPanes()`:
    (`#vsPronTargets`), bấm `#vsPronPlay` "Nghe mẫu" để nghe đúng phát âm của mục tiêu đang
    chọn (audio pregen theo từ, thiếu thì fallback giọng thiết bị), bấm `#vsPronMic` đọc qua
    micro → so từng từ tại chỗ (pron-core,
-   chip xanh/đỏ + điểm) → AI trả mẹo sửa (`POST /api/pronunciation/feedback`); đọc <90 điểm
+   chip xanh/đỏ + điểm) → AI trả mẹo sửa (`POST /api/pronunciation/feedback`). Trong lúc nghe
+   micro app ghi âm luôn giọng đọc bằng MediaRecorder (blob chỉ ở bộ nhớ máy, không upload);
+   nói xong hiện nút `#vsPronReplay` **"Nghe lại"** phát lại chính giọng vừa đọc (mode Phát âm
+   tab Nói dùng `#pronReplay`, cùng helper `LV.selfRecord`); trình duyệt không hỗ trợ thì nút
+   ẩn và luồng chính vẫn chạy; đổi mục tiêu Từ/Câu mẫu hoặc sang thẻ khác là gỡ bản ghi;
+   đọc <90 điểm
    thì từ vào sổ lỗi, không ảnh hưởng thang điểm SRS của bước hiện tại. Nút "Nghe từ" /
    "Nghe từ chậm" trên thẻ đọc TỪ (term), không phải câu mẫu — từ vựng đều được pregen audio.
    Phím Space khi

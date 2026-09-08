@@ -8,6 +8,7 @@ const html = await readFile(new URL('public/index.html', root), 'utf8');
 const learningJs = await readFile(new URL('public/learning.js', root), 'utf8');
 const css = await readFile(new URL('public/styles.css', root), 'utf8');
 const coreJs = await readFile(new URL('public/pron-core.cjs', root), 'utf8');
+const appJs = await readFile(new URL('public/app.js', root), 'utf8');
 
 test('tab Speaking có mode Phát âm và panel riêng ẩn mặc định', () => {
   assert.match(html, /<button type="button" data-mode="pron">Phát âm<\/button>/);
@@ -74,4 +75,27 @@ test('thẻ từ trong phiên học có khu luyện đọc/nói (từ hoặc câ
   // Space trên nút mic đang focus không được lột thành "Đã hiểu"
   assert.match(learningJs, /INPUT\|TEXTAREA\|SELECT\|BUTTON/);
   assert.match(css, /\.vs-pron\s*\{[^}]+var\(--border\)/);
+});
+
+test('sau khi nói có nút "Nghe lại" phát lại chính giọng vừa ghi (cục bộ, không upload)', () => {
+  // Nút ẩn mặc định, hiện sau lần nói đầu; aria-label nói rõ đó là giọng của người học
+  assert.match(html, /id="vsPronReplay"[^>]+aria-label="Nghe lại giọng bạn vừa đọc"[^>]*hidden/);
+  assert.match(html, /id="pronReplay"[^>]+aria-label="Nghe lại giọng bạn vừa nói"[^>]*hidden/);
+  // Helper ghi âm MediaRecorder dùng chung; không hỗ trợ thì trả false, luồng chính vẫn chạy
+  assert.match(appJs, /function selfRecordSupported\(\)[^}]+MediaRecorder/);
+  assert.match(appJs, /getUserMedia\(\{ audio: true \}\)/);
+  assert.match(appJs, /selfRecord: \{ supported: selfRecordSupported, start: selfRecordStart, stop: selfRecordStop \}/);
+  // Wiring: ghi âm chạy song song với listenOnce, xong thì tạo object URL để phát lại
+  assert.match(learningJs, /const recOn = await LV\.selfRecord\.start\(\);[\s\S]{0,400}?const heard = await LV\.listenOnce/);
+  assert.match(learningJs, /async function pronRecord\(\)[\s\S]+?recOn \? await LV\.selfRecord\.stop\(\) : ''/);
+  assert.match(learningJs, /async function vsPronRecord\(\)[\s\S]+?recOn \? await LV\.selfRecord\.stop\(\) : ''/);
+  assert.match(learningJs, /pronReplayInto\('pronReplay', myVoice\)/);
+  assert.match(learningJs, /pronReplayInto\('vsPronReplay', myVoice\)/);
+  // Đổi mục tiêu / sang thẻ khác / chọn câu khác thì gỡ nút nghe lại
+  assert.match(learningJs, /pronReplayInto\('vsPronReplay', ''\)/);
+  assert.match(learningJs, /pronReplayInto\('pronReplay', ''\)/);
+  // Không rò rỉ object URL: bản ghi mới revoke bản cũ
+  assert.match(appJs, /URL\.revokeObjectURL\(selfRecorder\.url\)/);
+  // CSS có trạng thái đang phát
+  assert.match(css, /\.vs-pron-actions \.playing, \.hero-actions \.playing/);
 });
