@@ -409,6 +409,120 @@ export class Store {
     );
     return rows;
   }
+
+  // ---- Nội dung học (roadmap #2 Admin CMS) ----
+  // type ∈ lessons|readings|roleplay; lang/status = null -> không lọc
+  async listContent(type, { lang = null, status = null } = {}) {
+    if (type === 'lessons') {
+      const { rows } = await this.query(
+        `SELECT * FROM lessons WHERE ($1::text IS NULL OR lang = $1) AND ($2::text IS NULL OR status = $2) ORDER BY order_index, id`,
+        [lang, status]
+      );
+      const ids = rows.map((r) => r.id);
+      let items = [];
+      if (ids.length) {
+        const res = await this.query(
+          `SELECT * FROM lesson_items WHERE lesson_id = ANY($1::text[]) AND kind = 'sentence' ORDER BY order_index`,
+          [ids]
+        );
+        items = res.rows;
+      }
+      return { rows, items };
+    }
+    const table = type === 'readings' ? 'readings' : 'roleplay_scenarios';
+    const order = type === 'readings' ? 'level, id' : 'id';
+    const { rows } = await this.query(
+      `SELECT * FROM ${table} WHERE ($1::text IS NULL OR lang = $1) AND ($2::text IS NULL OR status = $2) ORDER BY ${order}`,
+      [lang, status]
+    );
+    return { rows, items: [] };
+  }
+
+  async getContent(type, id) {
+    const { rows } = await this.listContent(type);
+    const row = rows.find((r) => r.id === id) || null;
+    if (!row) return null;
+    const items = type === 'lessons'
+      ? (await this.query(`SELECT * FROM lesson_items WHERE lesson_id = $1 AND kind = 'sentence' ORDER BY order_index`, [id])).rows
+      : [];
+    return { row, items };
+  }
+
+  // value đã qua validateContentInput; lessons kèm sentences -> ghi cha + items trong 1 transaction
+  async upsertContent(type, { id, lang, status, provider = null, model = null, ...value }) {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      let row;
+      if (type === 'lessons') {
+        const { rows } = await client.query(
+          `INSERT INTO lessons (id, lang, stage, title, order_index, metadata, status, provider, model)
+           VALUES ($1,$2,$3,$4,COALESCE((SELECT max(order_index)+1 FROM lessons WHERE lang = $2), 0),'{}'::jsonb,$5,$6,$7)
+           ON CONFLICT (id) DO UPDATE SET title = $4, status = $5, provider = $6, model = $7, updated_at = now()
+           RETURNING *`,
+          [id, lang, value.stage || 'young-adult', value.topic, status, provider, model]
+        );
+        row = rows[0];
+        await client.query(`DELETE FROM lesson_items WHERE lesson_id = $1 AND kind = 'sentence'`, [id]);
+        let i = 0;
+        for (const s of value.sentences) {
+          await client.query(
+            `INSERT INTO lesson_items (lesson_id, kind, payload, order_index) VALUES ($1,'sentence',$2::jsonb,$3)`,
+            [id, JSON.stringify(s), i++]
+          );
+        }
+      } else if (type === 'readings') {
+        const { rows } = await client.query(
+          `INSERT INTO readings (id, lang, level, title, body, metadata, status, provider, model)
+           VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9)
+           ON CONFLICT (id) DO UPDATE SET level = $3, title = $4, body = $5, metadata = $6::jsonb, status = $7, provider = $8, model = $9, updated_at = now()
+           RETURNING *`,
+          [id, lang, String(value.level), value.title, value.paragraphs.join('\n\n'), JSON.stringify({ questions: value.questions }), status, provider, model]
+        );
+        row = rows[0];
+      } else {
+        const { rows } = await client.query(
+          `INSERT INTO roleplay_scenarios (id, lang, stage, title, vi_title, persona, opening, prompts, status, provider, model)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11)
+           ON CONFLICT (id) DO UPDATE SET title = $4, vi_title = $5, persona = $6, opening = $7, prompts = $8::jsonb, status = $9, provider = $10, model = $11, updated_at = now()
+           RETURNING *`,
+          [id, lang, value.stage || 'young-adult', value.title, value.vi, value.persona || '', value.opening || '', JSON.stringify(value.prompts || []), status, provider, model]
+        );
+        row = rows[0];
+      }
+      await client.query('COMMIT');
+      return row;
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async setContentStatus(type, id, status) {
+    const table = type === 'lessons' ? 'lessons' : type === 'readings' ? 'readings' : 'roleplay_scenarios';
+    const { rows } = await this.query(
+      `UPDATE ${table} SET status = $2, updated_at = now() WHERE id = $1 RETURNING *`, [id, status]
+    );
+    return rows[0] || null;
+  }
+
+  async deleteContent(type, id) {
+    const table = type === 'lessons' ? 'lessons' : type === 'readings' ? 'readings' : 'roleplay_scenarios';
+    const { rowCount } = await this.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
+    return rowCount > 0;
+  }
+
+  async contentCounts() {
+    const { rows } = await this.query(`
+      SELECT 'lessons' AS type, status, count(*)::int AS count FROM lessons GROUP BY status
+      UNION ALL SELECT 'readings', status, count(*)::int FROM readings GROUP BY status
+      UNION ALL SELECT 'roleplay', status, count(*)::int FROM roleplay_scenarios GROUP BY status`);
+    const counts = { lessons: { draft: 0, reviewed: 0 }, readings: { draft: 0, reviewed: 0 }, roleplay: { draft: 0, reviewed: 0 } };
+    for (const r of rows) counts[r.type][r.status] = r.count;
+    return counts;
+  }
 }
 
 function mapSrsRow(row) {

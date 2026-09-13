@@ -59,6 +59,7 @@ import { pregenAll } from './pregen.mjs';
 import { loadMemory, saveMemory, addMemoryNote, buildMemoryPrompt } from './memory.mjs';
 import { AdminService } from './admin.mjs';
 import { initializeStore } from './db/store.mjs';
+import { validLang, lessonRowsToApi, readingRowsToApi, roleplayRowsToApi } from './db/content-map.mjs';
 import { hashPassword, verifyPassword, passwordStrengthOk, newSessionToken, tokenHash, sessionExpiry, sessionCookie, clearSessionCookie, parseSessionCookie, resolveSession, publicUser } from './db/auth.mjs';
 import { normalizeSyncPayload, mapLegacyLocalState, validAgeGroup, validRegisterRole } from './db/sync.mjs';
 import { loadMemoryFromStore, saveMemoryToStore, buildSyncSnapshot } from './db/memory-adapter.mjs';
@@ -166,6 +167,7 @@ const admin = new AdminService({
 
 // ---- PostgreSQL store (ADR-001). Thiếu DATABASE_URL -> app vẫn chạy, account/sync trả 503 DB_UNAVAILABLE.
 const store = await initializeStore({ migrate: process.env.MIGRATE_ON_START === '1' });
+admin.store = store; // pregen quét cả nội dung CMS trong DB (roadmap #2)
 const apiError = (message, statusCode, code) => Object.assign(new Error(message), { statusCode, code });
 function requireDb() {
   if (!store) throw apiError('Server chưa cấu hình PostgreSQL (thiếu DATABASE_URL).', 503, 'DB_UNAVAILABLE');
@@ -615,6 +617,19 @@ const server = createServer(async (request, response) => {
     if (request.method === 'POST' && pathname === '/api/admin/vocab/review') {
       const payload = JSON.parse((await readBody(request)) || '{}');
       return sendJson(response, 200, await admin.setVocabReviewed(payload));
+    }
+
+    // ---- Nội dung học (roadmap #2): learner đọc nội dung đã duyệt từ DB; DB tắt -> lỗi chuẩn, frontend fallback literal ----
+    if (request.method === 'GET' && pathname.startsWith('/api/content/')) {
+      const kind = pathname.slice('/api/content/'.length);
+      if (!['lessons', 'readings', 'roleplay'].includes(kind)) throw apiError('Không rõ loại nội dung.', 404, 'NOT_FOUND');
+      const lang = validLang(new URL(request.url, 'http://local').searchParams.get('lang'));
+      if (!lang) throw apiError('Ngôn ngữ phải là en hoặc zh.', 400, 'LANG_INVALID');
+      requireDb();
+      const { rows, items } = await store.listContent(kind, { lang, status: 'reviewed' });
+      if (kind === 'lessons') return sendJson(response, 200, { lessons: lessonRowsToApi(rows, items) });
+      if (kind === 'readings') return sendJson(response, 200, { levels: readingRowsToApi(rows) });
+      return sendJson(response, 200, { scenarios: roleplayRowsToApi(rows) });
     }
 
     if (request.method === 'GET' && pathname === '/api/voice/status') {

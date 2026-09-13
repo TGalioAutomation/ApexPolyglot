@@ -68,6 +68,16 @@ Sai vai trò → 403 `ROLE_REQUIRED` (ví dụ learner gọi `/api/parent/invite
 | POST | `/api/teacher/chat` | `{ learnerId?, message, history[] }` → câu trả lời Cô Linh có inject trí nhớ dài hạn; câu ví dụ trong `【 】` được đọc TTS |
 | GET | `/api/teacher/status` | Provider AI nào đang cấu hình/active |
 
+### 3c. Nội dung học (roadmap #2 — DB-first, literal fallback)
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/api/content/lessons?lang=en\|zh` | `{ lessons: [{ topic, sentences: [{ id, text, vi, pinyin? }] }] }` — chủ đề câu mẫu **đã duyệt** từ DB, sort `order_index`. Mirror literal `LESSONS` trong `app.js` |
+| GET | `/api/content/readings?lang=en\|zh` | `{ levels: { "<1-7>": [{ id, level, title, paragraphs[], questions[] }] } }` — bài đọc đã duyệt. Mirror `READING_TEXTS` |
+| GET | `/api/content/roleplay?lang=en\|zh` | `{ scenarios: [{ id, title, vi }] }` — kịch bản roleplay đã duyệt. Mirror `ROLEPLAY_SCENARIOS` |
+
+Lỗi: `400 LANG_INVALID` (thiếu/sai lang), `404 NOT_FOUND` (loại lạ), `503 DB_UNAVAILABLE` (chưa bật PostgreSQL — frontend fallback về literal đóng băng trong `public/app.js`/`learning.js`, xem `public/content-core.cjs`). Nội dung nháp (`draft`) không bao giờ lọt các endpoint này.
+
 ## 3b. Thi thử TOEIC cuối buổi
 
 Đề sinh **phía client** bằng `public/toeic-core.cjs` (deterministic theo số đề, không dùng LLM — như placement):

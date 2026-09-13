@@ -34,6 +34,7 @@ export class AdminService {
     this.root = root;
     this.voiceStatus = voiceStatus;
     this.aiStatus = aiStatus;
+    this.store = null; // server gán sau khi initializeStore (roadmap #2: pregen quét cả nội dung DB)
     this.jobs = [];
     this.activeJob = null;
   }
@@ -66,7 +67,7 @@ export class AdminService {
   }
 
   async overview() {
-    const catalog = collectContent();
+    const catalog = await collectContent({ store: this.store });
     const byLanguage = catalog.reduce((counts, item) => {
       counts[item.lang] = (counts[item.lang] || 0) + 1;
       return counts;
@@ -136,6 +137,7 @@ export class AdminService {
       const cacheOnly = !voice.available;
       if (cacheOnly) job.logs.push('OpenVox chưa sẵn sàng: chỉ lập chỉ mục các file WAV đã có.');
       return pregenAll({
+        store: this.store,
         silent: true,
         voiceEn: safeVoice(options.voiceEn),
         voiceZh: safeVoice(options.voiceZh),

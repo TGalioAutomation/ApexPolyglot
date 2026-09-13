@@ -1249,6 +1249,48 @@ async function playTopicSequential() {
 
 init();
 
+/* ---------- Nội dung học từ DB (roadmap #2): DB-first, literal fallback ----------
+ * Fetch 3 endpoint cho cả en/zh khi khởi động; lỗi/timeout/rỗng -> giữ nguyên literal.
+ * learning.js đăng ký LV.onContent để áp phần readings/roleplay của nó. */
+const CONTENT_CORE = window.CONTENT_CORE || {};
+async function fetchContentJson(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) return null;
+    return await res.json().catch(() => null);
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+async function loadRemoteContent() {
+  if (!CONTENT_CORE.applyLessons) return false;
+  const timeoutMs = CONTENT_CORE.CONTENT_TIMEOUT_MS || 2500;
+  let changed = false;
+  await Promise.all(['en', 'zh'].map(async (lang) => {
+    const [lessonsRes, readingsRes, roleplayRes] = await Promise.all([
+      fetchContentJson(`/api/content/lessons?lang=${lang}`, timeoutMs),
+      fetchContentJson(`/api/content/readings?lang=${lang}`, timeoutMs),
+      fetchContentJson(`/api/content/roleplay?lang=${lang}`, timeoutMs)
+    ]);
+    if (lessonsRes && lessonsRes.lessons && CONTENT_CORE.applyLessons(LESSONS, lang, lessonsRes.lessons)) {
+      changed = true;
+      if (lang === language) {
+        if (topicIndex >= LESSONS[language].length) topicIndex = 0;
+        renderTopicTabs();
+        renderSentences();
+        updateTeacherContext();
+      }
+    }
+    if (window.LV && window.LV.onContent) {
+      if (readingsRes && readingsRes.levels) window.LV.onContent.readings(lang, readingsRes.levels);
+      if (roleplayRes && roleplayRes.scenarios) window.LV.onContent.roleplay(roleplayRes.scenarios);
+    }
+  }));
+  return changed;
+}
+loadRemoteContent();
+
 // Export API chung cho learning.js (load sau file này)
 window.LV = {
   get language() { return language; },
@@ -1271,5 +1313,6 @@ window.LV = {
   get quiz() { return quiz; },
   progress,
   saveProgress,
-  renderProgress
+  renderProgress,
+  loadRemoteContent
 };

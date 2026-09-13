@@ -98,37 +98,50 @@ erDiagram
     boolean reviewed
   }
   lessons {
-    text id PK
+    text id PK "l-<lang>-<slug-chủ-đề>"
     text lang
     text stage
-    text title
+    text title "chủ đề (tiếng Việt)"
     int order_index
     jsonb metadata
+    text status "draft|reviewed (007)"
+    text provider "nguồn AI nháp, null = người soạn"
+    text model
+    timestamp updated_at
   }
   lesson_items {
     uuid id PK
     text lesson_id FK
-    text kind "vocab|quiz|listening|reading"
-    jsonb payload
+    text kind "vocab|quiz|listening|reading|shadow|sentence (007)"
+    jsonb payload "sentence: {id,text,vi,pinyin?}"
     text audio_text
     int order_index
   }
   readings {
-    text id PK
+    text id PK "r-<lang>-<slug>; bản seed giữ id literal cũ"
     text lang
-    text level
+    text level "1-7"
     text title
-    text body
-    jsonb metadata
+    text body "paragraphs nối bằng \\n\\n"
+    jsonb metadata "{questions:[{q,options,answer}]}"
+    text status "draft|reviewed (007)"
+    text provider
+    text model
+    timestamp updated_at
   }
   roleplay_scenarios {
-    text id PK
+    text id PK "rp-<lang>-<slug>; bản seed giữ id cũ (restaurant...)"
     text lang
     text stage
     text title
+    text vi_title "nhãn tiếng Việt (007)"
     text persona
     text opening
     jsonb prompts
+    text status "draft|reviewed (007)"
+    text provider
+    text model
+    timestamp updated_at
   }
   learning_sessions {
     uuid id PK

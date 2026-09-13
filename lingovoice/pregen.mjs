@@ -11,7 +11,7 @@ import { publicQuestions } from './placement.mjs';
 const ROOT = dirname(fileURLToPath(import.meta.url));
 
 // Trích khối dữ liệu JS dạng literal từ file frontend (để nội dung chỉ có MỘT nguồn)
-function extractLiteral(filePath, startMarker, endMarker) {
+export function extractLiteral(filePath, startMarker, endMarker) {
   const src = readFileSync(filePath, 'utf8');
   const anchor = src.indexOf(startMarker);
   if (anchor < 0) throw new Error(`marker not found: ${startMarker} in ${filePath}`);
@@ -22,7 +22,31 @@ function extractLiteral(filePath, startMarker, endMarker) {
   return eval(`(${chunk})`);
 }
 
-export function collectContent() {
+// Nội dung đã duyệt từ DB (CMS roadmap #2) — nguồn chính khi server có PostgreSQL
+async function appendDbContent(store, jobs) {
+  const lesson = await store.listContent('lessons', { status: 'reviewed' });
+  for (const row of lesson.rows) {
+    for (const item of lesson.items.filter((i) => i.lesson_id === row.id)) {
+      const text = item.payload && item.payload.text;
+      if (text) jobs.push({ lang: row.lang, text });
+    }
+  }
+  const reading = await store.listContent('readings', { status: 'reviewed' });
+  for (const row of reading.rows) {
+    for (const para of String(row.body || '').split(/\n{2,}/)) {
+      for (const line of para.split(/(?<=[。！？.!?])\s*/).filter(Boolean)) {
+        if (line.trim()) jobs.push({ lang: row.lang, text: line.trim() });
+      }
+    }
+  }
+  const roleplay = await store.listContent('roleplay', { status: 'reviewed' });
+  for (const row of roleplay.rows) {
+    if (row.opening) jobs.push({ lang: row.lang, text: row.opening });
+    for (const prompt of row.prompts || []) jobs.push({ lang: row.lang, text: String(prompt) });
+  }
+}
+
+export async function collectContent({ store } = {}) {
   const appJs = join(ROOT, 'public', 'app.js');
   const learningJs = join(ROOT, 'public', 'learning.js');
   const jobs = []; // {lang, text}
@@ -74,6 +98,11 @@ export function collectContent() {
     }
   }
 
+  // DB sống -> gộp nội dung CMS đã duyệt (lỗi thì giữ nguồn literal)
+  if (store) {
+    try { await appendDbContent(store, jobs); } catch { /* DB lỗi: bỏ qua */ }
+  }
+
   // Khử trùng
   const seen = new Set();
   return jobs.filter((j) => {
@@ -84,8 +113,8 @@ export function collectContent() {
   });
 }
 
-export async function pregenAll({ silent = false, voiceEn, voiceZh, speed, cacheOnly = false, onProgress } = {}) {
-  const jobs = collectContent();
+export async function pregenAll({ silent = false, voiceEn, voiceZh, speed, cacheOnly = false, onProgress, store } = {}) {
+  const jobs = await collectContent({ store });
   const client = new VoiceClient();
   const log = silent ? () => {} : (msg) => console.log(msg);
   let generated = 0, cached = 0, failed = 0;
@@ -121,5 +150,9 @@ export async function pregenAll({ silent = false, voiceEn, voiceZh, speed, cache
 // Chạy độc lập: node pregen.mjs
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === join(process.cwd(), 'pregen.mjs');
 if (process.argv[1] && process.argv[1].endsWith('pregen.mjs')) {
-  pregenAll().then((r) => process.exit(r.failed && r.total === r.failed ? 1 : 0));
+  const { initializeStore } = await import('./db/store.mjs');
+  initializeStore({ migrate: false })
+    .then((store) => pregenAll({ store }))
+    .then((r) => process.exit(r.failed && r.total === r.failed ? 1 : 0))
+    .catch(() => process.exit(1));
 }

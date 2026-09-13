@@ -3378,5 +3378,25 @@ function learningInit() {
   maybeStartOnboarding(); // lần đầu mở app -> wizard 3 bước
 }
 
+/* ---------- Nội dung học từ DB (roadmap #2) ----------
+ * app.js fetch /api/content/* rồi gọi các hook dưới; áp xong re-render phần mình sở hữu.
+ * Dữ liệu lạ bị content-core lọc; lỗi -> giữ nguyên literal. */
+window.LV = window.LV || {};
+window.LV.onContent = {
+  readings(lang, levels) {
+    if (!window.CONTENT_CORE || !window.CONTENT_CORE.applyReadings(READING_TEXTS, lang, levels)) return;
+    renderReadLibrary();
+  },
+  roleplay(scenarios) {
+    if (!window.CONTENT_CORE || !window.CONTENT_CORE.applyRoleplay(ROLEPLAY_SCENARIOS, scenarios)) return;
+    const sel = $('#scenarioSelect');
+    if (!sel || !sel.options.length) return;
+    const current = sel.value;
+    sel.replaceChildren();
+    ROLEPLAY_SCENARIOS.forEach((s) => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.vi; sel.append(o); });
+    if (ROLEPLAY_SCENARIOS.some((s) => s.id === current)) sel.value = current;
+  }
+};
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', learningInit);
 else learningInit();

@@ -8,6 +8,7 @@
 | Unit logic | `node --test` | SRS (`srs-core`), writing-core, placement, voice-design, vocab data | không |
 | API/UI integration | `node --test test/server.test.mjs` + `test/*-ui.test.mjs` | HTTP thật với **mock OpenVox + mock DeepSeek** (không cần service ngoài) | không |
 | DB integration | `node --test test/db-integration.test.mjs` | Migration + store + auth + sync trên PostgreSQL thật | `TEST_DATABASE_URL` |
+| Content (roadmap #2) | `node --test test/content-core.test.mjs test/content-seed.test.mjs test/content-api.test.mjs` | Gộp nội dung DB vào literal (UMD), validate CMS + seed idempotent, API đọc `/api/content/*` (spawn server, DB chết → 503; DB sống → shape mirror literal) | phần DB sống cần `TEST_DATABASE_URL` |
 
 `npm test` **phải xanh mà không cần PostgreSQL/OpenVox/key AI** — nhờ inject store mock
 và mock server cho service ngoài. DB test tự skip khi không set `TEST_DATABASE_URL`.

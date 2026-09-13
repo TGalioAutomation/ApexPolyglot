@@ -59,9 +59,9 @@ test('lv-shell: stage theming, empty state toggle, bắt lỗi audio — không 
   assert.match(api, /\/api\/sync\/import-local/);
 });
 
-test('script nạp đúng thứ tự: app → srs → writing → pron → toeic-core → learning → lv-api → lv-shell → toeic', () => {
+test('script nạp đúng thứ tự: content-core → app → srs → writing → pron → toeic-core → learning → lv-api → lv-shell → toeic', () => {
   const order = [...html.matchAll(/<script src="([a-z-]+\.c?js)"><\/script>/g)].map((m) => m[1]);
-  assert.deepEqual(order, ['app.js', 'srs-core.cjs', 'writing-core.cjs', 'pron-core.cjs', 'toeic-core.cjs', 'learning.js', 'lv-api.js', 'lv-shell.js', 'toeic.js']);
+  assert.deepEqual(order, ['content-core.cjs', 'app.js', 'srs-core.cjs', 'writing-core.cjs', 'pron-core.cjs', 'toeic-core.cjs', 'learning.js', 'lv-api.js', 'lv-shell.js', 'toeic.js']);
 });
 
 test('design tokens v2: scale spacing/shadow, 4 stage accent, dark mode block', () => {

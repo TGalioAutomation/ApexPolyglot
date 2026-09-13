@@ -62,6 +62,18 @@ Client giữ offline-first trong localStorage; khi có mạng + đăng nhập: p
 Import 1 lần dữ liệu cũ: POST /api/sync/import-local (payload localStorage kiểu cũ)
 ```
 
+### 3.5 Nội dung học (roadmap #2 — DB-first, literal fallback)
+
+```
+literal app.js/learning.js ──scripts/seed-content.mjs (upsert reviewed, idempotent)──▶ PostgreSQL lessons/readings/roleplay_scenarios
+GET /api/content/* (chỉ reviewed) ──▶ app.js loadRemoteContent() ──▶ content-core.cjs sanitize/áp vào LESSONS/READING_TEXTS/ROLEPLAY_SCENARIOS
+                                                                    └─ lỗi/timeout/rỗng → giữ nguyên literal (offline-first không đổi)
+pregen collectContent({store}) ──▶ gộp cả nội dung reviewed trong DB khi quét audio (manifest clobber-safe theo bbc4772)
+```
+
+- Literal trong frontend **đóng băng làm seed offline**; nội dung mới chỉ vào qua DB (CMS roadmap #2 phase B).
+- `status` vòng đời: `draft` (AI nháp / soạn tay, chỉ admin thấy) → `reviewed` (hiện cho learner + pregen quét).
+
 ## 4. Ràng buộc kiến trúc
 
 1. **Ít dependency** — node:http/node:crypto trước, package sau (ADR-001 ghi nhận `pg`).
@@ -70,6 +82,7 @@ Import 1 lần dữ liệu cũ: POST /api/sync/import-local (payload localStorag
 4. **Offline-first phía client** — localStorage là store chính khi học; PG là bản chân lý đám mây khi đã đăng nhập (chiến lược merge last-write-wins theo trường, xem `data-model.md`).
 5. **Secret chỉ trong `.env`** — admin API không bao giờ trả secret.
 6. **Bảo mật tối thiểu** — scrypt hash password, session HMAC, Basic Auth cho admin; HTTPS do reverse proxy/tunnel đảm nhiệm khi deploy.
+7. **Nội dung học DB-first** — learner đọc nội dung đã duyệt từ PostgreSQL qua `/api/content/*`; literal frontend chỉ là fallback offline (đóng băng, không phát triển thêm).
 
 ## 5. Deployment
 
