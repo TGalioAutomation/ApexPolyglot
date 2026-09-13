@@ -113,6 +113,22 @@ client gọi submit và xoá nhãn chưa-đồng-bộ sau khi thành công.
 | POST | `/api/admin/vocab/review` | Đánh dấu `reviewed` (ghi atomic tmp+rename) |
 | GET | `/data/vocab-{en,zh}.json` | Catalog vocab phục vụ client |
 
+### 5b. CMS nội dung học (roadmap #2) — MỚI
+
+`:type ∈ lessons\|readings\|roleplay` (sai → 400 `TYPE_INVALID`). Toàn bộ nhóm yêu cầu Basic Auth admin. Lỗi dùng chung: 400 `LANG_INVALID`/`TITLE_REQUIRED`/`LEVEL_INVALID`/`SENTENCES_INVALID`/`PARAGRAPHS_INVALID`/`ANSWER_INVALID`…, 404 `CONTENT_NOT_FOUND`, 503 `NO_AI`/`DB_UNAVAILABLE`, 502 `AI_ERROR`.
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/api/admin/content/:type?lang=&status=` | Danh sách (status rỗng = tất cả); item có `status/provider/model/updatedAt` + nội dung theo loại |
+| POST | `/api/admin/content/:type` | Tạo bản nháp: `{ lang, topic\|title, sentences\|paragraphs+questions\|vi+persona+opening+prompts }` → 201 item |
+| PUT | `/api/admin/content/:type/:id` | Sửa (giữ nguyên status) → 200 item |
+| POST | `/api/admin/content/:type/:id/review` | `{ reviewed: boolean }` → chuyển `draft ↔ reviewed` |
+| DELETE | `/api/admin/content/:type/:id` | Xóa vĩnh viễn → `{ ok: true }` |
+| POST | `/api/admin/content/:type/ai-draft` | `{ lang, level?, topic?, theme? }` → AI soạn nháp (validator schema như vocab card) → 201 item `draft` |
+| POST | `/api/admin/jobs/content-seed` | Job nạp nội dung gốc (literal frontend) vào DB, upsert `reviewed` idempotent |
+
+Nội dung `reviewed` được learner đọc qua §3c và được `pregen` quét audio; `draft` chỉ admin thấy.
+
 ## 6. Static
 
 `GET /*` phục vụ `public/`; `/admin` → `public/admin/index.html`. Header bảo mật cơ bản +

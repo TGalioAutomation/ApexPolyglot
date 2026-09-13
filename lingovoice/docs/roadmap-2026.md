@@ -7,10 +7,11 @@
 **Giải pháp:** PostgreSQL + đăng nhập + `/api/sync/*` (offline-first, merge last-write-wins), import 1 lần dữ liệu cũ.
 **Done khi:** học trên máy A, đăng nhập máy B là thấy đúng tiến độ.
 
-## #2 — Nền tảng nội dung + Admin CMS
+## #2 — Nền tảng nội dung + Admin CMS ✅ phase A+B (9/2026); phase sau: lesson_items đa dạng + stage filtering
 **Vấn đề:** bài học/tài liệu đọc/kịch bản roleplay đang hardcode trong `app.js`/`learning.js` — thêm nội dung phải đụng code + pregen audio.
 **Giải pháp:** đưa `lessons/lesson_items/readings/roleplay_scenarios` vào DB (schema đã có sẵn trong migration 004); admin CMS soạn nội dung; pipeline AI soạn nháp → human review → duyệt (`reviewed`) → tự sinh audio pregen theo job.
 **Giá trị:** giáo viên/quản trị tự thêm bài mà không cần dev; nội dung mới ra mắt trong ngày.
+**Đã làm:** migration 007 vòng đời `draft/reviewed` (+`vi_title`, kind `sentence`); `/api/content/*` đọc nội dung reviewed (DB-first, literal fallback qua `content-core.cjs`); seed idempotent literal → DB; `/api/admin/content/*` CRUD + AI nháp (`ai-draft`) + duyệt + job `content-seed`; pregen quét cả nội dung DB; UI Content Studio trong dashboard admin.
 **Công sức:** L (3–4 tuần). **Phụ thuộc:** #1 (DB), admin auth role.
 
 ## #3 — Phòng gym phát âm + hội thoại real-time

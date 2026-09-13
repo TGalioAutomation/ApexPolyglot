@@ -113,3 +113,15 @@ Esc = thoát (thoát giữa chừng vẫn giữ phiên).
 - Product copy **tiếng Việt**, xưng hô thân thiện theo stage (em/con — bạn/anh chị).
 - Nội dung học EN/ZH giữ nguyên ngữ, hiển thị phân biệt rõ (font-weight + màu phụ đề).
 - Yêu cầu vui nhộn chỉ tăng theo stage trẻ (3–12); stage 18–25 tối giản, uy tín.
+
+
+## Admin CMS — Content Studio (roadmap #2, 9/2026)
+
+Màn "Nội dung học (CMS)" trong dashboard quản trị (`public/admin/`), theo design system admin (dark, panel, mono eyebrow):
+
+- **Toolbar**: tab loại nội dung (`role=tablist`: Bài đọc / Roleplay / Chủ đề câu, tab chọn có `aria-selected` + nền accent), select Ngôn ngữ + Trạng thái (Tất cả/Nháp/Đã duyệt).
+- **Bảng danh sách**: Tiêu đề + id mono nhỏ, Ngôn ngữ, Chi tiết (cấp/đoạn/câu), Trạng thái chip (amber `Nháp`, green `Đã duyệt`, kèm huy hiệu `AI` khi nguồn là AI), Cập nhật, 3 thao tác: Sửa / Duyệt(↩Bỏ duyệt) / Xóa (xác nhận `confirm()`).
+- **Trạng thái rỗng**: hàng thông báo "Chưa có nội dung phù hợp bộ lọc."; lỗi fetch hiện thẳng trong bảng.
+- **Modal soạn** (`<dialog>` + ::backdrop mờ): form fields ẩn/hiện theo loại (readings: tiêu đề/cấp/đoạn/câu hỏi dạng dòng `q | opt1 | opt2 | opt3 | đáp án`; roleplay: tiêu đề/nhãn VI/persona/opening/prompts; lessons: chủ đề + câu dạng `text | nghĩa | pinyin`); nút **AI soạn nháp thay thế** điền form từ AI (aria-busy khi chờ), lỗi server hiện trong khối `#cfError` role=alert.
+- **Hành động khối**: Thêm mới / AI soạn nháp / Nạp nội dung gốc (job `content-seed`). Sau duyệt nội dung có câu mới, nhắc chạy "Đảm bảo đủ audio" (pregen quét cả DB).
+- Touch-target: tab/nút ≥ 44px; mobile ≤620px toolbar xếp dọc, nút modal full-width; `prefers-reduced-motion` tắt transition.

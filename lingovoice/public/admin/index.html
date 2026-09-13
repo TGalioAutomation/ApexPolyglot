@@ -94,7 +94,60 @@
         </table>
       </div>
     </section>
+    <section class="panel content-panel" aria-labelledby="contentTitle">
+      <div class="panel-head">
+        <div><p class="eyebrow">CONTENT STUDIO</p><h2 id="contentTitle">Nội dung học (CMS)</h2></div>
+        <span class="status-pill" id="contentCount">0 mục</span>
+      </div>
+      <p class="panel-copy">Soạn / AI soạn nháp → duyệt → người học thấy ngay. Nội dung nháp không hiện cho người học. Sau khi duyệt nội dung có câu mới, bấm "Đảm bảo đủ audio" để sinh audio.</p>
+      <div class="cms-toolbar" role="toolbar" aria-label="Bộ lọc nội dung">
+        <div class="cms-tabs" role="tablist" aria-label="Loại nội dung">
+          <button type="button" role="tab" class="cms-tab" data-type="readings" aria-selected="true">Bài đọc</button>
+          <button type="button" role="tab" class="cms-tab" data-type="roleplay" aria-selected="false">Roleplay</button>
+          <button type="button" role="tab" class="cms-tab" data-type="lessons" aria-selected="false">Chủ đề câu</button>
+        </div>
+        <label>Ngôn ngữ<select id="contentLang"><option value="en">English</option><option value="zh">中文</option></select></label>
+        <label>Trạng thái<select id="contentStatus"><option value="">Tất cả</option><option value="draft">Nháp</option><option value="reviewed">Đã duyệt</option></select></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tiêu đề</th><th>Ngôn ngữ</th><th>Chi tiết</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr></thead>
+          <tbody id="contentRows"></tbody>
+        </table>
+      </div>
+      <div class="cms-actions">
+        <button class="button secondary" type="button" id="addContent">Thêm mới</button>
+        <button class="button secondary" type="button" id="aiDraftContent">AI soạn nháp</button>
+        <button class="button secondary" type="button" id="runContentSeed">Nạp nội dung gốc</button>
+      </div>
+    </section>
   </main>
+
+  <dialog class="content-modal" id="contentModal" aria-labelledby="contentModalTitle">
+    <form method="dialog" id="contentForm" class="content-form">
+      <h3 id="contentModalTitle">Soạn nội dung</h3>
+      <div class="form-grid compact">
+        <label>Ngôn ngữ<select id="cfLang"><option value="en">English</option><option value="zh">中文</option></select></label>
+        <label id="cfLevelWrap" hidden>Cấp độ (1-7)<select id="cfLevel"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
+      </div>
+      <label id="cfTopicWrap" hidden>Chủ đề (tiếng Việt)<input id="cfTopic" type="text" maxlength="120" /></label>
+      <label id="cfTitleWrap" hidden>Tiêu đề<input id="cfTitle" type="text" maxlength="200" /></label>
+      <label id="cfViWrap" hidden>Nhãn tiếng Việt<input id="cfVi" type="text" maxlength="160" /></label>
+      <label id="cfSentencesWrap" hidden>Câu mẫu — mỗi dòng: câu | nghĩa tiếng Việt | pinyin (tuỳ chọn)<textarea id="cfSentences" rows="4"></textarea></label>
+      <label id="cfParagraphsWrap" hidden>Đoạn văn — cách nhau bởi dòng trống<textarea id="cfParagraphs" rows="5"></textarea></label>
+      <label id="cfQuestionsWrap" hidden>Câu hỏi — mỗi dòng: câu hỏi | lựa chọn 1 | lựa chọn 2 | lựa chọn 3 | số thứ tự đáp án (từ 1)<textarea id="cfQuestions" rows="3"></textarea></label>
+      <label id="cfPersonaWrap" hidden>Persona đối thoại<textarea id="cfPersona" rows="2"></textarea></label>
+      <label id="cfOpeningWrap" hidden>Câu mở đầu (tiếng học)<textarea id="cfOpening" rows="2"></textarea></label>
+      <label id="cfPromptsWrap" hidden>Gợi ý — mỗi dòng một ý<textarea id="cfPrompts" rows="3"></textarea></label>
+      <p class="cms-error" id="cfError" role="alert" hidden></p>
+      <div class="cms-modal-actions">
+        <button class="button secondary" type="button" id="cfAiFill">AI soạn nháp thay thế</button>
+        <span class="spacer"></span>
+        <button class="button secondary" type="button" id="cfCancel">Hủy</button>
+        <button class="button primary" type="button" id="cfSave">Lưu nháp</button>
+      </div>
+    </form>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/admin/admin.js"></script>

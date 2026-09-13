@@ -235,6 +235,57 @@ export async function generateVocabCard(term, language) {
   return card;
 }
 
+// ---- CMS nội dung (roadmap #2): AI soạn nháp — validator tái dùng db/content-map.mjs ----
+import { validateLessonInput, validateReadingInput, validateRoleplayInput } from './db/content-map.mjs';
+
+function cmsValidator(validate) {
+  return (obj) => {
+    const result = validate(obj);
+    return result.ok ? result.value : null;
+  };
+}
+
+export async function generateReadingDraft({ lang, level }) {
+  const langName = lang === 'zh' ? 'tiếng Trung giản thể' : 'tiếng Anh';
+  const lv = Math.min(7, Math.max(1, Number(level) || 1));
+  const card = await runStructured({
+    system: `Bạn là giáo viên ${langName} soạn bài đọc cho người Việt. Nội dung gốc thú vị, ngôn ngữ đúng trình độ.`,
+    user: `Soạn 1 bài đọc ${langName} trình độ ${lv}/7 (1 dễ - 7 khó). Trả JSON chỉ gồm: title (tiêu đề ${langName}), paragraphs (mảng 2-3 đoạn, mỗi đoạn 2-4 câu), questions (mảng 2-3 câu hỏi trắc nghiệm, mỗi câu có q (câu hỏi), options (mảng 3 lựa chọn ${langName}), answer (index 0-2 của đáp án đúng)).`,
+    validator: cmsValidator(validateReadingInput)
+  });
+  const { provider, model, ...value } = card;
+  return { value, provider, model };
+}
+
+export async function generateLessonDraft({ lang, topic }) {
+  const langName = lang === 'zh' ? 'tiếng Trung giản thể' : 'tiếng Anh';
+  const subject = typeof topic === 'string' && topic.trim() ? topic.trim() : 'chủ đề giao tiếp thường ngày';
+  const card = await runStructured({
+    system: `Bạn là giáo viên ${langName} cho người Việt, soạn thư viện câu mẫu thực dụng.`,
+    user: `Soạn chủ đề "${subject}". Trả JSON chỉ gồm: topic (tên chủ đề TIẾNG VIỆT ngắn), sentences (mảng đúng 3 câu ${langName} thực dụng cho chủ đề này, mỗi câu có text (câu ${langName} tự nhiên), vi (nghĩa tiếng Việt)${lang === 'zh' ? ', pinyin (phiên âm có dấu thanh)' : ''}).`,
+    validator: (obj) => {
+      const result = validateLessonInput(obj);
+      if (!result.ok) return null;
+      if (result.value.sentences.length !== 3) return null;
+      return result.value;
+    }
+  });
+  const { provider, model, ...value } = card;
+  return { value, provider, model };
+}
+
+export async function generateRoleplayDraft({ lang, theme }) {
+  const langName = lang === 'zh' ? 'tiếng Trung giản thể' : 'tiếng Anh';
+  const subject = typeof theme === 'string' && theme.trim() ? theme.trim() : 'tình huống giao tiếp thực dụng';
+  const card = await runStructured({
+    system: `Bạn là giáo viên ${langName} thiết kế kịch bản roleplay cho người Việt.`,
+    user: `Thiết kế kịch bản roleplay: ${subject}. Trả JSON chỉ gồm: title (tên tình huống bằng ${langName}), vi (tên tình huống tiếng Việt), persona (1-2 câu mô tả vai đối thoại bằng tiếng Việt), opening (câu mở đầu của đối phương bằng ${langName}), prompts (mảng 4-6 gợi ý ý tưởng người học có thể nói, tiếng Việt).`,
+    validator: cmsValidator(validateRoleplayInput)
+  });
+  const { provider, model, ...value } = card;
+  return { value, provider, model };
+}
+
 // ---- P1: feedback bài viết ----
 export async function writingFeedback({ text, prompt, language }) {
   const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';

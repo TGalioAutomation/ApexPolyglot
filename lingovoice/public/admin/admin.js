@@ -91,7 +91,8 @@ async function runJob(button, path, body, success) {
   finally { button.disabled = false; button.removeAttribute('aria-busy'); }
 }
 async function loadVocab() {
-  const params = new URLSearchParams({ language: $('#vocabLanguage').value, level: $('#vocabLevel').value, query: $('#vocabQuery').value, limit: '150' });
+  const urlParams = new URLSearchParams(location.search); // vocabLimit=N: thu gọn bảng cho link chia sẻ/ảnh chụp
+  const params = new URLSearchParams({ language: $('#vocabLanguage').value, level: $('#vocabLevel').value, query: $('#vocabQuery').value, limit: urlParams.get('vocabLimit') || '150' });
   try {
     const data = await api(`/api/admin/vocab?${params}`);
     $('#vocabResultCount').textContent = `${data.total} mục`;
@@ -115,5 +116,183 @@ $('#vocabRows').addEventListener('click', async (event) => {
 });
 document.addEventListener('visibilitychange', schedulePolling);
 
+/* ---------- Content Studio (roadmap #2) ---------- */
+const CMS = { type: 'readings', items: [], editing: null }; // editing = item đang sửa hoặc null (tạo mới)
+
+const CMS_FIELDS = {
+  readings: ['cfLang', 'cfLevelWrap', 'cfTitleWrap', 'cfParagraphsWrap', 'cfQuestionsWrap'],
+  roleplay: ['cfLang', 'cfTitleWrap', 'cfViWrap', 'cfPersonaWrap', 'cfOpeningWrap', 'cfPromptsWrap'],
+  lessons: ['cfLang', 'cfTopicWrap', 'cfSentencesWrap']
+};
+
+function cmsTypeLabel(type) {
+  return { readings: 'Bài đọc', roleplay: 'Roleplay', lessons: 'Chủ đề câu' }[type] || type;
+}
+
+function cmsDetail(item) {
+  if (CMS.type === 'readings') return `Cấp ${item.level} · ${item.paragraphs.length} đoạn · ${item.questions.length} câu hỏi`;
+  if (CMS.type === 'roleplay') return item.vi || '—';
+  return `${(item.sentences || []).length} câu`;
+}
+
+function renderContent() {
+  $('#contentCount').textContent = `${CMS.items.length} mục`;
+  const rows = $('#contentRows');
+  if (!CMS.items.length) {
+    rows.innerHTML = '<tr><td colspan="6" class="empty">Chưa có nội dung phù hợp bộ lọc.</td></tr>';
+    return;
+  }
+  rows.innerHTML = CMS.items.map((item) => `<tr>
+    <td data-label="Tiêu đề"><strong>${escapeHtml(item.topic || item.title || item.id)}</strong><small>${escapeHtml(item.id)}</small></td>
+    <td data-label="Ngôn ngữ">${item.lang === 'zh' ? '中文' : 'EN'}</td>
+    <td data-label="Chi tiết">${escapeHtml(cmsDetail(item))}</td>
+    <td data-label="Trạng thái"><span class="content-chip ${item.status}">${item.status === 'reviewed' ? 'Đã duyệt' : 'Nháp'}</span>${item.provider ? `<small class="ai-mark">AI</small>` : ''}</td>
+    <td data-label="Cập nhật"><small>${escapeHtml(formatTime(item.updatedAt))}</small></td>
+    <td data-label="Thao tác">
+      <button type="button" class="button small secondary" data-act="edit" data-id="${escapeHtml(item.id)}">Sửa</button>
+      <button type="button" class="button small secondary review-toggle" data-act="review" data-id="${escapeHtml(item.id)}" aria-pressed="${item.status === 'reviewed'}">${item.status === 'reviewed' ? 'Bỏ duyệt' : 'Duyệt'}</button>
+      <button type="button" class="button small danger" data-act="delete" data-id="${escapeHtml(item.id)}">Xóa</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function loadContent() {
+  const params = new URLSearchParams({ lang: $('#contentLang').value, status: $('#contentStatus').value });
+  try {
+    const data = await api(`/api/admin/content/${CMS.type}?${params}`);
+    CMS.items = data.items || [];
+    renderContent();
+  } catch (error) {
+    $('#contentRows').innerHTML = `<tr><td colspan="6" class="empty">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+function cmsSetFields(type) {
+  for (const id of ['cfLevelWrap', 'cfTitleWrap', 'cfViWrap', 'cfSentencesWrap', 'cfParagraphsWrap', 'cfQuestionsWrap', 'cfPersonaWrap', 'cfOpeningWrap', 'cfPromptsWrap', 'cfTopicWrap']) {
+    $(`#${id}`).hidden = true;
+  }
+  for (const id of CMS_FIELDS[type]) $(`#${id}`).hidden = false;
+}
+
+function cmsItemToForm(item) {
+  $('#cfLang').value = item ? item.lang : $('#contentLang').value;
+  $('#cfLevelWrap').hidden = CMS.type !== 'readings';
+  $('#cfTopic').value = item?.topic || '';
+  $('#cfTitle').value = item?.title || '';
+  $('#cfVi').value = item?.vi || '';
+  $('#cfSentences').value = (item?.sentences || []).map((s) => [s.text, s.vi, s.pinyin || ''].join(' | ')).join('\n');
+  $('#cfParagraphs').value = (item?.paragraphs || []).join('\n\n');
+  $('#cfQuestions').value = (item?.questions || []).map((q) => [q.q, ...q.options, q.answer + 1].join(' | ')).join('\n');
+  $('#cfPersona').value = item?.persona || '';
+  $('#cfOpening').value = item?.opening || '';
+  $('#cfPrompts').value = (item?.prompts || []).join('\n');
+  $('#cfLevel').value = String(item?.level || 2);
+  $('#cfError').hidden = true;
+}
+
+function cmsFormToItem() {
+  const lang = $('#cfLang').value;
+  if (CMS.type === 'readings') {
+    return { lang, title: $('#cfTitle').value, level: Number($('#cfLevel').value),
+      paragraphs: $('#cfParagraphs').value.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
+      questions: $('#cfQuestions').value.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line) => {
+        const parts = line.split('|').map((p) => p.trim());
+        return { q: parts[0], options: parts.slice(1, -1), answer: Number(parts.at(-1)) - 1 };
+      }) };
+  }
+  if (CMS.type === 'roleplay') {
+    return { lang, title: $('#cfTitle').value, vi: $('#cfVi').value, persona: $('#cfPersona').value, opening: $('#cfOpening').value,
+      prompts: $('#cfPrompts').value.split(/\n+/).map((p) => p.trim()).filter(Boolean) };
+  }
+  return { lang, topic: $('#cfTopic').value,
+    sentences: $('#cfSentences').value.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line) => {
+      const [text, vi, pinyin] = line.split('|').map((p) => p.trim());
+      const s = { text, vi };
+      if (pinyin) s.pinyin = pinyin;
+      return s;
+    }) };
+}
+
+function cmsOpenModal(item) {
+  CMS.editing = item || null;
+  cmsSetFields(CMS.type);
+  cmsItemToForm(item);
+  $('#contentModalTitle').textContent = item ? `Sửa ${cmsTypeLabel(CMS.type)}: ${item.topic || item.title}` : `Thêm ${cmsTypeLabel(CMS.type)} mới`;
+  $('#contentModal').showModal();
+}
+
+async function cmsSave() {
+  const body = cmsFormToItem();
+  const path = CMS.editing ? `/api/admin/content/${CMS.type}/${encodeURIComponent(CMS.editing.id)}` : `/api/admin/content/${CMS.type}`;
+  try {
+    await api(path, { method: CMS.editing ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    $('#contentModal').close();
+    notify(CMS.editing ? 'Đã lưu thay đổi.' : 'Đã tạo bản nháp.');
+    loadContent();
+  } catch (error) {
+    const box = $('#cfError');
+    box.textContent = error.message;
+    box.hidden = false;
+  }
+}
+
+async function cmsAiDraft() {
+  const lang = $('#cfLang').value;
+  const body = { lang };
+  if (CMS.type === 'readings') body.level = Number($('#cfLevel').value) || 2;
+  if (CMS.type === 'lessons') body.topic = $('#cfTopic').value || $('#cfTitle').value;
+  if (CMS.type === 'roleplay') body.theme = $('#cfTitle').value || $('#cfVi').value;
+  const btn = $('#cfAiFill'); btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+  try {
+    const item = await api(`/api/admin/content/${CMS.type}/ai-draft`, { method: 'POST', body: JSON.stringify(body) });
+    notify('AI đã soạn nháp. Kiểm tra rồi bấm Lưu nháp.');
+    CMS.editing = item;
+    cmsItemToForm(item);
+  } catch (error) {
+    const box = $('#cfError');
+    box.textContent = error.message;
+    box.hidden = false;
+  } finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+}
+
+document.querySelectorAll('.cms-tab').forEach((tab) => tab.addEventListener('click', () => {
+  document.querySelectorAll('.cms-tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+  CMS.type = tab.dataset.type;
+  loadContent();
+}));
+$('#contentLang').addEventListener('change', loadContent);
+$('#contentStatus').addEventListener('change', loadContent);
+$('#addContent').addEventListener('click', () => cmsOpenModal(null));
+$('#aiDraftContent').addEventListener('click', () => { cmsOpenModal(null); cmsAiDraft(); });
+$('#runContentSeed').addEventListener('click', (event) => runJob(event.currentTarget, '/api/admin/jobs/content-seed', {}, 'Đã bắt đầu nạp nội dung gốc vào DB.'));
+$('#cfSave').addEventListener('click', cmsSave);
+$('#cfCancel').addEventListener('click', () => $('#contentModal').close());
+$('#cfAiFill').addEventListener('click', cmsAiDraft);
+$('#contentRows').addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-act]');
+  if (!button) return;
+  const item = CMS.items.find((i) => i.id === button.dataset.id);
+  if (button.dataset.act === 'edit') cmsOpenModal(item);
+  if (button.dataset.act === 'review') {
+    button.disabled = true;
+    try {
+      await api(`/api/admin/content/${CMS.type}/${encodeURIComponent(button.dataset.id)}/review`, { method: 'POST', body: JSON.stringify({ reviewed: button.getAttribute('aria-pressed') !== 'true' }) });
+      notify('Đã cập nhật trạng thái duyệt.');
+      loadContent();
+    } catch (error) { notify(error.message, true); button.disabled = false; }
+  }
+  if (button.dataset.act === 'delete' && confirm(`Xóa "${item ? (item.topic || item.title) : button.dataset.id}" khỏi CMS?`)) {
+    try {
+      await api(`/api/admin/content/${CMS.type}/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
+      notify('Đã xóa.');
+      loadContent();
+    } catch (error) { notify(error.message, true); }
+  }
+});
+
 loadOverview({ quiet: true });
 loadVocab();
+loadContent();
+
+// Deep-link mở sẵn trình soạn (vd /admin#cms-new)
+if (location.hash === '#cms-new') cmsOpenModal(null);

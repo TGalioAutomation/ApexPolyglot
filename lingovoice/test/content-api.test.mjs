@@ -98,6 +98,108 @@ test('DB sống: trả shape mirror literal, chỉ nội dung reviewed', async (
   assert.doesNotMatch(allTexts, /Bản nháp không hiện/);
 });
 
+test('admin CMS API: CRUD + duyệt + job seed (loopback admin, DB sống)', async (t) => {
+  if (!hasTestDb) return t.skip('Thiếu TEST_DATABASE_URL — bỏ qua phần DB sống');
+  const base = `http://127.0.0.1:${PORT_LIVE_DB}`;
+
+  // danh sách + lọc
+  const listed = await (await fetch(`${base}/api/admin/content/readings?lang=en&status=reviewed`)).json();
+  assert.equal(listed.type, 'readings');
+  assert.ok(listed.items.length >= 2);
+  const badType = await fetch(`${base}/api/admin/content/nonsense`);
+  assert.equal(badType.status, 400);
+  assert.equal((await badType.json()).code, 'TYPE_INVALID');
+
+  // tạo tay -> draft
+  const created = await fetch(`${base}/api/admin/content/readings`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lang: 'en', title: 'CMS Test Reading', level: 2, paragraphs: ['Para one.'], questions: [{ q: 'Q?', options: ['a', 'b'], answer: 1 }] })
+  });
+  assert.equal(created.status, 201);
+  const item = await created.json();
+  assert.equal(item.status, 'draft');
+  assert.match(item.id, /^r-en-/);
+
+  // draft chưa lọt API đọc
+  const beforeReview = await (await fetch(`${base}/api/content/readings?lang=en`)).json();
+  assert.doesNotMatch(JSON.stringify(beforeReview), /CMS Test Reading/);
+
+  // sửa
+  const updated = await fetch(`${base}/api/admin/content/readings/${item.id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'CMS Test Reading v2', level: 2, paragraphs: ['Para one.', 'Para two.'], questions: [] })
+  });
+  assert.equal(updated.status, 200);
+  assert.equal((await updated.json()).title, 'CMS Test Reading v2');
+
+  // validate lỗi có mã
+  const invalid = await fetch(`${base}/api/admin/content/readings/${item.id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'X', level: 9, paragraphs: ['p'] })
+  });
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json()).error, 'LEVEL_INVALID');
+
+  // duyệt -> lọt API đọc
+  const reviewed = await fetch(`${base}/api/admin/content/readings/${item.id}/review`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reviewed: true })
+  });
+  assert.equal(reviewed.status, 200);
+  assert.equal((await reviewed.json()).status, 'reviewed');
+  const afterReview = await (await fetch(`${base}/api/content/readings?lang=en`)).json();
+  assert.match(JSON.stringify(afterReview), /CMS Test Reading v2/);
+
+  // bỏ duyệt + xóa
+  await fetch(`${base}/api/admin/content/readings/${item.id}/review`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reviewed: false })
+  });
+  const deleted = await fetch(`${base}/api/admin/content/readings/${item.id}`, { method: 'DELETE' });
+  assert.equal(deleted.status, 200);
+  const missing = await fetch(`${base}/api/admin/content/readings/${item.id}`, { method: 'DELETE' });
+  assert.equal(missing.status, 404);
+
+  // roleplay + lessons vòng đời nhanh
+  const rp = await (await fetch(`${base}/api/admin/content/roleplay`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lang: 'en', title: 'CMS Test Cafe', vi: 'Quán cà phê test', persona: 'Barista', opening: 'Hi!', prompts: ['Order a latte'] })
+  })).json();
+  assert.equal(rp.status, 'draft');
+  const ls = await (await fetch(`${base}/api/admin/content/lessons`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lang: 'en', topic: 'CMS Test Topic', sentences: [{ text: 'Test sentence.', vi: 'Câu thử.' }] })
+  })).json();
+  assert.equal(ls.status, 'draft');
+  assert.ok(Array.isArray(ls.sentences) && ls.sentences.length === 1);
+  const lsReviewed = await (await fetch(`${base}/api/admin/content/lessons/${ls.id}/review`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reviewed: true })
+  })).json();
+  assert.equal(lsReviewed.status, 'reviewed');
+  const learnerLessons = await (await fetch(`${base}/api/content/lessons?lang=en`)).json();
+  assert.ok(learnerLessons.lessons.some((t) => t.topic === 'CMS Test Topic'));
+  for (const [type, id] of [['roleplay', rp.id], ['lessons', ls.id]]) {
+    await fetch(`${base}/api/admin/content/${type}/${id}`, { method: 'DELETE' });
+  }
+
+  // AI draft không có AI -> 503 NO_AI (server test không cấu hình key)
+  const noAi = await fetch(`${base}/api/admin/content/readings/ai-draft`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: 'en', level: 1 })
+  });
+  assert.equal(noAi.status, 503);
+  const noAiBody = await noAi.json();
+  assert.equal(noAiBody.error, 'Chưa cấu hình AI.');
+  assert.equal(noAiBody.code, 'NO_AI');
+
+  // job seed nạp lại nội dung gốc
+  const jobRes = await fetch(`${base}/api/admin/jobs/content-seed`, { method: 'POST' });
+  assert.equal(jobRes.status, 202);
+  const job = await jobRes.json();
+  assert.equal(job.type, 'content-seed');
+  await new Promise((r) => setTimeout(r, 800));
+  const done = await (await fetch(`${base}/api/admin/jobs/${job.id}`)).json();
+  assert.equal(done.status, 'completed');
+  assert.ok(done.result.stats.lessons >= 10);
+});
+
 test('frontend wired: content-core nạp trước app.js, app fetch cả 2 ngôn ngữ, learning có hook', async () => {
   const html = await readFile(join(ROOT, 'public', 'index.html'), 'utf8');
   const app = await readFile(join(ROOT, 'public', 'app.js'), 'utf8');
@@ -113,5 +215,5 @@ test('frontend wired: content-core nạp trước app.js, app fetch cả 2 ngôn
   assert.match(learning, /window\.LV\.onContent = \{/);
   assert.match(learning, /applyReadings\(READING_TEXTS/);
   assert.match(learning, /applyRoleplay\(ROLEPLAY_SCENARIOS/);
-  assert.match(core, /CONTENT_TIMEOUT_MS: 2500/);
+  assert.match(core, /CONTENT_TIMEOUT_MS = 2500/);
 });

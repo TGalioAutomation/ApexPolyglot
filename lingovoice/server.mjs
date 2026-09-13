@@ -619,6 +619,40 @@ const server = createServer(async (request, response) => {
       return sendJson(response, 200, await admin.setVocabReviewed(payload));
     }
 
+    // ---- CMS nội dung (roadmap #2): /api/admin/content/<type>[/<id>|/ai-draft|/<id>/review] ----
+    if (pathname === '/api/admin/content' || pathname.startsWith('/api/admin/content/')) {
+      const segs = pathname.slice('/api/admin/content/'.length).split('/').filter(Boolean).map(decodeURIComponent);
+      const type = segs[0];
+      if (!['lessons', 'readings', 'roleplay'].includes(type)) throw apiError('Loại nội dung không hợp lệ.', 400, 'TYPE_INVALID');
+      if (segs.length === 1 && request.method === 'GET') {
+        const params = new URL(request.url, 'http://local').searchParams;
+        return sendJson(response, 200, await admin.listContent({ type, language: params.get('lang'), status: params.get('status') }));
+      }
+      if (segs.length === 1 && request.method === 'POST') {
+        const payload = JSON.parse((await readBody(request)) || '{}');
+        return sendJson(response, 201, await admin.saveContent({ type, payload }));
+      }
+      if (segs.length === 2 && segs[1] === 'ai-draft' && request.method === 'POST') {
+        const payload = JSON.parse((await readBody(request)) || '{}');
+        return sendJson(response, 201, await admin.aiDraft({ type, ...payload, language: payload.lang }));
+      }
+      if (segs.length === 2 && request.method === 'PUT') {
+        const payload = JSON.parse((await readBody(request)) || '{}');
+        return sendJson(response, 200, await admin.saveContent({ type, id: segs[1], payload }));
+      }
+      if (segs.length === 3 && segs[2] === 'review' && request.method === 'POST') {
+        const payload = JSON.parse((await readBody(request)) || '{}');
+        return sendJson(response, 200, await admin.reviewContent({ type, id: segs[1], reviewed: payload.reviewed }));
+      }
+      if (segs.length === 2 && request.method === 'DELETE') {
+        return sendJson(response, 200, await admin.deleteContentItem({ type, id: segs[1] }));
+      }
+      throw apiError('Không hỗ trợ thao tác này.', 405, 'METHOD_NOT_ALLOWED');
+    }
+    if (request.method === 'POST' && pathname === '/api/admin/jobs/content-seed') {
+      return sendJson(response, 202, admin.startContentSeed());
+    }
+
     // ---- Nội dung học (roadmap #2): learner đọc nội dung đã duyệt từ DB; DB tắt -> lỗi chuẩn, frontend fallback literal ----
     if (request.method === 'GET' && pathname.startsWith('/api/content/')) {
       const kind = pathname.slice('/api/content/'.length);
