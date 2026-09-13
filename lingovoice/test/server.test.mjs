@@ -542,6 +542,48 @@ test('pronunciation feedback trả score + mẹo sửa từng từ', async () =>
   assert.deepEqual(Object.keys(d.issues[0]).sort(), ['heardAs', 'tip', 'word']);
 });
 
+test('pronunciation feedback: diff của client quyết định score, lọc issue AI bịa ngoài diff', async () => {
+  // mock AI trả score 82 + issue "schedule"; diff báo cả 6 từ đúng → server phải trả 100 và bỏ issue
+  const words = ['I', 'have', 'a', 'busy', 'schedule', 'today'];
+  const r = await fetch(`http://127.0.0.1:${port1}/api/pronunciation/feedback`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      target: 'I have a busy schedule today.', heard: 'I have a busy schedule today',
+      language: 'en', level: 3,
+      diff: words.map((w) => ({ word: w, heard: w, status: 'ok' }))
+    })
+  });
+  assert.equal(r.status, 200);
+  const d = await r.json();
+  assert.equal(d.score, 100);
+  assert.deepEqual(d.issues, []);
+});
+
+test('pronunciation feedback: diff có từ sai → score máy chấm theo độ giống', async () => {
+  // 5/6 từ đúng + "schedule" nghe thành "skedule" (giống 75%) → (5 + 0.75)/6 ≈ 96; issue của mock khớp diff nên được giữ
+  const r = await fetch(`http://127.0.0.1:${port1}/api/pronunciation/feedback`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      target: 'I have a busy schedule today.', heard: 'I have a busy skedule today',
+      language: 'en', level: 3,
+      ipa: '/ˈʃedʒuːl/',
+      diff: [
+        { word: 'I', heard: 'i', status: 'ok' },
+        { word: 'have', heard: 'have', status: 'ok' },
+        { word: 'a', heard: 'a', status: 'ok' },
+        { word: 'busy', heard: 'busy', status: 'ok' },
+        { word: 'schedule', heard: 'skedule', status: 'wrong' },
+        { word: 'today', heard: 'today', status: 'ok' }
+      ]
+    })
+  });
+  assert.equal(r.status, 200);
+  const d = await r.json();
+  assert.equal(d.score, 96);
+  assert.equal(d.issues.length, 1);
+  assert.equal(d.issues[0].word, 'schedule');
+});
+
 test('pronunciation feedback lỗi khi thiếu transcript -> 400', async () => {
   const r = await fetch(`http://127.0.0.1:${port1}/api/pronunciation/feedback`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },

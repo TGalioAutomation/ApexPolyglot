@@ -1,6 +1,7 @@
 // LingoVoice — AI teacher adapter (DeepSeek / Gemini / OpenAI)
 // Key chỉ nằm ở server (qua .env). Endpoint chat gọi module này.
 import { CO_LINH_VOICE_DESIGN } from './voice.mjs';
+import Pron from './public/pron-core.cjs';
 const PROVIDER_KEYS = {
   gemini: 'GEMINI_API_KEY',
   deepseek: 'DEEPSEEK_API_KEY',
@@ -172,14 +173,18 @@ export async function runStructured({ system, user, validator }) {
   }
   const errors = [];
   for (const provider of order) {
-    try {
-      const result = await callProvider(provider, { system, user, json: true });
-      const parsed = extractJson(result.text);
-      const validated = validator(parsed);
-      if (validated === null) throw new Error(`${provider} returned invalid JSON shape`);
-      return { ...validated, provider, model: result.model };
-    } catch (e) {
-      errors.push(e.message);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await callProvider(provider, { system, user, json: true });
+        const parsed = extractJson(result.text);
+        const validated = validator(parsed);
+        if (validated === null) throw new Error(`${provider} returned invalid JSON shape`);
+        return { ...validated, provider, model: result.model };
+      } catch (e) {
+        errors.push(e.message);
+        // JSON lệch schema thường là hụt một lần — thử lại ngay; lỗi mạng/provider chết thì sang provider kế
+        if (!/JSON/i.test(e.message)) break;
+      }
     }
   }
   const err = new Error(`All AI providers failed: ${errors.join('; ')}`);
@@ -351,14 +356,29 @@ export async function roleplayFeedback({ scenario, language, history }) {
 }
 
 // ---- P3: sửa lỗi phát âm (so transcript STT với câu mục tiêu) ----
-export async function pronunciationFeedback({ target, heard, language, level }) {
+// Chấm lại điểm từ diff từng từ bằng cùng bộ so của client (public/pron-core.cjs):
+// score là số liệu máy tính, LLM không được tự bịa — nó chỉ viết praise/issues/drill.
+const normPronWord = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+
+export async function pronunciationFeedback({ target, heard, language, level, diff, ipa }) {
   const langName = language === 'zh' ? 'tiếng Trung' : 'tiếng Anh';
   const zhNote = language === 'zh'
     ? 'Với tiếng Trung: chú ý thanh điệu (tone) của từng chữ, các âm khởi đầu zh/ch/sh/r/z/c/s và âm cuối -n/-ng.'
     : 'Với tiếng Anh: chú ý âm cuối (ed/s), cặp âm dễ nhầm (sh/s, th/t, v/w, iː/ɪ) và trọng âm từ.';
+  const diffList = (Array.isArray(diff) ? diff : []).filter((d) => d && typeof d === 'object' && typeof d.word === 'string' && d.word.trim());
+  const badWords = new Set(diffList.filter((d) => d.status !== 'ok').map((d) => normPronWord(d.word)));
+  const detScore = diffList.length ? Pron.score(diffList) : null;
+  const diffTable = diffList.map((d) => d.status === 'ok'
+    ? `- "${d.word}": nghe đúng`
+    : d.status === 'wrong'
+      ? `- "${d.word}": SAI, STT nghe thành "${d.heard || '?'}"`
+      : `- "${d.word}": THIẾU hẳn, STT không nghe thấy`).join('\n');
+  const diffNote = diffList.length
+    ? `\n\nMÁY ĐÃ SO TỪNG TỪ (kết quả tin cậy, dựa hoàn toàn vào đây để liệt kê lỗi):\n${diffTable}${ipa ? `\nPhiên âm IPA tham khảo: ${ipa}` : ''}\nChỉ được đưa issues cho các từ máy đánh SAI hoặc THIẾU — tuyệt đối không thêm từ khác, không đổi từ.`
+    : '';
   const fb = await runStructured({
-    system: `Bạn là giáo viên phát âm ${langName} cho người Việt. Học viên đọc một câu mục tiêu; hệ thống nhận dạng giọng nói (STT) ghi lại những gì nghe được. Từ bị STT ghi sai/thiếu so với câu mục tiêu nhiều khả năng là chỗ học viên phát âm sai. Nhiệm vụ: chỉ ra TỪNG từ phát âm chưa đúng kèm mẹo sửa cụ thể (vị trí lưỡi/môi, âm cuối, thanh điệu), bằng tiếng Việt, ngắn gọn và khích lệ. ${zhNote} Nếu transcript khớp hoàn toàn, hãy khen và đưa câu khó hơn để luyện. Trình độ học viên: mức ${level} (1-7), mẹo phải phù hợp trình độ. KHÔNG bịa ra lỗi nếu không thấy chênh lệch rõ.`,
-    user: `Câu mục tiêu: "${target}"\nSTT nghe được: "${heard}"\n\nTrả JSON chỉ gồm: score (số nguyên 0-100: điểm phát âm ước lượng, 100 là khớp hoàn toàn), praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), issues (mảng TỐI ĐA 4 từ phát âm chưa đúng, mỗi phần tử là object chỉ gồm: word (từ/Chữ Hán trong câu mục tiêu), heardAs (STT nghe thành gì; chuỗi rỗng "" nếu từ bị bỏ qua hẳn), tip (mẹo sửa 1 câu tiếng Việt)). CHỈ đưa những từ STT nghe KHÁC với câu mục tiêu hoặc bị thiếu hẳn — tuyệt đối không đưa từ mà STT nghe trùng nguyên văn; drill (1 câu luyện tiếp bằng ${langName} nhắm đúng các âm bị lỗi, kèm phiên âm IPA hoặc pinyin trong ngoặc nếu phù hợp, KHÔNG kèm nhãn mở đầu kiểu "Luyện tập:"/"Luyện tiếp:"). Nếu không có từ nào sai, issues là mảng rỗng []. QUAN TRỌNG: praise, tip phải là tiếng Việt TỰ NHIÊN, đúng chính tả, dễ hiểu cho người mới — không viết cụm chữ vô nghĩa, không ghép âm theo kiểu máy móc.`,
+    system: `Bạn là giáo viên phát âm ${langName} cho người Việt. Học viên đọc một câu mục tiêu; hệ thống nhận dạng giọng nói (STT) ghi lại những gì nghe được. Từ bị STT ghi sai/thiếu so với câu mục tiêu nhiều khả năng là chỗ học viên phát âm sai. Nhiệm vụ: chỉ ra TỪNG từ phát âm chưa đúng kèm mẹo sửa cụ thể (vị trí lưỡi/môi, âm cuối, thanh điệu), bằng tiếng Việt, ngắn gọn và khích lệ. ${zhNote} Nếu transcript khớp hoàn toàn, hãy khen và đưa câu khó hơn để luyện. Trình độ học viên: mức ${level} (1-7), mẹo phải phù hợp trình độ. KHÔNG bịa ra lỗi nếu không thấy chênh lệch rõ. Nếu được cung cấp bảng so từng từ của máy, TUYỆT ĐỐI dựa vào bảng đó để liệt kê từ lỗi — không tự suy luận lại, không bịa thêm từ khác.`,
+    user: `Câu mục tiêu: "${target}"\nSTT nghe được: "${heard}"${diffNote}\n\nTrả JSON chỉ gồm: score (số nguyên 0-100: điểm phát âm ước lượng, 100 là khớp hoàn toàn), praise (1 điểm làm tốt bằng tiếng Việt, tối đa 1 câu), issues (mảng TỐI ĐA 4 từ phát âm chưa đúng, mỗi phần tử là object chỉ gồm: word (từ/Chữ Hán trong câu mục tiêu), heardAs (STT nghe thành gì; chuỗi rỗng "" nếu từ bị bỏ qua hẳn), tip (mẹo sửa 1 câu tiếng Việt)). CHỈ đưa những từ STT nghe KHÁC với câu mục tiêu hoặc bị thiếu hẳn — tuyệt đối không đưa từ mà STT nghe trùng nguyên văn; drill (1 câu luyện tiếp bằng ${langName} nhắm đúng các âm bị lỗi, kèm phiên âm IPA hoặc pinyin trong ngoặc nếu phù hợp, KHÔNG kèm nhãn mở đầu kiểu "Luyện tập:"/"Luyện tiếp:"). Nếu không có từ nào sai, issues là mảng rỗng []. QUAN TRỌNG: praise, tip phải là tiếng Việt TỰ NHIÊN, đúng chính tả, dễ hiểu cho người mới — không viết cụm chữ vô nghĩa, không ghép âm theo kiểu máy móc.`,
     validator: (obj) => {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
       if (Object.keys(obj).sort().join('|') !== 'drill|issues|praise|score') return null;
@@ -369,7 +389,6 @@ export async function pronunciationFeedback({ target, heard, language, level }) 
       const scoreNum = Number(obj.score);
       if (!praise || !drill || !Number.isInteger(scoreNum) || scoreNum < 0 || scoreNum > 100) return null;
       if (!Array.isArray(obj.issues) || obj.issues.length > 4) return null;
-      const norm = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
       const issues = obj.issues.map((it) => {
         if (!it || typeof it !== 'object' || Array.isArray(it)) return null;
         if (Object.keys(it).sort().join('|') !== 'heardAs|tip|word') return null;
@@ -379,8 +398,9 @@ export async function pronunciationFeedback({ target, heard, language, level }) 
         const heardAs = typeof it.heardAs === 'string' && it.heardAs.length <= 60 ? it.heardAs.trim() : null;
         if (heardAs === null) return null;
         return { word, heardAs, tip };
-      }).filter((it) => it && norm(it.heardAs) !== norm(it.word)); // model đôi khi vẫn trả heardAs trùng từ mục tiêu — loại bỏ thay vì từ chối cả phản hồi
-      return { score: scoreNum, praise, issues, drill };
+      }).filter((it) => it && normPronWord(it.heardAs) !== normPronWord(it.word)) // model đôi khi vẫn trả heardAs trùng từ mục tiêu — loại bỏ thay vì từ chối cả phản hồi
+        .filter((it) => !diffList.length || badWords.has(normPronWord(it.word))); // có diff thì chỉ nhận từ máy đánh dấu sai/thiếu — lọc từ model bịa
+      return { score: detScore !== null ? detScore : scoreNum, praise, issues, drill };
     }
   });
   return fb;

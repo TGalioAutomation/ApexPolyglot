@@ -30,9 +30,14 @@ test('panel phát âm có đủ nút nghe/nói/chọn câu và vùng kết quả
 
 test('luồng phát âm dùng speech adapter chung và chấm từng từ bằng Pron core', () => {
   assert.match(learningJs, /async function pronRecord\(\)[\s\S]+LV\.listenOnce/);
-  assert.match(learningJs, /window\.Pron\.align\(it\.text, heard, LV\.language\)/);
+  assert.match(learningJs, /pronBestAlign\(it\.text, heard, heardAlts, LV\.language\)/);
   assert.match(learningJs, /window\.Pron\.score\(aligned\)/);
   assert.match(learningJs, /fetch\('\/api\/pronunciation\/feedback'/);
+  // chấm theo bản STT khớp nhất + gửi diff/IPA cho AI để nhận xét không mâu thuẫn bảng so từng từ
+  assert.match(learningJs, /function pronBestAlign\(/);
+  assert.match(learningJs, /pronBestAlign\(item\.term, heard, heardAlts, lang\)/);
+  assert.match(learningJs, /ipa: it\.ipa \|\| ''/);
+  assert.match(learningJs, /diff: \(aligned \|\| \[\]\)\.map/);
   assert.match(coreJs, /typeof module === 'object' && module\.exports/);
 });
 
@@ -70,7 +75,8 @@ test('thẻ từ trong phiên học có khu luyện đọc/nói (từ hoặc câ
   assert.match(learningJs, /vsPronReset\(v\); \/\/ luyện đọc\/nói ngay trên thẻ giới thiệu/);
   assert.match(learningJs, /vsPronReset\(cur\.item\); \/\/ sau khi lật đáp án cũng có thể luyện đọc\/nói/);
   assert.match(learningJs, /async function vsPronRecord\(\)[\s\S]+LV\.listenOnce/);
-  assert.match(learningJs, /window\.Pron\.align\(target, heard, LV\.language\)/);
+  assert.match(learningJs, /pronBestAlign\(target, heard, heardAlts, LV\.language\)/);
+  assert.match(learningJs, /ipa: v\.ipa \|\| ''/);
   assert.match(learningJs, /fetch\('\/api\/pronunciation\/feedback'/);
   assert.match(learningJs, /\$\('#vsPronMic'\)\.addEventListener\('click', vsPronRecord\)/);
   // Nghe mẫu đọc theo mục tiêu đang chọn (từ hoặc câu mẫu); "Nghe từ" đọc từ đơn
@@ -112,7 +118,7 @@ test('popup chi tiết từ (nhấn giữ) có đọc thử: mic + so từng t�
   assert.match(learningJs, /body\.append\(vsDetailPronBlock\(item\)\); \/\/ đọc thử ngay trong popup/);
   assert.match(learningJs, /btn\.textContent = 'Đọc thử';/);
   assert.match(learningJs, /'Nghe lại giọng bạn vừa đọc'/);
-  assert.match(learningJs, /window\.Pron\.align\(item\.term, heard, lang\)/);
+  assert.match(learningJs, /pronBestAlign\(item\.term, heard, heardAlts, lang\)/);
   assert.match(learningJs, /const recOn = await LV\.selfRecord\.start\(\);[\s\S]{0,400}?const heard = await LV\.listenOnce/);
   assert.match(learningJs, /pronReplayInto\(replay, myVoice\)/);
   assert.match(learningJs, /addMistake\('speaking', `Phát âm: “\$\{item\.term\}”`/);
@@ -122,4 +128,10 @@ test('popup chi tiết từ (nhấn giữ) có đọc thử: mic + so từng t�
   assert.match(learningJs, /LV\.playText\(item\.term, item\.lang/);
   // chống chọn chữ khi giữ lâu trên thẻ
   assert.match(css, /\.holdable\s*\{[^}]+user-select: none/);
+});
+
+test('STT trả nhiều alternatives để chấm phát âm chọn bản khớp nhất (browser + native)', () => {
+  assert.match(appJs, /recognition\.maxAlternatives = 5/);
+  assert.match(appJs, /callbacks\.onAlternatives\?\./);
+  assert.match(appJs, /payload\.alternatives/);
 });

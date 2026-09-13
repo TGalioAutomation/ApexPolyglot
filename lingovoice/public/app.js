@@ -880,18 +880,20 @@ function listenOnceWithBrowser(lang, callbacks = {}) {
     let settled = false;
     const timeoutMs = Math.max(0, Number(callbacks.timeoutMs || 0));
     let timer = null;
-    const finish = (transcript, errorCode) => {
+    const finish = (transcript, errorCode, alternatives) => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
       if (errorCode && errorCode !== 'cancelled') callbacks.onError?.(errorCode);
+      if (alternatives && alternatives.length) callbacks.onAlternatives?.(alternatives);
       callbacks.onEnd?.(transcript || null, errorCode || null);
       resolve(transcript || null);
     };
     recognition.lang = lang;
     recognition.interimResults = Boolean(callbacks.interim);
     recognition.continuous = false;
-    recognition.maxAlternatives = 1;
+    // Nhiều alternatives để chấm phát âm lấy bản nghe khớp mục tiêu nhất (không chấm oan người đọc đúng)
+    recognition.maxAlternatives = 5;
     callbacks.onReady?.({
       stop: () => { try { recognition.stop(); } catch {} },
       cancel: () => { try { recognition.abort(); } catch {} }
@@ -900,13 +902,22 @@ function listenOnceWithBrowser(lang, callbacks = {}) {
     recognition.onresult = (event) => {
       let transcript = '';
       let isFinal = false;
+      const alternatives = [];
       for (let i = 0; i < event.results.length; i++) {
-        transcript += `${event.results[i][0]?.transcript || ''} `;
-        isFinal ||= event.results[i].isFinal;
+        const res = event.results[i];
+        transcript += `${res[0]?.transcript || ''} `;
+        // Gom bản nghe phụ (hạng 2+) của kết quả final để chấm phát âm chọn bản khớp nhất
+        if (res.isFinal) {
+          for (let j = 1; j < res.length && alternatives.length < 4; j++) {
+            const alt = String(res[j]?.transcript || '').trim();
+            if (alt) alternatives.push(alt);
+          }
+        }
+        isFinal ||= res.isFinal;
       }
       const clean = transcript.trim();
       if (clean && !isFinal) callbacks.onPartial?.(clean);
-      if (clean && (isFinal || !callbacks.interim)) finish(clean);
+      if (clean && (isFinal || !callbacks.interim)) finish(clean, null, alternatives);
     };
     recognition.onerror = (event) => finish(null, mapBrowserSpeechError(event.error));
     recognition.onend = () => finish(null);
@@ -931,12 +942,13 @@ function listenOnceWithNative(lang, callbacks = {}) {
     let settled = false;
     const timeoutMs = Math.max(0, Number(callbacks.timeoutMs || 0));
     let timer = null;
-    const finish = (transcript, errorCode) => {
+    const finish = (transcript, errorCode, alternatives) => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
       bridge.onmessage = previousHandler || null;
       if (errorCode && errorCode !== 'cancelled') callbacks.onError?.(errorCode);
+      if (alternatives && alternatives.length) callbacks.onAlternatives?.(alternatives);
       callbacks.onEnd?.(transcript || null, errorCode || null);
       resolve(transcript || null);
     };
@@ -955,7 +967,12 @@ function listenOnceWithNative(lang, callbacks = {}) {
       else if (payload.type === 'listening') callbacks.onListening?.();
       else if (payload.type === 'processing') callbacks.onProcessing?.();
       else if (payload.type === 'partial') callbacks.onPartial?.(payload.transcript || '');
-      else if (payload.type === 'result') finish(String(payload.transcript || '').trim());
+      else if (payload.type === 'result') {
+        const alts = Array.isArray(payload.alternatives)
+          ? payload.alternatives.map((t) => String(t || '').trim()).filter(Boolean).slice(0, 4)
+          : null;
+        finish(String(payload.transcript || '').trim(), null, alts);
+      }
       else if (payload.type === 'error') {
         if (payload.code === 'unavailable' && browserSpeechSupported()) fallbackToBrowser();
         else finish(null, payload.code || 'unknown');

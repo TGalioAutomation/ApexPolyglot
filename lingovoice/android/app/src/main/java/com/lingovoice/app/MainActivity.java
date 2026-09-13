@@ -36,6 +36,7 @@ import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
 import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -226,7 +227,7 @@ public final class MainActivity extends ComponentActivity {
                     return;
                 }
                 speechFinalDelivered = true;
-                postSpeechEvent("result", "transcript", transcript);
+                postSpeechResult(transcript, results);
             }
             @Override public void onPartialResults(Bundle partialResults) {
                 String transcript = firstTranscript(partialResults);
@@ -234,6 +235,27 @@ public final class MainActivity extends ComponentActivity {
             }
             @Override public void onEvent(int eventType, Bundle params) {}
         });
+    }
+
+    private void postSpeechResult(String transcript, Bundle results) {
+        if (speechReplyProxy == null || !WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) return;
+        try {
+            JSONObject event = new JSONObject().put("type", "result").put("transcript", transcript);
+            JSONArray alternatives = new JSONArray();
+            ArrayList<String> matches = results == null
+                    ? null
+                    : results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            if (matches != null) {
+                for (int i = 1; i < matches.size() && alternatives.length() < 4; i++) {
+                    String alt = matches.get(i);
+                    if (alt != null && !alt.trim().isEmpty()) alternatives.put(alt.trim());
+                }
+            }
+            if (alternatives.length() > 0) event.put("alternatives", alternatives);
+            speechReplyProxy.postMessage(event.toString());
+        } catch (JSONException ignored) {
+            // Keys and values above are controlled by the app and always JSON-safe.
+        }
     }
 
     private static String firstTranscript(Bundle results) {

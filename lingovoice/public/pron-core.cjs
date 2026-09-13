@@ -77,13 +77,16 @@
     return out.reverse();
   }
 
-  // Word accuracy 0..100 (làm tròn); wrong tính nửa điểm vì đã phát âm gần đúng vị trí.
+  // Word accuracy 0..100 (làm tròn); từ wrong được cộng theo độ giống THẬT với chỗ STT nghe
+  // (vd "skedule" ~0.75) thay vì điểm phẳng — nói lệch nhẹ phải cao điểm hơn sai hẳn sang từ khác.
   function score(aligned) {
     if (!aligned.length) return 0;
-    const total = aligned.length;
-    const ok = aligned.filter((a) => a.status === 'ok').length;
-    const wrong = aligned.filter((a) => a.status === 'wrong').length;
-    return Math.round(((ok + wrong * 0.5) / total) * 100);
+    let pts = 0;
+    for (const a of aligned) {
+      if (a.status === 'ok') pts += 1;
+      else if (a.status === 'wrong') pts += similarity(a.word, a.heard || '');
+    }
+    return Math.round((pts / aligned.length) * 100);
   }
 
   // Các từ cần AI nhận xét: sai trước, thiếu sau, tối đa 4.

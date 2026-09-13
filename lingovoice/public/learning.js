@@ -1091,9 +1091,11 @@ function vsDetailPronBlock(item) {
     words.replaceChildren();
     status.textContent = 'Đang nghe bạn đọc…';
     const recOn = await LV.selfRecord.start();
+    let heardAlts = null;
     const heard = await LV.listenOnce({
       language: LV.SPEECH_LANG[lang],
       timeoutMs: 10000,
+      onAlternatives: (alts) => { heardAlts = alts; },
       onListening: () => { status.textContent = 'Đang nghe bạn đọc…'; },
       onProcessing: () => { status.textContent = 'Đang nhận dạng…'; },
       onError: () => { status.textContent = 'Không nghe rõ — thử lại ở nơi yên tĩnh nhé.'; }
@@ -1103,7 +1105,7 @@ function vsDetailPronBlock(item) {
     btn.disabled = false;
     btn.setAttribute('aria-pressed', 'false');
     if (!heard) return;
-    const aligned = window.Pron.align(item.term, heard, lang);
+    const aligned = pronBestAlign(item.term, heard, heardAlts, lang);
     const scoreNum = window.Pron.score(aligned);
     pronRenderDiffInto(words, aligned);
     result.hidden = false;
@@ -1121,7 +1123,10 @@ function vsDetailPronBlock(item) {
     try {
       const res = await fetch('/api/pronunciation/feedback', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: item.term, heard, language: lang, level })
+        body: JSON.stringify({
+          target: item.term, heard, language: lang, level, ipa: item.ipa || '',
+          diff: aligned.map((a) => ({ word: a.word, heard: a.heard || '', status: a.status }))
+        })
       });
       const d = await res.json();
       fb.replaceChildren();
@@ -1561,6 +1566,20 @@ function pronScoreLabel(s) {
   if (s >= 40) return 'Cố lên chút nữa nhé.';
   return 'Thử nghe mẫu lại rồi nói chậm hơn nhé.';
 }
+// Chấm theo bản STT khớp mục tiêu nhất: nhận dạng giọng nói hay ghi lệch từ đọc đúng
+// thành từ gần tiếng — so thêm các bản nghe phụ (alternatives) để không chấm oan,
+// còn từ đọc thật sự lệch thì bản nào cũng lệch nên vẫn bắt được như thường.
+function pronBestAlign(target, heard, alts, lang) {
+  const candidates = [heard, ...(Array.isArray(alts) ? alts : [])].filter(Boolean);
+  let best = window.Pron.align(target, heard, lang);
+  let bestScore = window.Pron.score(best);
+  for (let i = 1; i < candidates.length; i++) {
+    const aligned = window.Pron.align(target, candidates[i], lang);
+    const s = window.Pron.score(aligned);
+    if (s > bestScore) { best = aligned; bestScore = s; }
+  }
+  return best;
+}
 async function pronRecord() {
   if (pronState.busy) return;
   const it = pronState.item;
@@ -1571,9 +1590,11 @@ async function pronRecord() {
   $('#pronResult').hidden = true;
   $('#pronStatus').textContent = 'Đang nghe bạn nói…';
   const recOn = await LV.selfRecord.start();
+  let heardAlts = null;
   const heard = await LV.listenOnce({
     language: LV.SPEECH_LANG[LV.language],
     timeoutMs: 12000,
+    onAlternatives: (alts) => { heardAlts = alts; },
     onListening: () => { $('#pronStatus').textContent = 'Đang nghe bạn nói…'; },
     onProcessing: () => { $('#pronStatus').textContent = 'Đang nhận dạng câu nói…'; },
     onError: () => { $('#pronStatus').textContent = 'Không nhận diện được. Hãy thử lại ở nơi yên tĩnh.'; }
@@ -1584,7 +1605,7 @@ async function pronRecord() {
   $('#pronMic').setAttribute('aria-pressed', 'false');
   pronState.busy = false;
   if (!heard) return;
-  const aligned = window.Pron.align(it.text, heard, LV.language);
+  const aligned = pronBestAlign(it.text, heard, heardAlts, LV.language);
   const localScore = window.Pron.score(aligned);
   pronRenderDiff(aligned);
   $('#pronResult').hidden = false;
@@ -1602,9 +1623,9 @@ async function pronRecord() {
     pronCredit(it, 100);
     return;
   }
-  await pronAskAi(it, heard);
+  await pronAskAi(it, heard, aligned);
 }
-async function pronAskAi(it, heard) {
+async function pronAskAi(it, heard, aligned) {
   const fbEl = $('#pronFeedback');
   fbEl.replaceChildren();
   const loading = document.createElement('p');
@@ -1615,7 +1636,10 @@ async function pronAskAi(it, heard) {
   try {
     const res = await fetch('/api/pronunciation/feedback', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target: it.text, heard, language: LV.language, level })
+      body: JSON.stringify({
+        target: it.text, heard, language: LV.language, level, ipa: it.ipa || '',
+        diff: (aligned || []).map((a) => ({ word: a.word, heard: a.heard || '', status: a.status }))
+      })
     });
     const d = await res.json();
     fbEl.replaceChildren();
@@ -1731,9 +1755,11 @@ async function vsPronRecord() {
   const statusEl = document.getElementById('vsPronStatus');
   statusEl.textContent = 'Đang nghe bạn đọc…';
   const recOn = await LV.selfRecord.start();
+  let heardAlts = null;
   const heard = await LV.listenOnce({
     language: LV.SPEECH_LANG[LV.language],
     timeoutMs: 10000,
+    onAlternatives: (alts) => { heardAlts = alts; },
     onListening: () => { statusEl.textContent = 'Đang nghe bạn đọc…'; },
     onProcessing: () => { statusEl.textContent = 'Đang nhận dạng…'; },
     onError: () => { statusEl.textContent = 'Không nghe rõ — thử lại ở nơi yên tĩnh nhé.'; }
@@ -1744,7 +1770,7 @@ async function vsPronRecord() {
   mic.setAttribute('aria-pressed', 'false');
   vsPronState.busy = false;
   if (!heard) return;
-  const aligned = window.Pron.align(target, heard, LV.language);
+  const aligned = pronBestAlign(target, heard, heardAlts, LV.language);
   const scoreNum = window.Pron.score(aligned);
   pronRenderDiffInto(document.getElementById('vsPronWords'), aligned);
   resultEl.hidden = false;
@@ -1769,7 +1795,10 @@ async function vsPronRecord() {
   try {
     const res = await fetch('/api/pronunciation/feedback', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target, heard, language: LV.language, level })
+      body: JSON.stringify({
+        target, heard, language: LV.language, level, ipa: v.ipa || '',
+        diff: aligned.map((a) => ({ word: a.word, heard: a.heard || '', status: a.status }))
+      })
     });
     const d = await res.json();
     fbEl.replaceChildren();

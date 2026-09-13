@@ -64,7 +64,7 @@ Sai vai trò → 403 `ROLE_REQUIRED` (ví dụ learner gọi `/api/parent/invite
 | POST | `/api/writing/feedback` | `{ prompt, text }` → `{ praise, fix, corrected, why, retry }` |
 | POST | `/api/roleplay/turn` | `{ scenario, history[], userText }` → `{ reply, hint }` |
 | POST | `/api/roleplay/feedback` | `{ scenario, history[] }` → `{ praise, topFix, corrected, next }` |
-| POST | `/api/pronunciation/feedback` | `{ target ≤300, heard ≤300 (transcript STT), language, level 1-7? }` → `{ score 0-100, praise, issues ≤4: [{ word, heardAs, tip }], drill }` — AI so transcript STT với câu mục tiêu, chỉ từ phát âm sai kèm mẹo sửa. Lỗi: 400 thiếu input, 503 `NO_AI`, 502 `AI_ERROR`. So-từng-từ tức thì ở client qua `public/pron-core.cjs` (không cần mạng) |
+| POST | `/api/pronunciation/feedback` | `{ target ≤300, heard ≤300 (transcript STT), language, level 1-7?, ipa?, diff?: [{ word, heard, status ok\|wrong\|missing } ≤60] }` → `{ score 0-100, praise, issues ≤4: [{ word, heardAs, tip }], drill }` — client so từng từ bằng `public/pron-core.cjs` (không cần mạng, chấm theo bản STT khớp nhất trong các alternatives) và gửi kèm `diff`; khi có `diff` server chấm lại `score` bằng cùng bộ so (LLM không tự bịa điểm) và chỉ nhận issues cho từ máy đánh dấu sai/thiếu. Lỗi: 400 thiếu input, 503 `NO_AI`, 502 `AI_ERROR` |
 | POST | `/api/teacher/chat` | `{ learnerId?, message, history[] }` → câu trả lời Cô Linh có inject trí nhớ dài hạn; câu ví dụ trong `【 】` được đọc TTS |
 | GET | `/api/teacher/status` | Provider AI nào đang cấu hình/active |
 

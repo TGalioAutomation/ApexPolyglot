@@ -922,8 +922,16 @@ const server = createServer(async (request, response) => {
       if (!heard || heard.length > 300) throw Object.assign(new Error('heard is required (max 300)'), { statusCode: 400 });
       const language = payload.language === 'zh' ? 'zh' : 'en';
       const level = Math.min(7, Math.max(1, Number(payload.level) || 2));
+      const ipa = typeof payload.ipa === 'string' ? payload.ipa.trim().slice(0, 300) : '';
+      const diff = (Array.isArray(payload.diff) ? payload.diff : []).slice(0, 60).map((d) => {
+        if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+        const word = typeof d.word === 'string' ? d.word.trim().slice(0, 60) : '';
+        const heardAs = typeof d.heard === 'string' ? d.heard.trim().slice(0, 60) : '';
+        const status = d.status === 'ok' || d.status === 'wrong' || d.status === 'missing' ? d.status : null;
+        return word && status ? { word, heard: heardAs, status } : null;
+      }).filter(Boolean);
       try {
-        const fb = await pronunciationFeedback({ target, heard, language, level });
+        const fb = await pronunciationFeedback({ target, heard, language, level, diff, ipa });
         return sendJson(response, 200, { ...fb, language });
       } catch (error) {
         if (error.code === 'NO_AI') return sendJson(response, 503, { error: 'NO_AI', code: 'NO_AI' });

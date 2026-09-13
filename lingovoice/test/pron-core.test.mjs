@@ -36,8 +36,16 @@ test('align tiếng Trung so theo chữ và bắt chữ sai', () => {
 
 test('score: đúng hết 100, sai một từ nhiều từ vẫn còn điểm cao, trống 0', () => {
   assert.equal(Pron.score(Pron.align('Good morning', 'good morning', 'en')), 100);
-  assert.equal(Pron.score(Pron.align('I have a busy schedule today.', 'I have a busy skedule today', 'en')), 92);
+  // "schedule" nghe thành "skedule" giống ~75% → 6 từ đúng + 0.75 điểm từ sai / 6 từ = 96
+  assert.equal(Pron.score(Pron.align('I have a busy schedule today.', 'I have a busy skedule today', 'en')), 96);
   assert.equal(Pron.score(Pron.align('Good morning', '', 'en')), 0);
+});
+
+test('score: từ sai chấm theo độ giống thật — lệch nhẹ điểm cao hơn sai hẳn', () => {
+  // nói "ship" nghe thành "sheep" (giống 60% theo Levenshtein chuẩn hóa) phải hơn điểm nói thành từ không liên quan
+  assert.equal(Pron.score(Pron.align('ship', 'sheep', 'en')), 60);
+  assert.equal(Pron.score(Pron.align('hello', 'xyz', 'en')), 0);
+  assert.ok(Pron.score(Pron.align('ship', 'sheep', 'en')) > Pron.score(Pron.align('hello', 'xyz', 'en')));
 });
 
 test('wrongWords ưu tiên từ sai rồi từ thiếu, giới hạn 4', () => {
