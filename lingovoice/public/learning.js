@@ -268,6 +268,7 @@ function srsNext(difficulty, grade) {
 function srsState(id, lang) {
   return store.srs.items[lang]?.[id] || { state: 'new', difficulty: 0.3, dueAt: null, lastGrade: null, reps: 0 };
 }
+function srsHas(lang, id) { return Boolean(id) && Object.hasOwn(store.srs.items[lang] || {}, id); }
 function srsRecord(id, lang, grade, kind = 'vocab') {
   const s = store.srs;
   const cur = s.items[lang]?.[id] || { state: 'new', difficulty: 0.3, dueAt: null, lastGrade: null, reps: 0 };
@@ -1513,14 +1514,22 @@ function pronReplayInto(btnOrId, url) {
 const pronState = { item: null, busy: false };
 function pronPool(source) {
   if (source === 'words') {
-    const items = vocabItems(LV.language).filter((v) => v.term);
+    // "Từ đã học" = từ đã vào sổ SRS — luyện phát âm không được đưa từ chưa học thành đã học
+    const items = vocabItems(LV.language).filter((v) => v.term && srsHas(LV.language, v.id));
     return items.map((v) => ({ kind: 'word', id: v.id, text: v.term, ipa: v.ipa || '', vi: v.meaning || '' }));
   }
   return LV.allSentences(LV.language).map((s) => ({ kind: 'sentence', id: s.id, text: s.text, ipa: '', vi: s.vi || '' }));
 }
 function pronPick() {
-  const pool = pronPool($('#pronSource').value);
-  if (!pool.length) { pronState.item = null; $('#pronText').textContent = 'Chưa có nội dung để luyện.'; return; }
+  const source = $('#pronSource').value;
+  const pool = pronPool(source);
+  if (!pool.length) {
+    pronState.item = null;
+    $('#pronText').textContent = source === 'words'
+      ? 'Chưa có từ đã học — học từ mới xong quay lại đây luyện nhé.'
+      : 'Chưa có nội dung để luyện.';
+    return;
+  }
   pronState.item = pool[Math.floor(Math.random() * pool.length)];
   const it = pronState.item;
   $('#pronTarget').lang = LV.language === 'zh' ? 'zh-CN' : 'en';
@@ -1655,7 +1664,8 @@ function pronFeedbackInto(el, d) {
 // Ghi nhận kết quả: sai thì vào sổ lỗi; luyện từ đã học thì chấm SRS theo điểm
 function pronCredit(it, scoreNum) {
   if (scoreNum < 90) addMistake('speaking', `Phát âm: “${it.text}”`, it.text);
-  if (it.kind === 'word' && it.id) {
+  // Chỉ chấm SRS cho từ ĐÃ học — điểm phát âm phải không đưa từ chưa học vào sổ SRS
+  if (it.kind === 'word' && srsHas(LV.language, it.id)) {
     srsRecord(it.id, LV.language, scoreNum >= 85 ? 3 : scoreNum >= 60 ? 2 : 1, 'speaking');
   }
   recordActivity(1, 1);

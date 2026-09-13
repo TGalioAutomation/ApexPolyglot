@@ -36,10 +36,16 @@ test('luồng phát âm dùng speech adapter chung và chấm từng từ bằng
   assert.match(coreJs, /typeof module === 'object' && module\.exports/);
 });
 
-test('phát âm sai ghi sổ lỗi và luyện từ đã học thì chấm SRS', () => {
+test('phát âm sai ghi sổ lỗi; chỉ từ ĐÃ học mới được chấm SRS (điểm không biến từ chưa học thành đã học)', () => {
   assert.match(learningJs, /addMistake\('speaking', `Phát âm: “\$\{it\.text\}”`/);
+  assert.match(learningJs, /it\.kind === 'word' && srsHas\(LV\.language, it\.id\)/);
   assert.match(learningJs, /srsRecord\(it\.id, LV\.language, scoreNum >= 85 \? 3 : scoreNum >= 60 \? 2 : 1, 'speaking'\)/);
   assert.match(learningJs, /recordActivity\(1, 1\)/);
+});
+
+test('nguồn "Từ đã học" chỉ lấy từ đã vào sổ SRS, trống thì nhắc học từ mới trước', () => {
+  assert.match(learningJs, /vocabItems\(LV\.language\)\.filter\(\(v\) => v\.term && srsHas\(LV\.language, v\.id\)\)/);
+  assert.match(learningJs, /Chưa có từ đã học — học từ mới xong quay lại đây luyện nhé\./);
 });
 
 test('chuyển mode Speaking hiện/ẩn đúng panel phát âm', () => {
