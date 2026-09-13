@@ -3,15 +3,19 @@
 // không phải gọi OpenVox mỗi lần người dùng bấm nghe.
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
-export const AUDIO_CACHE_DIR = join(ROOT, 'cache', 'audio');
+// LV_AUDIO_CACHE_DIR: trỏ cache sang nơi khác (test dùng thư mục tạm, deploy dùng volume riêng).
+export const AUDIO_CACHE_DIR = process.env.LV_AUDIO_CACHE_DIR
+  ? resolve(process.env.LV_AUDIO_CACHE_DIR)
+  : join(ROOT, 'cache', 'audio');
 export const AUDIO_MANIFEST_FILE = join(AUDIO_CACHE_DIR, 'manifest.json');
 
 let manifestCache = null;
+let manifestLoadedMtimeMs = 0;
 let manifestWriteQueue = Promise.resolve();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -93,22 +97,46 @@ export async function writeCachedAudio(key, buffer) {
   await mkdir(AUDIO_CACHE_DIR, { recursive: true });
   await writeFile(audioCachePath(key), buffer);
 }
-async function loadAudioManifest() {
-  if (manifestCache) return manifestCache;
+function manifestMtimeMs() {
+  try { return statSync(AUDIO_MANIFEST_FILE).mtimeMs; } catch { return 0; }
+}
+async function readManifestFromDisk() {
   try {
     const parsed = JSON.parse(await readFile(AUDIO_MANIFEST_FILE, 'utf8'));
-    manifestCache = parsed && typeof parsed === 'object' ? parsed : { version: 1, entries: {} };
-  } catch {
-    manifestCache = { version: 1, entries: {} };
+    return parsed && typeof parsed === 'object' && parsed.entries && typeof parsed.entries === 'object' ? parsed : null;
+  } catch { return null; }
+}
+// Gộp entry mới từ đĩa vào manifest trong RAM; key trùng giữ bản RAM (vừa cập nhật hoặc đang chờ ghi).
+function mergeDiskManifest(disk) {
+  manifestCache.entries = { ...disk.entries, ...manifestCache.entries };
+  if (String(disk.updatedAt || '') > String(manifestCache.updatedAt || '')) manifestCache.updatedAt = disk.updatedAt;
+}
+async function loadAudioManifest() {
+  if (manifestCache) {
+    // pregen là tiến trình riêng: mtime manifest đổi nghĩa là nó vừa ghi thêm entry —
+    // gộp bản trên đĩa vào RAM để server đang chạy không đọc thiếu audio vừa pregen.
+    const mtime = manifestMtimeMs();
+    if (mtime && mtime !== manifestLoadedMtimeMs) {
+      const disk = await readManifestFromDisk();
+      if (disk) mergeDiskManifest(disk);
+      manifestLoadedMtimeMs = mtime;
+    }
+    return manifestCache;
   }
-  if (!manifestCache.entries || typeof manifestCache.entries !== 'object') manifestCache.entries = {};
+  manifestCache = (await readManifestFromDisk()) || { version: 1, entries: {} };
+  manifestLoadedMtimeMs = manifestMtimeMs();
   return manifestCache;
 }
 async function persistAudioManifest() {
   await mkdir(AUDIO_CACHE_DIR, { recursive: true });
+  // Đọc-merge từ đĩa TRƯỚC KHI ghi: pregen chạy song song lúc server sống có thể đã thêm entry
+  // mà RAM chưa có — ghi thẳng bản RAM cũ xuống sẽ làm entry đó mất vĩnh viễn (phải pregen lại).
+  const disk = await readManifestFromDisk();
+  if (disk) mergeDiskManifest(disk);
   const temp = `${AUDIO_MANIFEST_FILE}.tmp`;
   await writeFile(temp, JSON.stringify(manifestCache, null, 2));
   await rename(temp, AUDIO_MANIFEST_FILE);
+  manifestLoadedMtimeMs = manifestMtimeMs();
 }
 export async function rememberPreparedAudio(request, resolved) {
   const requestKey = preparedRequestKey(request);

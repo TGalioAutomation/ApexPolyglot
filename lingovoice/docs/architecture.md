@@ -26,6 +26,7 @@ graph LR
 | **API server** | Node.js `node:http` (`server.mjs`, zero framework) | Static + API: voice, placement, vocab, writing, roleplay, teacher chat, memory, auth, sync |
 | **AI adapter** | `ai.mjs` | Fallback DeepSeek → Gemini → OpenAI; prompt giáo viên; JSON schema validator |
 | **Voice client** | `voice.mjs` | OpenVox TTS, cache WAV SHA-256, manifest, pregen pipeline |
+| **An toàn manifest** | `voice.mjs` | persist manifest luôn đọc-merge từ đĩa trước khi ghi + refresh theo mtime khi đọc → chạy `npm run pregen` lúc server đang sống không còn đè mất entry của nhau (cả hai phía ghi thêm entry của mình, không ai mất dữ liệu) |
 | **Data layer** | `db/` (PostgreSQL + `pg`) | Migration, store interface, auth/session, đồng bộ học tập |
 | **Admin dashboard** | `public/admin/` | Job queue, audit vocab, thống kê hệ thống |
 | **Android wrapper** | `android/` (Java thuần) | WebView + SpeechRecognizer native (STT) |
