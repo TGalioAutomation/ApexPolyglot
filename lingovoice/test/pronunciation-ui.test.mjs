@@ -59,7 +59,8 @@ test('chuyển mode Speaking hiện/ẩn đúng panel phát âm', () => {
 
 test('CSS phát âm dùng design token, có trạng thái đúng/sai/thiếu và touch-target', () => {
   assert.match(css, /\.pron-ok\s*\{[^}]+var\(--accent-soft\)/);
-  assert.match(css, /\.pron-wrong\s*\{[^}]+var\(--destructive-soft\)/);
+  assert.match(css, /\.pron-close\s*\{[^}]+#fef3c7/); // amber: nghe hơi khác nhưng vẫn hiểu
+  assert.match(css, /\.pron-miss\s*\{[^}]+var\(--destructive-soft\)/);
   assert.match(css, /\.pron-missing\s*\{[^}]+var\(--muted\)/);
   assert.match(css, /\.pron-score-bar span \{[^}]+var\(--stage-accent\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]+\.pron-score-bar span \{ transition: none/);

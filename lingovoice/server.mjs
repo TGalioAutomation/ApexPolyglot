@@ -927,7 +927,8 @@ const server = createServer(async (request, response) => {
         if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
         const word = typeof d.word === 'string' ? d.word.trim().slice(0, 60) : '';
         const heardAs = typeof d.heard === 'string' ? d.heard.trim().slice(0, 60) : '';
-        const status = d.status === 'ok' || d.status === 'wrong' || d.status === 'missing' ? d.status : null;
+        // 'wrong' là tên cũ từ client cache — giữ nhận để điểm chuyển tiếp không tụt
+        const status = ['ok', 'close', 'miss', 'missing', 'wrong'].includes(d.status) ? d.status : null;
         return word && status ? { word, heard: heardAs, status } : null;
       }).filter(Boolean);
       try {

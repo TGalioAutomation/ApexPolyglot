@@ -1556,15 +1556,22 @@ function pronRenderDiffInto(el, aligned) {
     const chip = document.createElement('span');
     chip.className = `pron-word pron-${a.status}`;
     chip.textContent = a.word;
-    chip.title = a.status === 'wrong' ? `Nghe thành “${a.heard}”` : a.status === 'missing' ? 'Không nghe được từ này' : 'Đúng';
+    chip.title = a.status === 'ok'
+      ? 'Người nghe hiểu ngay'
+      : a.status === 'close'
+        ? `Nghe hơi khác (nghe thành “${a.heard}”) nhưng người nghe vẫn nhận ra từ này`
+        : a.status === 'miss'
+          ? `Người nghe hiểu thành “${a.heard}” — không hiểu đúng từ này`
+          : 'Không nói từ này';
     el.appendChild(chip);
   }
 }
+// Nhãn điểm theo tiêu chí người nghe có hiểu được câu nói hay không
 function pronScoreLabel(s) {
-  if (s >= 90) return 'Tuyệt vời!';
-  if (s >= 70) return 'Khá tốt, còn vài chỗ cần sửa.';
-  if (s >= 40) return 'Cố lên chút nữa nhé.';
-  return 'Thử nghe mẫu lại rồi nói chậm hơn nhé.';
+  if (s >= 90) return 'Người nghe hiểu trọn vẹn bạn nói!';
+  if (s >= 70) return 'Người nghe vẫn hiểu bạn — còn vài chỗ nghe hơi khác.';
+  if (s >= 40) return 'Người nghe khó hiểu vài từ — nghe mẫu rồi nói lại chậm hơn.';
+  return 'Người nghe sẽ khó hiểu câu này — nghe mẫu, nói chậm và rõ từng từ nhé.';
 }
 // Chấm theo bản STT khớp mục tiêu nhất: nhận dạng giọng nói hay ghi lệch từ đọc đúng
 // thành từ gần tiếng — so thêm các bản nghe phụ (alternatives) để không chấm oan,

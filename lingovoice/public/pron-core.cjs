@@ -37,14 +37,18 @@
     return 1 - prev[n] / Math.max(m, n);
   }
 
-  // Align từng từ mục tiêu với transcript: ok (khớp ≥0.9), wrong (khớp chỗ nhưng lệch âm), missing (không có).
-  // Ngưỡng 0.9 (chặt) vì STT nghe lệch một âm = khả năng phát âm sai — đúng thứ cần chỉ ra
-  // ("schedule" nói thành "skedule" phải là wrong, không phải ok).
-  // Thuật toán: Levenshtein trên mảng đơn vị; chi phí thay = 1 - similarity (nên từ lệch nhẹ vẫn align thành wrong thay vì wrong+missing).
+  // Align từng từ mục tiêu với transcript theo tiêu chí NGƯỜI NGHE CÓ HIỂU ĐƯỢC (intelligibility):
+  //  - ok    (giống ≥0.9): người nghe hiểu ngay.
+  //  - close (giống ≥0.5): nghe hơi khác (accent) nhưng người nghe vẫn nhận ra là từ đó — vẫn hiểu.
+  //  - miss  (giống <0.5): người nghe hiểu thành từ khác / không nhận ra — lỗi cần sửa.
+  //  - missing: không nói từ này. ('wrong' là tên cũ của vùng close/miss — score vẫn tính được)
+  // Thuật toán: Levenshtein trên mảng đơn vị; chi phí thay = 1 - similarity (nên từ lệch nhẹ vẫn align
+  // thành một đơn vị duy nhất thay vì miss + thừa).
   function align(target, heard, lang) {
     const T = tokenize(target, lang), H = tokenize(heard, lang);
     const m = T.length, n = H.length;
-    const SUB_THRESHOLD = 0.9;
+    const OK_THRESHOLD = 0.9;    // hiểu ngay
+    const CLOSE_THRESHOLD = 0.5; // nghe khác nhưng người nghe vẫn nhận ra từ
     const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
     for (let i = 0; i <= m; i++) dp[i][0] = i;
     for (let j = 0; j <= n; j++) dp[0][j] = j;
@@ -61,7 +65,8 @@
       if (i > 0 && j > 0) {
         const sub = dp[i - 1][j - 1] + (1 - similarity(T[i - 1], H[j - 1]));
         if (Math.abs(dp[i][j] - sub) < 1e-9) {
-          const status = similarity(T[i - 1], H[j - 1]) >= SUB_THRESHOLD ? 'ok' : 'wrong';
+          const sim = similarity(T[i - 1], H[j - 1]);
+          const status = sim >= OK_THRESHOLD ? 'ok' : sim >= CLOSE_THRESHOLD ? 'close' : 'miss';
           out.push({ word: T[i - 1], heard: H[j - 1], status });
           i--; j--; continue;
         }
@@ -77,23 +82,25 @@
     return out.reverse();
   }
 
-  // Word accuracy 0..100 (làm tròn); từ wrong được cộng theo độ giống THẬT với chỗ STT nghe
-  // (vd "skedule" ~0.75) thay vì điểm phẳng — nói lệch nhẹ phải cao điểm hơn sai hẳn sang từ khác.
+  // Word accuracy 0..100 (làm tròn) theo mức người nghe hiểu: ok = 1 điểm, close = độ giống thật
+  // (nghe hơi khác vẫn được ghi nhận là "vẫn hiểu", vd "skedule" ~0.75), miss/missing = 0.
+  // 'wrong' là biệt danh cũ của close — tính như close để client cache phiên trước vẫn đúng điểm.
   function score(aligned) {
     if (!aligned.length) return 0;
     let pts = 0;
     for (const a of aligned) {
       if (a.status === 'ok') pts += 1;
-      else if (a.status === 'wrong') pts += similarity(a.word, a.heard || '');
+      else if (a.status === 'close' || a.status === 'wrong') pts += similarity(a.word, a.heard || '');
     }
     return Math.round((pts / aligned.length) * 100);
   }
 
-  // Các từ cần AI nhận xét: sai trước, thiếu sau, tối đa 4.
+  // Các từ cần AI nhận xét: không-hiểu trước, nghe-hơi-khác sau, thiếu cuối, tối đa 4.
   function wrongWords(aligned, max = 4) {
-    const wrong = aligned.filter((a) => a.status === 'wrong');
+    const miss = aligned.filter((a) => a.status === 'miss');
+    const close = aligned.filter((a) => a.status === 'close');
     const missing = aligned.filter((a) => a.status === 'missing');
-    return wrong.concat(missing).slice(0, max);
+    return miss.concat(close).concat(missing).slice(0, max);
   }
 
   return { tokenize, similarity, align, score, wrongWords };

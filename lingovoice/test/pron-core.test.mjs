@@ -13,12 +13,20 @@ test('tokenize tách từng chữ Hán cho tiếng Trung, bỏ dấu câu và la
   assert.deepEqual(Pron.tokenize('你好 Ni hao！', 'zh'), ['你', '好']);
 });
 
-test('align nhận từ nghe lệch một âm là wrong (schedule → skedule)', () => {
+test('align: lệch một âm nhưng người nghe vẫn nhận ra từ = close (schedule → skedule)', () => {
   const aligned = Pron.align('I have a busy schedule today.', 'I have a busy skedule today', 'en');
-  const wrong = aligned.filter((a) => a.status === 'wrong');
-  assert.equal(wrong.length, 1);
-  assert.equal(wrong[0].word, 'schedule');
-  assert.equal(wrong[0].heard, 'skedule');
+  const close = aligned.filter((a) => a.status === 'close');
+  assert.equal(close.length, 1);
+  assert.equal(close[0].word, 'schedule');
+  assert.equal(close[0].heard, 'skedule');
+});
+
+test('align: nghe thành từ khác hẳn = miss (người nghe sẽ hiểu nhầm)', () => {
+  // morning/evening có đuôi "-ning" chung nên vẫn tính close — phải dùng từ không còn điểm nào giống
+  const aligned = Pron.align('Good morning', 'good banana', 'en');
+  const miss = aligned.filter((a) => a.status === 'miss');
+  assert.equal(miss.length, 1);
+  assert.equal(miss[0].word, 'morning');
 });
 
 test('align nhận từ bị bỏ qua là missing', () => {
@@ -28,7 +36,7 @@ test('align nhận từ bị bỏ qua là missing', () => {
 
 test('align tiếng Trung so theo chữ và bắt chữ sai', () => {
   const aligned = Pron.align('我每天学习中文。', '我每添学习中文', 'zh');
-  const wrong = aligned.filter((a) => a.status === 'wrong');
+  const wrong = aligned.filter((a) => a.status === 'miss');
   assert.equal(wrong.length, 1);
   assert.equal(wrong[0].word, '天');
   assert.equal(wrong[0].heard, '添');
@@ -48,11 +56,22 @@ test('score: từ sai chấm theo độ giống thật — lệch nhẹ điểm 
   assert.ok(Pron.score(Pron.align('ship', 'sheep', 'en')) > Pron.score(Pron.align('hello', 'xyz', 'en')));
 });
 
-test('wrongWords ưu tiên từ sai rồi từ thiếu, giới hạn 4', () => {
+test('align chia 3 mức theo ngưỡng người nghe hiểu: ok ≥0.9, close ≥0.5, miss <0.5', () => {
+  const levels = Pron.align('cat hat dog', 'cap hop dog', 'en');
+  const byWord = Object.fromEntries(levels.map((a) => [a.word, a.status]));
+  assert.equal(byWord.cat, 'close');  // cat→cap giống 67%
+  assert.equal(byWord.hat, 'miss');   // hat→hop giống 33%
+  assert.equal(byWord.dog, 'ok');
+});
+
+test('wrongWords ưu tiên miss → close → missing, giới hạn 4', () => {
   const aligned = Pron.align('one two three four five six', 'von too three four five six', 'en');
   const words = Pron.wrongWords(aligned);
   assert.ok(words.length <= 4);
-  assert.equal(words[0].status, 'wrong');
+  // "one" nghe thành "von" (giống 33% = miss) xếp trước "two"→"too" (giống 67% = close)
+  assert.equal(words[0].status, 'miss');
+  assert.equal(words[0].word, 'one');
+  assert.ok(words.some((w) => w.word === 'two' && w.status === 'close'));
   const missing = Pron.align('a b c d e f g h', 'a b c', 'en');
   assert.deepEqual(Pron.wrongWords(missing).map((w) => w.word), ['d', 'e', 'f', 'g']);
 });

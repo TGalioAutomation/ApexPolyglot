@@ -572,7 +572,7 @@ test('pronunciation feedback: diff có từ sai → score máy chấm theo độ
         { word: 'have', heard: 'have', status: 'ok' },
         { word: 'a', heard: 'a', status: 'ok' },
         { word: 'busy', heard: 'busy', status: 'ok' },
-        { word: 'schedule', heard: 'skedule', status: 'wrong' },
+        { word: 'schedule', heard: 'skedule', status: 'close' },
         { word: 'today', heard: 'today', status: 'ok' }
       ]
     })
