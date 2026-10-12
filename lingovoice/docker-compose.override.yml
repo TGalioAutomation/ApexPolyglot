@@ -1,0 +1,14 @@
+# Override cho deploy trên máy Mac (colima): colima không mount /Volumes vào VM
+# nên bind ./cache:/app/cache ở file gốc không thấy dữ liệu — dùng named volume
+# và nạp nội dung bằng tar stream (xem docs/architecture.md mục Deployment).
+# VPS Linux dùng file gốc với bind ./cache là đủ; không rsync file này.
+services:
+  postgres:
+    restart: unless-stopped
+  app:
+    restart: unless-stopped
+    volumes:
+      - audio_cache:/app/cache
+
+volumes:
+  audio_cache:

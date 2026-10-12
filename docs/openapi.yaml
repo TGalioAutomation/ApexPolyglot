@@ -1,0 +1,2237 @@
+openapi: 3.1.0
+info:
+  title: LingoPilot API
+  version: 1.0.0-draft
+  description: >-
+    Core target production HTTP contract. The extended endpoint catalog is in
+    docs/technical-architecture.md and each selected release endpoint must be
+    promoted into this contract before implementation. The current local
+    prototype exposes /api/*; production uses /v1/*. Level 1-7 is an internal
+    evidence-based scale.
+  contact:
+    name: LingoPilot Engineering
+servers:
+  - url: https://api.example.com/v1
+    description: Production placeholder
+  - url: https://staging-api.example.com/v1
+    description: Staging placeholder
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Learning
+  - name: Reviews
+  - name: Assessment
+  - name: Tutor
+  - name: Voice
+  - name: Progress
+  - name: Notifications
+  - name: Content
+  - name: Moderation
+  - name: Support
+  - name: Billing
+  - name: Analytics
+  - name: Privacy
+security:
+  - sessionCookie: []
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a learner account and establish a session
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: Account registered and secure session cookie issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate with email and password
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Authenticated and secure session cookie issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/recovery-requests:
+    post:
+      tags: [Auth]
+      summary: Request a single-use password recovery challenge
+      operationId: requestPasswordRecovery
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecoveryRequest" }
+      responses:
+        "202":
+          description: Request accepted; response never reveals whether the account exists
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/recovery-confirmations:
+    post:
+      tags: [Auth]
+      summary: Set a new password using a single-use recovery token
+      operationId: confirmPasswordRecovery
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecoveryConfirmation" }
+      responses:
+        "204": { description: Password changed and all existing sessions revoked }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/session:
+    get:
+      tags: [Auth]
+      summary: Get the current session
+      operationId: getSession
+      security: []
+      responses:
+        "200":
+          description: Session or anonymous state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Auth]
+      summary: Sign out and revoke the current session
+      operationId: deleteSession
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204":
+          description: Signed out
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/sessions:
+    get:
+      tags: [Auth]
+      summary: List active sessions for the current account
+      operationId: listSessions
+      responses:
+        "200":
+          description: Active sessions ordered by most recent activity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/SessionRecord" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /auth/sessions/{authSessionId}:
+    delete:
+      tags: [Auth]
+      summary: Revoke one account session
+      operationId: revokeSession
+      parameters:
+        - $ref: "#/components/parameters/AuthSessionId"
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204": { description: Session revoked }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /me/profile:
+    get:
+      tags: [Profile]
+      summary: Get learner profile
+      operationId: getProfile
+      responses:
+        "200":
+          description: Learner profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    patch:
+      tags: [Profile]
+      summary: Update learner profile
+      operationId: updateProfile
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated profile
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerProfile"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /study-plans/{language}:
+    parameters:
+      - $ref: "#/components/parameters/LanguagePath"
+    get:
+      tags: [Learning]
+      summary: Get the active 90-day study plan
+      operationId: getStudyPlan
+      responses:
+        "200":
+          description: Active plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyPlan"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    put:
+      tags: [Learning]
+      summary: Change schedule or language allocation
+      operationId: updateStudyPlan
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                dailyMinutes: { type: integer, enum: [15, 25, 35, 50] }
+                languageAllocation:
+                  $ref: "#/components/schemas/LanguageAllocation"
+                studyDays:
+                  type: array
+                  minItems: 1
+                  maxItems: 7
+                  uniqueItems: true
+                  items: { $ref: "#/components/schemas/Weekday" }
+                preferredLocalTime:
+                  type: string
+                  pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  example: "20:30"
+                timezone: { type: string, minLength: 1, maxLength: 100, example: Asia/Ho_Chi_Minh }
+      responses:
+        "200":
+          description: Recalculated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyPlan"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /today:
+    get:
+      tags: [Learning]
+      summary: Get next-best learning actions for today
+      operationId: getToday
+      responses:
+        "200":
+          description: At most three primary tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [date, day, tasks]
+                properties:
+                  date: { type: string, format: date }
+                  day: { type: integer, minimum: 1, maximum: 90 }
+                  tasks:
+                    type: array
+                    maxItems: 3
+                    items:
+                      $ref: "#/components/schemas/LearningTask"
+                  checkpoint:
+                    $ref: "#/components/schemas/CheckpointSummary"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /courses/{language}/path:
+    parameters:
+      - $ref: "#/components/parameters/LanguagePath"
+    get:
+      tags: [Learning]
+      summary: Get curriculum path
+      operationId: getPath
+      responses:
+        "200":
+          description: Versioned curriculum path
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [language, curriculumVersion, phases]
+                properties:
+                  language: { $ref: "#/components/schemas/Language" }
+                  curriculumVersion: { type: string }
+                  phases:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PathPhase"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /learning-sessions:
+    post:
+      tags: [Learning]
+      summary: Start a learning session
+      operationId: createLearningSession
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lessonId]
+              additionalProperties: false
+              properties:
+                lessonId: { type: string, format: uuid }
+                source: { type: string, enum: [today, path, practice, requirement] }
+      responses:
+        "201":
+          description: Session created or idempotently replayed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningSession"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /learning-sessions/{sessionId}:
+    get:
+      tags: [Learning]
+      summary: Get session and resumable state
+      operationId: getLearningSession
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningSession"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /learning-sessions/{sessionId}/attempts:
+    post:
+      tags: [Learning]
+      summary: Submit one exercise attempt
+      operationId: createAttempt
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttemptRequest"
+      responses:
+        "201":
+          description: Scored attempt and feedback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttemptResult"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /learning-sessions/{sessionId}/complete:
+    post:
+      tags: [Learning]
+      summary: Complete session and schedule reviews
+      operationId: completeLearningSession
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          description: Completion summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionCompletion"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /assessment-runs:
+    post:
+      tags: [Assessment]
+      summary: Start a placement, weekly, phase, recovery, or challenge assessment
+      operationId: createAssessment
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, kind]
+              additionalProperties: false
+              properties:
+                language: { $ref: "#/components/schemas/Language" }
+                kind: { $ref: "#/components/schemas/AssessmentKind" }
+                checkpointId: { type: [string, "null"], format: uuid }
+      responses:
+        "201":
+          description: Assessment without answer keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentRun"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /assessment-runs/{assessmentId}:
+    get:
+      tags: [Assessment]
+      summary: Resume assessment
+      operationId: getAssessment
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+      responses:
+        "200":
+          description: Assessment state without answer keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentRun"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /assessment-runs/{assessmentId}/attempts:
+    post:
+      tags: [Assessment]
+      summary: Save an assessment response
+      operationId: createAssessmentAttempt
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentAttemptRequest"
+      responses:
+        "201":
+          description: Response saved; no correctness leak before submit
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attemptId, savedAt]
+                properties:
+                  attemptId: { type: string, format: uuid }
+                  savedAt: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /assessment-runs/{assessmentId}/submit:
+    post:
+      tags: [Assessment]
+      summary: Finalize deterministic score and learning requirements
+      operationId: submitAssessment
+      parameters:
+        - $ref: "#/components/parameters/AssessmentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          description: Immutable scoring result and AI-assisted plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /learning-requirements:
+    get:
+      tags: [Learning]
+      summary: Get active measurable learning requirements
+      operationId: getRequirements
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, completed, expired, all], default: active }
+      responses:
+        "200":
+          description: Requirements
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/LearningRequirement" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /tutor/conversations:
+    post:
+      tags: [Tutor]
+      summary: Start a bounded tutor conversation
+      operationId: createTutorConversation
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, mode, goal]
+              additionalProperties: false
+              properties:
+                language: { $ref: "#/components/schemas/Language" }
+                mode: { type: string, enum: [guided, free, explain, retry] }
+                goal: { type: string, minLength: 1, maxLength: 500 }
+      responses:
+        "201":
+          description: Conversation created with fixed policy envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [conversationId, language, mode, turnBudget]
+                properties:
+                  conversationId: { type: string, format: uuid }
+                  language: { $ref: "#/components/schemas/Language" }
+                  mode: { type: string }
+                  turnBudget: { type: integer, minimum: 1, maximum: 30 }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /tutor/conversations/{conversationId}/turns:
+    post:
+      tags: [Tutor]
+      summary: Send a bounded tutor message
+      operationId: createTutorMessage
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, message]
+              additionalProperties: false
+              properties:
+                language: { $ref: "#/components/schemas/Language" }
+                message: { type: string, minLength: 1, maxLength: 4000 }
+                mode: { type: string, enum: [guided, free, explain, retry], default: guided }
+      responses:
+        "200":
+          description: Structured tutor response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TutorReply"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ProviderUnavailable"
+  /voice/capabilities:
+    get:
+      tags: [Voice]
+      summary: Get capability status without secrets
+      operationId: getVoiceStatus
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Language"
+      responses:
+        "200":
+          description: Voice capability status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tts, asr, analysis]
+                properties:
+                  tts: { type: string, enum: [available, degraded, unavailable] }
+                  asr: { type: string, enum: [available, degraded, unavailable] }
+                  analysis: { type: string, enum: [available, degraded, unavailable] }
+                  disclosure: { type: string }
+  /voice/synthesis:
+    post:
+      tags: [Voice]
+      summary: Synthesize speech through consent-compatible provider
+      operationId: createSpeech
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, text]
+              additionalProperties: false
+              properties:
+                language: { $ref: "#/components/schemas/Language" }
+                text: { type: string, minLength: 1, maxLength: 2000 }
+                voiceId: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Audio stream
+          headers:
+            X-Voice-Provider:
+              schema: { type: string }
+          content:
+            audio/wav:
+              schema: { type: string, contentEncoding: binary }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503":
+          $ref: "#/components/responses/ProviderUnavailable"
+  /media/uploads:
+    post:
+      tags: [Voice]
+      summary: Create a short-lived signed upload for consented audio
+      operationId: createVoiceUpload
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, mimeType, bytes]
+              additionalProperties: false
+              properties:
+                purpose: { type: string, enum: [speech_attempt, assessment, conversation] }
+                mimeType: { type: string, enum: [audio/webm, audio/wav, audio/mp4] }
+                bytes: { type: integer, minimum: 1, maximum: 15000000 }
+      responses:
+        "201":
+          description: Signed upload valid for at most five minutes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [uploadId, uploadUrl, expiresAt]
+                properties:
+                  uploadId: { type: string, format: uuid }
+                  uploadUrl: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /progress/summary:
+    get:
+      tags: [Progress]
+      summary: Get evidence-based progress
+      operationId: getProgressSummary
+      responses:
+        "200":
+          description: Progress by language and skill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressSummary"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /reviews/due:
+    get:
+      tags: [Reviews]
+      summary: List due SRS review cards in scheduler order
+      operationId: listDueReviews
+      parameters:
+        - $ref: "#/components/parameters/Language"
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: Due reviews and scheduler watermark
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, schedulerVersion]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ReviewCard" } }
+                  schedulerVersion: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /reviews/{reviewId}/attempts:
+    post:
+      tags: [Reviews]
+      summary: Submit a recall result and schedule the next SRS review
+      operationId: createReviewAttempt
+      parameters:
+        - $ref: "#/components/parameters/ReviewId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewAttemptRequest" }
+      responses:
+        "201":
+          description: Review evidence recorded and card rescheduled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewAttemptResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List learner notifications
+      operationId: listNotifications
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 256 }
+        - name: unreadOnly
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Cursor-paginated notifications
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPage" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /notifications/{notificationId}:
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification read or unread
+      operationId: updateNotification
+      parameters:
+        - $ref: "#/components/parameters/NotificationId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [read]
+              additionalProperties: false
+              properties:
+                read: { type: boolean }
+      responses:
+        "200":
+          description: Notification updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notification" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /notification-preferences:
+    get:
+      tags: [Notifications]
+      summary: Get notification channel preferences
+      operationId: getNotificationPreferences
+      responses:
+        "200":
+          description: Current preferences
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    put:
+      tags: [Notifications]
+      summary: Replace notification channel preferences
+      operationId: updateNotificationPreferences
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotificationPreferences" }
+      responses:
+        "200":
+          description: Preferences updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/content/items:
+    get:
+      tags: [Content]
+      summary: Search versioned curriculum content
+      operationId: adminListContent
+      x-required-roles: [content_editor, learning_reviewer, auditor, admin]
+      x-required-scopes: ["content:read"]
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ContentStatus" }
+        - name: language
+          in: query
+          schema: { $ref: "#/components/schemas/Language" }
+      responses:
+        "200":
+          description: Matching content records
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ContentItem" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    post:
+      tags: [Content]
+      summary: Create a draft content item
+      operationId: adminCreateContent
+      x-required-roles: [content_editor]
+      x-required-scopes: ["content:write"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentDraftRequest" }
+      responses:
+        "201":
+          description: Draft created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentItem" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/content/items/{contentId}:
+    patch:
+      tags: [Content]
+      summary: Update a draft and create a new immutable content version
+      operationId: adminUpdateContent
+      x-required-roles: [content_editor]
+      x-required-scopes: ["content:write"]
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentDraftRequest" }
+      responses:
+        "200":
+          description: New draft version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentItem" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/content/items/{contentId}/submit-review:
+    post:
+      tags: [Content]
+      summary: Submit a content version and create an independent review assignment
+      operationId: adminSubmitContentReview
+      x-required-roles: [content_editor]
+      x-required-scopes: ["content:write"]
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, reviewerId]
+              additionalProperties: false
+              properties:
+                version: { type: integer, minimum: 1 }
+                reviewerId: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Assignment created; server rejects reviewer equal to content creator
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReviewAssignment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/content/items/{contentId}/review-decisions:
+    post:
+      tags: [Content]
+      summary: Record an immutable review decision by the assigned reviewer
+      operationId: adminDecideContentReview
+      x-required-roles: [learning_reviewer]
+      x-required-scopes: ["content:publish"]
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assignmentId, version, decision, comment]
+              additionalProperties: false
+              properties:
+                assignmentId: { type: string, format: uuid }
+                version: { type: integer, minimum: 1 }
+                decision: { type: string, enum: [approved, changes_requested, rejected] }
+                comment: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        "201":
+          description: Decision recorded; authenticated reviewer must match assignment and differ from creator
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReviewDecision" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/content/items/{contentId}/publish:
+    post:
+      tags: [Content]
+      summary: Publish an approved content version
+      operationId: adminPublishContent
+      x-required-roles: [learning_reviewer]
+      x-required-scopes: ["content:publish"]
+      parameters:
+        - $ref: "#/components/parameters/ContentId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, reviewDecisionId]
+              additionalProperties: false
+              properties:
+                version: { type: integer, minimum: 1 }
+                reviewDecisionId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Published content version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentItem" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /reports:
+    post:
+      tags: [Moderation]
+      summary: Report unsafe tutor output, abuse, or content quality
+      operationId: createReport
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReportRequest" }
+      responses:
+        "201":
+          description: Report accepted and routed by severity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CaseRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /support/tickets:
+    get:
+      tags: [Support]
+      summary: List support tickets visible to the caller
+      operationId: listSupportTickets
+      x-required-scopes: ["support:self"]
+      responses:
+        "200":
+          description: Support tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/CaseRecord" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    post:
+      tags: [Support]
+      summary: Open a learner support ticket
+      operationId: createSupportTicket
+      x-required-scopes: ["support:self"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupportTicketRequest" }
+      responses:
+        "201":
+          description: Support ticket opened
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CaseRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/moderation/cases:
+    get:
+      tags: [Moderation]
+      summary: List moderation and safety cases
+      operationId: adminListModerationCases
+      x-required-roles: [moderator, auditor, admin]
+      x-required-scopes: ["moderation:read"]
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CaseStatus" }
+        - name: severity
+          in: query
+          schema: { type: string, enum: [low, medium, high, critical] }
+      responses:
+        "200":
+          description: Cases visible to the operator
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/CaseRecord" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /admin/moderation/cases/{caseId}:
+    patch:
+      tags: [Moderation]
+      summary: Assign or resolve a moderation case with an audit reason
+      operationId: adminUpdateModerationCase
+      x-required-roles: [moderator, admin]
+      x-required-scopes: ["moderation:write"]
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseUpdateRequest" }
+      responses:
+        "200":
+          description: Case updated and audit event appended
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CaseRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /billing/plans:
+    get:
+      tags: [Billing]
+      summary: List purchasable plans and regional prices
+      operationId: listBillingPlans
+      security: []
+      responses:
+        "200":
+          description: Active public plans
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/BillingPlan" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /billing/checkout-sessions:
+    post:
+      tags: [Billing]
+      summary: Create an idempotent hosted checkout session
+      operationId: createCheckoutSession
+      x-required-scopes: ["billing:self"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckoutRequest" }
+      responses:
+        "201":
+          description: Checkout session created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /billing/subscription:
+    get:
+      tags: [Billing]
+      summary: Get current subscription and renewal state
+      operationId: getSubscription
+      x-required-scopes: ["billing:self"]
+      responses:
+        "200":
+          description: Subscription or explicit free state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Subscription" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /billing/subscription/cancel:
+    post:
+      tags: [Billing]
+      summary: Schedule subscription cancellation at period end
+      operationId: cancelSubscription
+      x-required-scopes: ["billing:self"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          description: Cancellation state updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Subscription" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /entitlements:
+    get:
+      tags: [Billing]
+      summary: Get effective product entitlements
+      operationId: listEntitlements
+      responses:
+        "200":
+          description: Effective entitlements derived from ledger state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, evaluatedAt]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Entitlement" } }
+                  evaluatedAt: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /billing/webhooks/{provider}:
+    post:
+      tags: [Billing]
+      summary: Receive a signed, replay-protected billing provider event
+      operationId: receiveBillingWebhook
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [stripe, manual] }
+        - $ref: "#/components/parameters/WebhookSignature"
+        - $ref: "#/components/parameters/WebhookTimestamp"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "202": { description: Verified event durably recorded for idempotent processing }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /analytics/events:
+    post:
+      tags: [Analytics]
+      summary: Ingest a consent-filtered batch of product analytics events
+      operationId: ingestAnalyticsEvents
+      x-required-scopes: ["analytics:write:self"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AnalyticsBatch" }
+      responses:
+        "202":
+          description: Valid consented events accepted; rejected count contains no payload echo
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted, rejected]
+                properties:
+                  accepted: { type: integer, minimum: 0 }
+                  rejected: { type: integer, minimum: 0 }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /me/consents:
+    get:
+      tags: [Privacy]
+      summary: Get current consent ledger
+      operationId: getConsents
+      responses:
+        "200":
+          description: Consent records
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/ConsentRecord" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+    put:
+      tags: [Privacy]
+      summary: Grant or withdraw a purpose-specific consent
+      operationId: updateConsent
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, granted, policyVersion]
+              additionalProperties: false
+              properties:
+                type: { type: string, enum: [essential, analytics, ai_processing, audio_storage, personalization, marketing] }
+                granted: { type: boolean }
+                policyVersion: { type: string }
+      responses:
+        "200":
+          description: Updated ledger entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConsentRecord" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /me/exports:
+    post:
+      tags: [Privacy]
+      summary: Request a data export
+      operationId: createDataExport
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "202":
+          description: Export job accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyJob" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /me:
+    delete:
+      tags: [Privacy]
+      summary: Request account and personal data deletion
+      operationId: createDeletion
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmation]
+              additionalProperties: false
+              properties:
+                confirmation: { type: string, const: DELETE }
+      responses:
+        "202":
+          description: Deletion job accepted with cooling-off policy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyJob" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-lingopilot_session
+      description: Secure, HttpOnly, SameSite cookie; state-changing requests also require CSRF protection.
+  parameters:
+    Language:
+      name: language
+      in: query
+      required: true
+      schema: { $ref: "#/components/schemas/Language" }
+    LanguagePath:
+      name: language
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/Language" }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AssessmentId:
+      name: assessmentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AuthSessionId:
+      name: authSessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ReviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ContentId:
+      name: contentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 128 }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema: { type: string }
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      description: Double-submit token bound to the authenticated session; required on every cookie-authenticated mutation.
+      schema: { type: string, minLength: 32, maxLength: 256 }
+    WebhookSignature:
+      name: X-Webhook-Signature
+      in: header
+      required: true
+      description: Provider signature over the exact raw request body and timestamp.
+      schema: { type: string, minLength: 16, maxLength: 1024 }
+    WebhookTimestamp:
+      name: X-Webhook-Timestamp
+      in: header
+      required: true
+      description: Unix epoch seconds used for replay-window enforcement.
+      schema: { type: integer, minimum: 1 }
+  responses:
+    BadRequest:
+      description: Malformed syntax, unsupported media, or invalid transport metadata
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Forbidden:
+      description: Authenticated but missing consent, role, scope, entitlement, or valid CSRF token
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    NotFound:
+      description: Resource not found or not visible to caller
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    Conflict:
+      description: State or version conflict
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    RateLimited:
+      description: Rate or budget limit reached
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+    ProviderUnavailable:
+      description: AI or voice provider unavailable; client may use documented fallback
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+  schemas:
+    Language:
+      type: string
+      enum: [en, zh-CN]
+    Role:
+      type: string
+      enum: [learner, content_editor, learning_reviewer, support, moderator, billing_admin, auditor, admin]
+    Scope:
+      type: string
+      enum:
+        - learning:self
+        - support:self
+        - billing:self
+        - analytics:write:self
+        - content:read
+        - content:write
+        - content:publish
+        - moderation:read
+        - moderation:write
+        - support:read
+        - support:write
+        - billing:read
+        - billing:write
+        - audit:read
+    AssessmentKind:
+      type: string
+      enum: [placement, weekly, phase, recovery, challenge]
+    Session:
+      type: object
+      required: [authenticated, expiresAt, roles, scopes]
+      properties:
+        authenticated: { type: boolean }
+        userId: { type: [string, "null"], format: uuid }
+        expiresAt: { type: [string, "null"], format: date-time }
+        csrfToken:
+          type: [string, "null"]
+          description: Non-secret token echoed in X-CSRF-Token on authenticated mutations.
+        roles: { type: array, uniqueItems: true, items: { $ref: "#/components/schemas/Role" } }
+        scopes: { type: array, uniqueItems: true, items: { $ref: "#/components/schemas/Scope" } }
+    RegisterRequest:
+      type: object
+      required: [email, password, locale, timezone, acceptedTermsVersion]
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 12, maxLength: 128, writeOnly: true }
+        locale: { type: string, enum: [vi, en, zh-CN] }
+        timezone: { type: string, minLength: 1, maxLength: 100 }
+        acceptedTermsVersion: { type: string, minLength: 1, maxLength: 50 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 128, writeOnly: true }
+    RecoveryRequest:
+      type: object
+      required: [email]
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+    RecoveryConfirmation:
+      type: object
+      required: [token, newPassword]
+      additionalProperties: false
+      properties:
+        token: { type: string, minLength: 32, maxLength: 2048, writeOnly: true }
+        newPassword: { type: string, minLength: 12, maxLength: 128, writeOnly: true }
+    AuthResult:
+      type: object
+      required: [userId, session]
+      additionalProperties: false
+      properties:
+        userId: { type: string, format: uuid }
+        session: { $ref: "#/components/schemas/Session" }
+    SessionRecord:
+      type: object
+      required: [id, createdAt, lastSeenAt, current]
+      properties:
+        id: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        current: { type: boolean }
+        deviceLabel: { type: string, maxLength: 200 }
+        approximateLocation: { type: string, maxLength: 200 }
+    LearnerProfile:
+      type: object
+      required: [id, version, locale, languages, goal, dailyMinutes]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        locale: { type: string, enum: [vi, en, zh-CN] }
+        timezone: { type: string, example: Asia/Ho_Chi_Minh }
+        languages:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/Language" }
+        goal: { type: string, maxLength: 500 }
+        dailyMinutes: { type: integer, enum: [15, 25, 35, 50] }
+        correctionStyle: { type: string, enum: [gentle, balanced, direct] }
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        locale: { type: string, enum: [vi, en, zh-CN] }
+        timezone: { type: string, maxLength: 100 }
+        goal: { type: string, maxLength: 500 }
+        dailyMinutes: { type: integer, enum: [15, 25, 35, 50] }
+        correctionStyle: { type: string, enum: [gentle, balanced, direct] }
+    LanguageAllocation:
+      type: object
+      required: [en, "zh-CN"]
+      additionalProperties: false
+      properties:
+        en: { type: integer, minimum: 0, maximum: 100 }
+        "zh-CN": { type: integer, minimum: 0, maximum: 100 }
+      description: Values must sum to 100.
+      x-validation: en + zh-CN = 100
+      x-validation-rule-id: allocation-sum-100-v1
+    Weekday:
+      type: string
+      enum: [mon, tue, wed, thu, fri, sat, sun]
+    ScheduledStudyDay:
+      type: object
+      required: [date, localStart, timezone, plannedMinutes]
+      properties:
+        date: { type: string, format: date }
+        localStart: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        timezone: { type: string }
+        plannedMinutes: { type: integer, enum: [15, 25, 35, 50] }
+    StudyPlan:
+      type: object
+      required: [id, version, startDate, durationDays, dailyMinutes, languageAllocation, studyDays, preferredLocalTime, timezone, schedulePreview]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        startDate: { type: string, format: date }
+        durationDays: { type: integer, const: 90 }
+        dailyMinutes: { type: integer, enum: [15, 25, 35, 50] }
+        languageAllocation: { $ref: "#/components/schemas/LanguageAllocation" }
+        studyDays:
+          type: array
+          minItems: 1
+          maxItems: 7
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/Weekday" }
+        preferredLocalTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        timezone: { type: string }
+        schedulePreview: { type: array, items: { $ref: "#/components/schemas/ScheduledStudyDay" } }
+        nextRecalculationAt: { type: string, format: date-time }
+    LearningTask:
+      type: object
+      required: [id, type, language, title, minutes, reason, successCriterion]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [lesson, review, checkpoint, conversation, recovery] }
+        language: { $ref: "#/components/schemas/Language" }
+        title: { type: string }
+        minutes: { type: integer, minimum: 1, maximum: 50 }
+        reason: { type: string }
+        successCriterion: { type: string }
+        deepLink: { type: string }
+    CheckpointSummary:
+      type: [object, "null"]
+      properties:
+        id: { type: string, format: uuid }
+        dueAt: { type: string, format: date-time }
+        kind: { $ref: "#/components/schemas/AssessmentKind" }
+    PathPhase:
+      type: object
+      required: [id, title, dayStart, dayEnd, units]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        dayStart: { type: integer, minimum: 1, maximum: 90 }
+        dayEnd: { type: integer, minimum: 1, maximum: 90 }
+        units: { type: array, items: { $ref: "#/components/schemas/PathUnit" } }
+    PathUnit:
+      type: object
+      required: [id, canDo, state]
+      properties:
+        id: { type: string, format: uuid }
+        canDo: { type: string }
+        state: { type: string, enum: [locked, available, in_progress, review_due, mastered] }
+    LearningSession:
+      type: object
+      required: [id, lessonId, state, startedAt, currentStep, contentVersion]
+      properties:
+        id: { type: string, format: uuid }
+        lessonId: { type: string, format: uuid }
+        state: { type: string, enum: [active, completed, abandoned] }
+        startedAt: { type: string, format: date-time }
+        currentStep: { type: integer, minimum: 0 }
+        contentVersion: { type: string }
+        exercises: { type: array, items: { type: object, additionalProperties: true } }
+    AttemptRequest:
+      type: object
+      required: [exerciseId, response, clientAttemptId]
+      additionalProperties: false
+      properties:
+        exerciseId: { type: string, format: uuid }
+        clientAttemptId: { type: string, format: uuid }
+        response: { type: object, additionalProperties: true }
+        elapsedMs: { type: integer, minimum: 0, maximum: 3600000 }
+    AttemptResult:
+      type: object
+      required: [attemptId, score, feedback, retryRequired]
+      properties:
+        attemptId: { type: string, format: uuid }
+        score: { type: number, minimum: 0, maximum: 1 }
+        feedback: { $ref: "#/components/schemas/Feedback" }
+        retryRequired: { type: boolean }
+    Feedback:
+      type: object
+      required: [worked, priorityFix, betterVersion, explanation, retryPrompt]
+      properties:
+        worked: { type: string }
+        priorityFix: { type: string }
+        betterVersion: { type: string }
+        explanation: { type: string }
+        retryPrompt: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+    SessionCompletion:
+      type: object
+      required: [sessionId, meaningfulSeconds, evidenceIds, scheduledReviews]
+      properties:
+        sessionId: { type: string, format: uuid }
+        meaningfulSeconds: { type: integer, minimum: 0 }
+        evidenceIds: { type: array, items: { type: string, format: uuid } }
+        scheduledReviews: { type: integer, minimum: 0 }
+        nextTask: { anyOf: [{ $ref: "#/components/schemas/LearningTask" }, { type: "null" }] }
+    AssessmentRun:
+      type: object
+      required: [id, language, kind, state, blueprintVersion, rubricVersion, items]
+      properties:
+        id: { type: string, format: uuid }
+        language: { $ref: "#/components/schemas/Language" }
+        kind: { $ref: "#/components/schemas/AssessmentKind" }
+        state: { type: string, enum: [active, submitted, expired] }
+        blueprintVersion: { type: string }
+        rubricVersion: { type: string }
+        expiresAt: { type: string, format: date-time }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AssessmentItem" }
+    AssessmentItem:
+      type: object
+      required: [id, modality, type, prompt]
+      properties:
+        id: { type: string, format: uuid }
+        modality: { type: string, enum: [listening, reading, speaking, writing] }
+        type: { type: string, enum: [choice, dictation, ordered_chunks, open, audio_response] }
+        prompt: { type: string }
+        choices: { type: array, items: { type: string } }
+        media: { type: object, additionalProperties: true }
+      description: Never contains answer key or scoring weights.
+    AssessmentAttemptRequest:
+      type: object
+      required: [itemId, response, clientAttemptId]
+      additionalProperties: false
+      properties:
+        itemId: { type: string, format: uuid }
+        response: { type: object, additionalProperties: true }
+        clientAttemptId: { type: string, format: uuid }
+    AssessmentResult:
+      type: object
+      required:
+        - assessmentId
+        - overall
+        - level
+        - estimatedLevel
+        - skills
+        - evidenceStatus
+        - confidence
+        - standardError
+        - recommendedStartUnit
+        - dimensionCaveats
+        - requirements
+      properties:
+        assessmentId: { type: string, format: uuid }
+        overall: { type: integer, minimum: 0, maximum: 100 }
+        level:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 7
+          description: Verified internal Level; null until promotion policy has sufficient evidence.
+        estimatedLevel:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: Preliminary routing estimate; never grants progression or certification.
+        skills:
+          type: object
+          additionalProperties: { type: integer, minimum: 0, maximum: 100 }
+        evidenceStatus: { type: string, enum: [preliminary, verified, insufficient] }
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Calibrated confidence in the reported internal level, not a probability of learner success.
+        standardError:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Standard error of measurement on the 0-100 overall scale.
+        recommendedStartUnit:
+          type: object
+          required: [unitId, rationale]
+          additionalProperties: false
+          properties:
+            unitId:
+              type: string
+              pattern: "^(EN|ZH-CN)-L0[1-7]-D[0-9]{3}-U01$"
+            rationale: { type: string, minLength: 1, maxLength: 1000 }
+        dimensionCaveats:
+          type: object
+          required: [listening, reading, speaking]
+          additionalProperties: false
+          properties:
+            listening: { type: [string, "null"], maxLength: 500 }
+            reading: { type: [string, "null"], maxLength: 500 }
+            speaking: { type: [string, "null"], maxLength: 500 }
+          description: Null means no known caveat; text explains missing, low-quality, or non-comparable evidence.
+        scoringVersion: { type: string }
+        requirements:
+          type: array
+          maxItems: 3
+          items: { $ref: "#/components/schemas/LearningRequirement" }
+    LearningRequirement:
+      type: object
+      required: [id, skill, reason, title, minutes, successCriterion, status]
+      properties:
+        id: { type: string, format: uuid }
+        skill: { type: string }
+        reason: { type: string }
+        title: { type: string }
+        minutes: { type: integer, minimum: 1, maximum: 50 }
+        successCriterion: { type: string }
+        status: { type: string, enum: [active, completed, expired, superseded] }
+        dueAt: { type: [string, "null"], format: date-time }
+    TutorReply:
+      type: object
+      required: [conversationId, reply, feedback, retryPrompt, providerClass]
+      properties:
+        conversationId: { type: string, format: uuid }
+        reply: { type: string }
+        feedback: { $ref: "#/components/schemas/Feedback" }
+        retryPrompt: { type: string }
+        providerClass: { type: string, enum: [primary, fallback, deterministic] }
+        modelVersion: { type: string }
+        promptVersion: { type: string }
+    ProgressSummary:
+      type: object
+      required: [day, meaningfulMinutes, streak, languages]
+      properties:
+        day: { type: integer, minimum: 1, maximum: 90 }
+        meaningfulMinutes: { type: integer, minimum: 0 }
+        streak: { type: integer, minimum: 0 }
+        languages:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              internalLevel: { type: integer, minimum: 1, maximum: 7 }
+              levelEvidenceStatus: { type: string, enum: [insufficient, collecting, verified] }
+              skills: { type: object, additionalProperties: { type: number, minimum: 0, maximum: 1 } }
+    ReviewCard:
+      type: object
+      required: [id, language, prompt, responseMode, dueAt, stability, difficulty, reviewCount]
+      properties:
+        id: { type: string, format: uuid }
+        language: { $ref: "#/components/schemas/Language" }
+        prompt: { type: string, minLength: 1 }
+        responseMode: { type: string, enum: [recognition, recall, listening, speaking] }
+        mediaUrl: { type: string, format: uri }
+        dueAt: { type: string, format: date-time }
+        stability: { type: number, minimum: 0 }
+        difficulty: { type: number, minimum: 0, maximum: 1 }
+        reviewCount: { type: integer, minimum: 0 }
+    ReviewAttemptRequest:
+      type: object
+      required: [rating, response, elapsedMs, schedulerVersion]
+      additionalProperties: false
+      properties:
+        rating: { type: string, enum: [again, hard, good, easy] }
+        response: { type: object, additionalProperties: true }
+        elapsedMs: { type: integer, minimum: 0, maximum: 3600000 }
+        schedulerVersion: { type: string, minLength: 1, maxLength: 100 }
+    ReviewAttemptResult:
+      type: object
+      required: [attemptId, evidenceId, nextDueAt, intervalDays, schedulerVersion]
+      properties:
+        attemptId: { type: string, format: uuid }
+        evidenceId: { type: string, format: uuid }
+        nextDueAt: { type: string, format: date-time }
+        intervalDays: { type: number, minimum: 0 }
+        schedulerVersion: { type: string }
+    Notification:
+      type: object
+      required: [id, type, title, body, createdAt, read]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [review_due, checkpoint_due, streak_risk, plan_changed, billing, system] }
+        title: { type: string, minLength: 1, maxLength: 200 }
+        body: { type: string, minLength: 1, maxLength: 2000 }
+        deepLink: { type: string, maxLength: 500 }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }
+        readAt: { type: [string, "null"], format: date-time }
+    NotificationPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        nextCursor: { type: [string, "null"] }
+    NotificationPreferences:
+      type: object
+      required: [inApp, email, push, quietHours]
+      additionalProperties: false
+      properties:
+        inApp: { type: boolean }
+        email: { type: boolean }
+        push: { type: boolean }
+        quietHours:
+          type: object
+          required: [enabled, start, end, timezone]
+          additionalProperties: false
+          properties:
+            enabled: { type: boolean }
+            start: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+            end: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+            timezone: { type: string, minLength: 1, maxLength: 100 }
+    ContentStatus:
+      type: string
+      enum: [draft, in_review, approved, published, retired]
+    ContentDraftRequest:
+      type: object
+      required: [language, type, title, body, learningObjectives]
+      additionalProperties: false
+      properties:
+        language: { $ref: "#/components/schemas/Language" }
+        type: { type: string, enum: [unit, lesson, exercise, rubric, assessment_item] }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        body: { type: object, additionalProperties: true }
+        learningObjectives:
+          type: array
+          minItems: 1
+          items: { type: string, minLength: 1, maxLength: 500 }
+        prerequisiteIds: { type: array, uniqueItems: true, items: { type: string, format: uuid } }
+    ContentItem:
+      allOf:
+        - $ref: "#/components/schemas/ContentDraftRequest"
+        - type: object
+          required: [id, version, status, createdBy, createdAt, updatedAt]
+          properties:
+            id: { type: string, format: uuid }
+            version: { type: integer, minimum: 1 }
+            status: { $ref: "#/components/schemas/ContentStatus" }
+            createdBy: { type: string, format: uuid }
+            submittedBy: { type: [string, "null"], format: uuid }
+            assignedReviewerId: { type: [string, "null"], format: uuid }
+            reviewDecisionId: { type: [string, "null"], format: uuid }
+            publishedBy: { type: [string, "null"], format: uuid }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            publishedAt: { type: [string, "null"], format: date-time }
+    ContentReviewAssignment:
+      type: object
+      required: [id, contentId, version, createdBy, reviewerId, status, assignedAt]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        contentId: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        createdBy: { type: string, format: uuid }
+        reviewerId: { type: string, format: uuid }
+        status: { type: string, enum: [assigned, decided, cancelled] }
+        assignedAt: { type: string, format: date-time }
+      description: reviewerId must differ from createdBy; enforced transactionally by the server.
+    ContentReviewDecision:
+      type: object
+      required: [id, assignmentId, reviewerId, decision, comment, decidedAt]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        assignmentId: { type: string, format: uuid }
+        reviewerId: { type: string, format: uuid }
+        decision: { type: string, enum: [approved, changes_requested, rejected] }
+        comment: { type: string, minLength: 1, maxLength: 2000 }
+        decidedAt: { type: string, format: date-time }
+        consumedAt: { type: [string, "null"], format: date-time }
+    ReportRequest:
+      type: object
+      required: [category, description]
+      additionalProperties: false
+      properties:
+        category: { type: string, enum: [unsafe_ai, harassment, privacy, copyright, incorrect_content, billing, other] }
+        description: { type: string, minLength: 1, maxLength: 5000 }
+        resourceType: { type: string, enum: [tutor_turn, lesson, exercise, assessment, user, payment, other] }
+        resourceId: { type: string, maxLength: 200 }
+    SupportTicketRequest:
+      type: object
+      required: [subject, description]
+      additionalProperties: false
+      properties:
+        subject: { type: string, minLength: 1, maxLength: 300 }
+        description: { type: string, minLength: 1, maxLength: 10000 }
+        category: { type: string, enum: [account, learning, technical, billing, privacy, safety, other] }
+    CaseStatus:
+      type: string
+      enum: [open, triaged, investigating, waiting_for_user, resolved, dismissed]
+    CaseRecord:
+      type: object
+      required: [id, kind, status, severity, createdAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [report, support, safety] }
+        status: { $ref: "#/components/schemas/CaseStatus" }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        assigneeId: { type: [string, "null"], format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        version: { type: integer, minimum: 1 }
+    CaseUpdateRequest:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      properties:
+        status: { $ref: "#/components/schemas/CaseStatus" }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        assigneeId: { type: [string, "null"], format: uuid }
+        reason: { type: string, minLength: 1, maxLength: 2000 }
+    BillingPlan:
+      type: object
+      required: [id, name, currency, unitAmount, interval, features]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        currency: { type: string, pattern: "^[A-Z]{3}$", example: VND }
+        unitAmount: { type: integer, minimum: 0, description: Amount in the currency minor unit. }
+        interval: { type: string, enum: [month, year, one_time] }
+        features: { type: array, items: { type: string } }
+    CheckoutRequest:
+      type: object
+      required: [planId, successUrl, cancelUrl]
+      additionalProperties: false
+      properties:
+        planId: { type: string, minLength: 1, maxLength: 100 }
+        successUrl: { type: string, format: uri, maxLength: 2048 }
+        cancelUrl: { type: string, format: uri, maxLength: 2048 }
+        promotionCode: { type: string, maxLength: 100 }
+    CheckoutSession:
+      type: object
+      required: [id, url, expiresAt]
+      properties:
+        id: { type: string }
+        url: { type: string, format: uri }
+        expiresAt: { type: string, format: date-time }
+    Subscription:
+      type: object
+      required: [tier, status, cancelAtPeriodEnd]
+      properties:
+        id: { type: [string, "null"] }
+        tier: { type: string, enum: [free, pro, team] }
+        status: { type: string, enum: [none, trialing, active, past_due, paused, canceled] }
+        currentPeriodEnd: { type: [string, "null"], format: date-time }
+        cancelAtPeriodEnd: { type: boolean }
+        provider: { type: [string, "null"], enum: [stripe, manual, null] }
+    Entitlement:
+      type: object
+      required: [key, enabled, source]
+      properties:
+        key: { type: string, pattern: "^[a-z][a-z0-9_.-]+$" }
+        enabled: { type: boolean }
+        limit: { type: [integer, "null"], minimum: 0 }
+        source: { type: string, enum: [free, subscription, grant, promotion] }
+        expiresAt: { type: [string, "null"], format: date-time }
+    AnalyticsBatch:
+      type: object
+      required: [schemaVersion, sentAt, events]
+      additionalProperties: false
+      properties:
+        schemaVersion: { type: string, minLength: 1, maxLength: 50 }
+        sentAt: { type: string, format: date-time }
+        events:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: "#/components/schemas/AnalyticsEvent" }
+    AnalyticsEvent:
+      type: object
+      required: [id, name, occurredAt, anonymousId, properties]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, pattern: "^[a-z][a-z0-9_.]{1,99}$" }
+        occurredAt: { type: string, format: date-time }
+        anonymousId: { type: string, minLength: 16, maxLength: 128 }
+        properties:
+          type: object
+          maxProperties: 30
+          additionalProperties:
+            type: [string, number, integer, boolean, "null"]
+      description: Must not contain raw transcript, audio, email, access token, or free-form personal data.
+    ConsentRecord:
+      type: object
+      required: [type, granted, policyVersion, updatedAt]
+      properties:
+        type: { type: string }
+        granted: { type: boolean }
+        policyVersion: { type: string }
+        updatedAt: { type: string, format: date-time }
+        source: { type: string, enum: [onboarding, settings, support, migration] }
+    PrivacyJob:
+      type: object
+      required: [id, type, status, requestedAt]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [export, deletion] }
+        status: { type: string, enum: [queued, processing, completed, failed, cancelled] }
+        requestedAt: { type: string, format: date-time }
+        completionTarget: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status, code, requestId]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        code: { type: string, pattern: "^[A-Z0-9_]+$" }
+        detail: { type: string }
+        requestId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }

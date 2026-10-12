@@ -1,0 +1,17 @@
+{
+  "durationDays": 90,
+  "dailyMinutes": 35,
+  "target": "Build level-7 study habits across listening, reading and speaking; actual proficiency depends on baseline and consistency.",
+  "dailyRoutine": [
+    {"minutes": 12, "skill": "listening", "activity": "Listen twice: first for gist, second for key phrases."},
+    {"minutes": 10, "skill": "reading", "activity": "Read a short graded text and answer one comprehension question."},
+    {"minutes": 10, "skill": "speaking", "activity": "Shadow the model, record a response, receive AI feedback."},
+    {"minutes": 3, "skill": "review", "activity": "Save three useful phrases to spaced review."}
+  ],
+  "phases": [
+    {"days": "1-30", "name": "Nền tảng", "focus": "Âm, thanh điệu, câu cơ bản, 500 từ thiết yếu", "checkpoint": "Giới thiệu bản thân 60 giây bằng mỗi ngôn ngữ."},
+    {"days": "31-60", "name": "Bứt phá", "focus": "Hội thoại đời thường, đọc đoạn 250 từ, phản xạ câu hỏi", "checkpoint": "Nói 3 phút và tóm tắt một bài đọc không nhìn ghi chú."},
+    {"days": "61-90", "name": "Tự tin", "focus": "Nghe tốc độ tự nhiên, chủ đề công việc/du lịch, sửa lỗi tinh", "checkpoint": "Thực hiện một phiên hội thoại AI 10 phút và tự đánh giá."}
+  ],
+  "weeklyRotation": ["self-introduction", "daily-life", "food-and-shopping", "travel", "work-and-study", "opinions", "review-and-test"]
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LingoVoice</string>
+    <string name="web_content_description">Nội dung học ngoại ngữ LingoVoice</string>
+    <string name="server_unavailable_title">Không kết nối được server</string>
+    <string name="server_error">Hãy chạy LingoVoice server tại %1$s rồi thử lại. Trên emulator, 10.0.2.2 là máy Mac đang phát triển.</string>
+    <string name="retry">Thử lại</string>
+</resources>

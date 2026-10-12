@@ -1,0 +1,1245 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#EEF2FF" />
+  <title>LingoVoice — Lộ trình học Anh–Trung cá nhân hóa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/webp" href="/assets/splash-illustration.webp" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Tới nội dung chính</a>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 6h16M4 12h10M4 18h13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <span>LingoVoice</span>
+    </div>
+
+    <button class="journey-profile" id="journeyProfile" type="button" data-tab="setup" aria-label="Mở hồ sơ hành trình học tập">
+      <span class="journey-avatar" aria-hidden="true">
+        <img src="/assets/default-learner-avatar.webp" width="40" height="40" loading="lazy" decoding="async" alt="" />
+      </span>
+      <span class="journey-profile-copy"><b id="journeyProfileName">Bạn</b><small id="journeyProfileStage">Hành trình 18–25 tuổi</small></span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+
+    <div class="lang-toggle" role="group" aria-label="Chọn ngôn ngữ">
+      <button id="langEn" aria-pressed="true" data-lang="en">English</button>
+      <button id="langZh" aria-pressed="false" data-lang="zh">中文</button>
+    </div>
+
+    <div id="voiceStatus" class="voice-status" role="status" aria-live="polite">
+      <span class="status-dot"></span><span class="status-text">Đang kiểm tra giọng nói…</span>
+    </div>
+  </header>
+
+  <!-- Điều hướng chính — desktop (pills) -->
+  <nav class="main-tabs top-nav" id="mainTabs" role="tablist" aria-label="Điều hướng chính" aria-orientation="horizontal">
+    <button class="main-tab active" type="button" data-tab="today" role="tab" aria-selected="true" aria-controls="tab-today">Hôm nay</button>
+    <button class="main-tab" type="button" data-tab="path" role="tab" aria-selected="false" aria-controls="tab-path">Lộ trình</button>
+    <button class="main-tab" type="button" data-tab="practice" role="tab" aria-selected="false" aria-controls="practiceSubtabs">Luyện tập</button>
+    <button class="main-tab" type="button" data-tab="coach" role="tab" aria-selected="false" aria-controls="teacherDock">Cô Linh</button>
+    <button class="main-tab" type="button" data-tab="setup" role="tab" aria-selected="false" aria-controls="tab-setup">Thêm</button>
+  </nav>
+
+  <!-- Điều hướng chính — mobile (bottom nav) -->
+  <nav class="bottom-nav" id="bottomNav" aria-label="Điều hướng chính (mobile)">
+    <button type="button" data-tab="today" class="active" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      <span>Hôm nay</span>
+    </button>
+    <button type="button" data-tab="path">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h5a5 5 0 0 0 5-5V7"/></svg>
+      <span>Lộ trình</span>
+    </button>
+    <button type="button" data-tab="practice">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>Luyện tập</span>
+    </button>
+    <button type="button" data-tab="coach">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5z" fill="currentColor"/><path d="M6 10.5V16c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5" fill="currentColor"/></svg>
+      <span>Cô Linh</span>
+    </button>
+    <button type="button" data-tab="setup">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      <span>Thêm</span>
+    </button>
+  </nav>
+
+  <main class="container" id="main-content" tabindex="-1">
+    <!-- ===== HÔM NAY (Prompt 3: một hành động chính) ===== -->
+    <section id="tab-today" class="tab-panel" role="tabpanel" aria-labelledby="tab-today-title">
+      <h1 class="sr-only" id="tab-today-title">Hôm nay</h1>
+
+      <div class="greeting">
+        <div>
+          <span class="eyebrow" id="heroEyebrow">LISTEN · UNDERSTAND · SPEAK</span>
+          <h2 class="greet-h2" id="greetDay">Ngày 1 / 90 · Chặng Nền tảng</h2>
+        </div>
+        <div class="hero-progress" id="heroProgress" aria-live="polite"></div>
+      </div>
+
+      <section class="journey-banner" aria-labelledby="journeyTitle">
+        <div class="journey-intro">
+          <span class="journey-symbol" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11"/><path d="M8 6V4h8v2M3 19h18"/><path d="M9 11h6M9 15h4"/></svg>
+          </span>
+          <div>
+            <span class="section-kicker" id="journeyKicker">HỒ SƠ HỌC SUỐT HÀNH TRÌNH</span>
+            <h2 id="journeyTitle">Một bạn học · một tiến trình không bị mất</h2>
+            <p id="journeyDescription">Bài học, lỗi thường gặp và thành quả sẽ tiếp tục đồng hành khi bạn chuyển sang giai đoạn mới.</p>
+          </div>
+        </div>
+        <ol class="life-stage-rail" id="lifeStageRail" aria-label="Bốn giai đoạn học từ 3 đến 25 tuổi">
+          <li data-stage="preschool"><b>3–6</b><span>Làm quen</span></li>
+          <li data-stage="child"><b>7–12</b><span>Xây nền</span></li>
+          <li data-stage="teen"><b>13–17</b><span>Bứt phá</span></li>
+          <li data-stage="young-adult"><b>18–25</b><span>Ứng dụng</span></li>
+        </ol>
+      </section>
+
+      <!-- Empty state: chưa đặt mục tiêu — minh họa empty-state-today -->
+      <div class="empty-state" id="todayEmpty" role="status" hidden>
+        <img src="/assets/empty-state-today.webp" width="220" height="165" loading="lazy" decoding="async" alt="Chim cánh cụt đeo ba lô đứng trước con đường đến cờ đích" />
+        <h3>Hành trình của bạn chưa bắt đầu</h3>
+        <p>Đặt tên, giai đoạn và mục tiêu để cô Linh chuẩn bị bài học mỗi ngày cho bạn.</p>
+        <button class="btn primary" type="button" data-tab="setup">Đặt mục tiêu ngay</button>
+      </div>
+
+      <!-- HERO: đúng MỘT bài tốt nhất tiếp theo -->
+      <div class="hero focus-hero">
+        <div class="hero-copy">
+          <span class="section-kicker">BÀI TỐT NHẤT TIẾP THEO</span>
+          <h2 id="planNextTitle">Đặt mục tiêu để nhận kế hoạch</h2>
+          <p id="planNextReason" class="hero-sub"></p>
+          <div class="hero-actions">
+            <button class="btn primary btn-lg" id="planNextGo">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              <span id="planNextGoLabel">Bắt đầu ngay</span>
+            </button>
+          </div>
+          <div class="secondary-actions">
+            <button class="btn ghost sm" id="randomPlay">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              Nghe câu ngẫu nhiên
+            </button>
+            <button class="btn ghost sm" id="quizStart">Luyện nghe nhanh</button>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orb orb-a"></div><div class="orb orb-b"></div>
+          <div class="wave-line"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+
+      <!-- Hướng dẫn bắt đầu (chỉ hiện khi chưa thiết lập) -->
+      <div class="onboard-guide" id="onboardGuide" hidden role="status" aria-live="polite">
+        <div class="og-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="og-body">
+          <b>Bắt đầu ở đây — 2 bước, ~5 phút</b>
+          <span>① Chọn mục tiêu &amp; thời gian → ② Làm test đầu vào để có bài học đúng level.</span>
+          <button type="button" class="text-btn" id="ogGo">Thiết lập ngay</button>
+          <button type="button" class="text-btn" id="ogSkip">Bỏ qua, học luôn</button>
+        </div>
+      </div>
+
+      <!-- Cô Linh nhắc: một dòng ngắn, không mở chat -->
+      <div class="coach-line" role="status" aria-live="polite">
+        <span class="coach-dot" aria-hidden="true"></span>
+        <div class="coach-line-body">
+          <span class="coach-tag" id="coachTag"></span>
+          <strong id="coachTitle"></strong>
+          <span id="coachDetail" class="coach-detail"></span>
+          <span id="coachSample" class="coach-sample" hidden></span>
+          <button type="button" class="text-btn" id="coachListen">Nghe ví dụ</button>
+        </div>
+        <button class="btn ghost sm" id="coachGo">Bắt đầu</button>
+      </div>
+
+      <!-- Checklist hôm nay (≤3) -->
+      <div class="card today-check">
+        <div class="section-head">
+          <div><span class="section-kicker">HÔM NAY</span><h2>Hoạt động hôm nay</h2></div>
+          <span class="chip phase-chip" id="planPhase">Chặng: Nền tảng</span>
+        </div>
+        <ol id="planStack" class="plan-stack check-stack"></ol>
+      </div>
+
+      <!-- Đà học tập & báo cáo tuần -->
+      <div class="card habits-card">
+        <div class="section-head">
+          <div><span class="section-kicker">HABIT · TUẦN NÀY</span><h2>Đà học tập</h2></div>
+          <span class="chip phase-chip" id="habitStreak">0 ngày liên tiếp</span>
+        </div>
+        <div class="habit-grid">
+          <div class="stat"><b id="habitTodayMin">0</b><span id="habitTodayGoal">phút hôm nay</span></div>
+          <div class="stat"><b id="habitWordsWeek">0</b><span>từ học tuần này</span></div>
+          <div class="stat"><b id="habitMissed">0</b><span>ngày chưa học</span></div>
+          <div class="stat"><b><span id="xpTotalVal">0</span> XP</b><span id="levelName">Đăng nhập để nhận XP</span></div>
+        </div>
+        <div class="level-track" role="img" aria-label="Tiến độ lên cấp theo XP"><span id="levelBarFill"></span></div>
+        <div class="badge-row" id="badgeRow" aria-label="Huy hiệu đã đạt"></div>
+        <div class="week-bars" id="habitWeek" role="img" aria-label="Phút học 7 ngày gần nhất"></div>
+        <p class="hint" id="habitNote" aria-live="polite"></p>
+      </div>
+
+      <!-- Roadmap thu gọn thành progress bar -->
+      <div class="card roadmap-bar-card">
+        <div class="section-head">
+          <div><span class="section-kicker">LỘ TRÌNH 90 NGÀY</span><h2 id="planDay">Ngày 1 / 90</h2></div>
+          <button class="text-btn" id="roadmapGo" data-go-path>Xem chi tiết →</button>
+        </div>
+        <div class="roadmap-bar" id="roadmapBar"></div>
+      </div>
+    </section>
+
+    <!-- ===== LỘ TRÌNH (chi tiết) ===== -->
+    <section id="tab-path" class="tab-panel" role="tabpanel" hidden aria-labelledby="tab-path-title">
+      <h1 class="sr-only" id="tab-path-title">Lộ trình 90 ngày</h1>
+      <div class="card">
+        <div class="section-head">
+          <div><span class="section-kicker">90-DAY PATH</span><h2>Lộ trình của bạn</h2></div>
+          <span class="chip phase-chip" id="planPhasePath">Chặng: Nền tảng</span>
+        </div>
+        <p class="hint" id="pathSummary"></p>
+        <div id="planRoadmap" class="roadmap"></div>
+      </div>
+      <div class="card cefr-card">
+        <div class="section-head">
+          <div><span class="section-kicker">CEFR · KHUNG THAM CHIẾU</span><h2>Bạn cần học gì ở mỗi cấp?</h2></div>
+        </div>
+        <p class="hint" id="cefrSummary" aria-live="polite"></p>
+        <div id="cefrList" class="cefr-list"></div>
+        <p class="hint cefr-note" id="cefrWorkplace"></p>
+      </div>
+    </section>
+
+    <!-- ===== LUYỆN TẬP (practice hub: 5 kỹ năng) ===== -->
+    <div class="practice-wrap" id="practiceSubtabs" role="tablist" aria-label="Kỹ năng luyện tập" hidden>
+      <button type="button" data-skill="vocab" class="active" role="tab" aria-selected="true">Từ mới</button>
+      <button type="button" data-skill="writing" role="tab" aria-selected="false">Viết</button>
+      <button type="button" data-skill="speaking" role="tab" aria-selected="false">Nói</button>
+      <button type="button" data-skill="reading" role="tab" aria-selected="false">Đọc</button>
+      <button type="button" data-skill="listening" role="tab" aria-selected="false">Nghe</button>
+      <button type="button" data-skill="toeic" role="tab" aria-selected="false">Thi thử</button>
+    </div>
+
+    <!-- Vocabulary Studio -->
+    <section id="tab-vocab" class="tab-panel practice-panel" role="tabpanel" aria-labelledby="pv-title">
+      <h1 class="sr-only" id="pv-title">Vocabulary Studio</h1>
+
+      <!-- STUDIO HOME -->
+      <div id="vstudio-home">
+        <div class="card studio-hero">
+          <span class="section-kicker">VOCABULARY STUDIO</span>
+          <h2>Kho từ của bạn</h2>
+          <p class="hint" id="vsStats" aria-live="polite"></p>
+          <p class="hint freq-hint" id="vsFreqHint"></p>
+          <div class="vocab-data-card" id="vsDataCoverage" role="status" aria-live="polite">
+            <div class="vocab-data-head"><strong>Dữ liệu từ vựng</strong><span>Đang nạp…</span></div>
+            <p>Đang đọc kho từ đã chuẩn bị.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary btn-lg" id="vsReviewStart">Bắt đầu phiên ôn tập</button>
+            <button class="btn ghost" id="vsLearnStart">Học từ mới</button>
+          </div>
+          <p class="hint" id="vsSuggest" hidden></p>
+        </div>
+
+        <div class="seg studio-tabs" id="studioTabs" role="tablist" aria-label="Khu vực kho từ">
+          <button type="button" class="active" data-vview="review" role="tab" aria-selected="true">Ôn tập</button>
+          <button type="button" data-vview="learn" role="tab" aria-selected="false">Học mới</button>
+          <button type="button" data-vview="packs" role="tab" aria-selected="false">Gói từ vựng</button>
+          <button type="button" data-vview="bank" role="tab" aria-selected="false">Kho từ</button>
+          <button type="button" data-vview="mistakes" role="tab" aria-selected="false">Lỗi</button>
+        </div>
+
+        <div id="vs-review" class="card vs-pane">
+          <div class="section-head">
+            <div><span class="section-kicker">ÔN TẬP</span><h3>Cần ôn ngay</h3></div>
+            <button class="btn primary sm" id="vsReviewQuick">Ôn ngay</button>
+          </div>
+          <div id="vsReviewList" class="review-list"></div>
+        </div>
+
+        <div id="vs-learn" class="card vs-pane" hidden>
+          <div class="section-head">
+            <div><span class="section-kicker">HỌC MỚI</span><h3>Từ mới chưa học</h3></div>
+            <button class="btn primary sm" id="vsLearnQuick">Học từ mới</button>
+          </div>
+          <div id="vsLearnList" class="review-list"></div>
+        </div>
+
+        <div id="vs-packs" class="vs-pane" hidden>
+          <div class="section-head">
+            <div><span class="section-kicker">GÓI TỪ VỰNG</span><h3>Chọn gói theo chủ đề</h3></div>
+          </div>
+          <p class="hint">Mỗi gói là một chủ đề — học gói nào, kho từ mới của bạn sẽ ưu tiên gói đó.</p>
+          <div id="vsPackGrid" class="pack-grid"></div>
+        </div>
+
+        <div id="vs-bank" class="vs-pane" hidden>
+          <div class="card bank-card">
+            <div class="section-head"><div><span class="section-kicker">WORD BANK</span><h3>Kho từ</h3></div></div>
+            <div class="bank-tools">
+              <input id="vsSearch" type="search" placeholder="Tìm từ / nghĩa…" aria-label="Tìm từ" />
+              <select id="vsLangFilter" aria-label="Lọc ngôn ngữ">
+                <option value="all">Mọi ngôn ngữ</option><option value="en">English</option><option value="zh">中文</option>
+              </select>
+              <select id="vsTopicFilter" aria-label="Lọc chủ đề"></select>
+              <select id="vsCefrFilter" aria-label="Lọc cấp CEFR">
+                <option value="all">Mọi cấp CEFR</option>
+                <option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option>
+                <option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option>
+              </select>
+              <select id="vsStateFilter" aria-label="Lọc trạng thái">
+                <option value="all">Mọi trạng thái</option>
+                <option value="new">new</option><option value="learning">learning</option><option value="review">review</option>
+                <option value="mastered">mastered</option><option value="difficult">difficult</option>
+              </select>
+              <select id="vsFreqFilter" aria-label="Lọc tần suất">
+                <option value="all">Mọi tần suất</option>
+                <option value="1">freq 1 — rất phổ biến</option><option value="2">freq 2</option><option value="3">freq 3</option>
+                <option value="4">freq 4</option><option value="5">freq 5 — ít gặp</option>
+              </select>
+              <select id="vsWorkFilter" aria-label="Lọc giao tiếp công việc">
+                <option value="all">Mọi nhóm</option><option value="yes">Công việc</option><option value="no">Ngoài công việc</option>
+              </select>
+            </div>
+            <div class="add-word">
+              <input id="vsAddInput" type="text" placeholder="Thêm từ mới — AI tạo thẻ…" aria-label="Thêm từ mới" />
+              <button class="btn primary" id="vsAddBtn">AI tạo thẻ</button>
+              <span id="vsAddStatus" role="status" aria-live="polite"></span>
+            </div>
+            <div id="vsAddPreview" class="vs-preview" hidden></div>
+            <p class="bank-result-count" id="vsBankCount" aria-live="polite"></p>
+            <div id="vsBankList" class="review-list"></div>
+          </div>
+        </div>
+
+        <div id="vs-mistakes" class="vs-pane" hidden>
+          <div class="card">
+            <div class="section-head">
+              <div><span class="section-kicker">ERROR NOTEBOOK</span><h3>Lỗi cần sửa</h3></div>
+              <button class="btn ghost sm" id="mistakeClear">Xóa đã xử lý</button>
+            </div>
+            <ul id="mistakeList" class="mistake-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRIEFING: học từ mới — nói rõ số lượng ngay từ đầu -->
+      <div id="vstudio-brief" hidden>
+        <div class="session-top">
+          <button class="btn ghost sm" id="vsBriefExit">← Thoát</button>
+          <span class="session-progress">Phiên học từ mới</span>
+        </div>
+        <div class="card brief-card">
+          <span class="section-kicker">HỌC TỪ MỚI</span>
+          <p class="brief-count" id="vsBriefCount" aria-live="polite">5 từ mới</p>
+          <p class="hint" id="vsBriefDetail">Mỗi từ kèm 1 câu mẫu · ôn tích lũy xen kẽ ngay trong phiên</p>
+          <div class="seg" id="vsBriefBatch" role="group" aria-label="Số từ mỗi phiên">
+            <button type="button" data-batch="3">3 từ</button>
+            <button type="button" data-batch="5">5 từ</button>
+            <button type="button" data-batch="7">7 từ</button>
+          </div>
+          <div class="seg topic-seg" id="vsBriefTopic" role="group" aria-label="Gói từ vựng"></div>
+          <div id="vsBriefList" class="review-list brief-list" aria-label="Danh sách từ sẽ học"></div>
+          <button class="btn primary btn-lg" id="vsBriefStart">Bắt đầu học 5 từ mới</button>
+        </div>
+      </div>
+
+      <!-- FOCUSED SESSION (Learn / Review) -->
+      <div id="vstudio-session" hidden>
+        <div class="session-top">
+          <button class="btn ghost sm" id="vsExit">← Thoát</button>
+          <span id="vsProgressText" class="session-progress">1 / 10</span>
+        </div>
+        <div class="progress-track"><span id="vsProgressBar"></span></div>
+
+        <div class="session-card" id="vsCard" role="region" aria-live="polite" aria-label="Thẻ từ vựng">
+          <span class="step-badge" id="vsStepBadge" hidden></span>
+          <div class="vs-front">
+            <span class="vocab-topic" id="vsTopic"></span>
+            <h3 id="vsTerm" title="Nhấn giữ để xem nghĩa, cách dùng, nghe và đọc thử"></h3>
+            <div id="vsPinyin" class="vocab-pinyin"></div>
+          </div>
+          <div class="vs-back" id="vsBack" hidden>
+            <p class="vs-meta" id="vsMeta"></p>
+            <p class="vs-pos" id="vsPosIpa"></p>
+            <p class="vs-meaning" id="vsMeaning"></p>
+            <div class="hero-actions vs-audio">
+              <button type="button" class="btn ghost sm" id="vsPlay">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe từ
+              </button>
+              <button type="button" class="btn ghost sm" id="vsPlaySlow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe từ chậm
+              </button>
+            </div>
+            <p class="vs-example" id="vsExample" title="Nhấn giữ để xem nghĩa, cách dùng, nghe và đọc thử"></p>
+            <p class="vocab-pinyin" id="vsExamplePinyin"></p>
+            <p class="vocab-trans" id="vsTranslation"></p>
+            <p class="vs-note" id="vsNote"></p>
+            <div class="vs-pron" id="vsPron" aria-label="Luyện đọc nói từ này">
+              <div class="vs-pron-bar">
+                <div class="seg vs-pron-targets" id="vsPronTargets" role="group" aria-label="Chọn nội dung luyện đọc">
+                  <button type="button" class="active" data-target="word" aria-pressed="true">Từ</button>
+                  <button type="button" data-target="sentence" aria-pressed="false">Câu mẫu</button>
+                </div>
+                <div class="vs-pron-actions">
+                  <button type="button" class="btn ghost sm" id="vsPronPlay" aria-label="Nghe mẫu nội dung đang luyện">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    Nghe mẫu
+                  </button>
+                  <button type="button" class="btn ghost sm" id="vsPronMic" aria-pressed="false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg>
+                    Đọc thử
+                  </button>
+                  <button type="button" class="btn ghost sm" id="vsPronReplay" aria-label="Nghe lại giọng bạn vừa đọc" hidden>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    Nghe lại
+                  </button>
+                </div>
+              </div>
+              <p class="pron-target vs-pron-line"><span id="vsPronText"></span><small id="vsPronIpa"></small></p>
+              <p class="hint" id="vsPronStatus" role="status"></p>
+              <div id="vsPronResult" hidden>
+                <div class="pron-words" id="vsPronWords" aria-label="So từng từ với nội dung mục tiêu"></div>
+                <p class="vs-pron-score"><strong id="vsPronScore" aria-live="polite"></strong></p>
+                <div id="vsPronFeedback"></div>
+              </div>
+            </div>
+            <p class="vs-interval" id="vsInterval" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="session-actions">
+          <button class="btn primary btn-lg" id="vsReveal">Hiện đáp án <kbd class="kbd">Space</kbd></button>
+          <button class="btn primary btn-lg" id="vsUnderstood" hidden>Đã hiểu — sang bước tiếp <kbd class="kbd">Space</kbd></button>
+          <div class="vs-grades" id="vsGrades" hidden>
+            <button type="button" class="grade grade-again" data-grade="1">Lại <small>1 phút</small></button>
+            <button type="button" class="grade grade-hard" data-grade="2">Khó <small>1 ngày</small></button>
+            <button type="button" class="grade grade-good" data-grade="3">Tốt <small>3 ngày</small></button>
+            <button type="button" class="grade grade-easy" data-grade="5">Dễ <small>10 ngày</small></button>
+          </div>
+        </div>
+        <p class="session-hint" id="vsKeyHint">Phím: Space = hiện đáp án / đã hiểu · 1–4 = đánh giá</p>
+      </div>
+
+      <!-- SUMMARY: tổng kết phiên học từ mới -->
+      <div id="vstudio-summary" hidden>
+        <div class="card summary-card">
+          <span class="section-kicker">TỔNG KẾT PHIÊN</span>
+          <h2 id="vsSumTitle">Học xong 5 từ mới</h2>
+          <div class="summary-grid">
+            <div class="sum-tile"><b id="vsSumWords">5</b><span>từ mới</span></div>
+            <div class="sum-tile"><b id="vsSumChecks">4</b><span>lần kiểm tra tích lũy</span></div>
+            <div class="sum-tile"><b id="vsSumAgain">0</b><span>lần cần học lại</span></div>
+          </div>
+          <p class="hint" id="vsSumNote"></p>
+          <div class="hero-actions">
+            <button class="btn primary" id="vsSumNext">Học tiếp từ mới</button>
+            <button class="btn ghost" id="vsSumTest">Thi thử cuối buổi</button>
+            <button class="btn ghost" id="vsSumHome">Về kho từ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORD BANK detail -->
+      <div class="modal" id="vsDetail" role="dialog" aria-modal="true" aria-labelledby="vsDetailKind" aria-hidden="true">
+        <div class="modal-box">
+          <div class="modal-head">
+            <span class="section-kicker" id="vsDetailKind">WORD DETAIL</span>
+            <button type="button" class="teacher-close" id="vsDetailClose" aria-label="Đóng chi tiết">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+          <div id="vsDetailBody" class="vs-detail"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Viết -->
+    <section id="tab-writing" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="pw-title">
+      <h1 class="sr-only" id="pw-title">Luyện viết câu</h1>
+      <div class="card writing-studio">
+        <header class="writing-studio-head">
+          <div>
+            <span class="section-kicker">WRITING STUDIO</span>
+            <h2>Viết để sử dụng</h2>
+            <p>Luyện từng bước, sửa ngay tại chỗ và ghi nhớ qua lần viết lại.</p>
+          </div>
+          <div class="writing-score" id="writingScore" aria-live="polite">0 câu đúng</div>
+        </header>
+
+        <div class="writing-progress" aria-label="Tiến độ phiên luyện viết">
+          <div class="writing-progress-copy"><span id="writingProgressLabel">Câu 1 / 5</span><span>Phiên luyện ngắn</span></div>
+          <div class="writing-progress-track"><span id="writingProgressBar"></span></div>
+        </div>
+
+        <div class="writing-modes" id="writingModes" role="tablist" aria-label="Chọn dạng bài viết">
+          <button type="button" role="tab" aria-selected="true" data-mode="chunks" class="active"><strong>Sắp xếp câu</strong><small>Nắm trật tự từ</small></button>
+          <button type="button" role="tab" aria-selected="false" tabindex="-1" data-mode="dictation"><strong>Nghe – viết</strong><small>Rèn chính tả</small></button>
+          <button type="button" role="tab" aria-selected="false" tabindex="-1" data-mode="reverse"><strong>Dịch ngược</strong><small>Tự tạo câu</small></button>
+          <button type="button" role="tab" aria-selected="false" tabindex="-1" data-mode="free"><strong>Viết tự do</strong><small>Diễn đạt ý</small></button>
+        </div>
+
+        <section class="writing-exercise" aria-labelledby="writingPromptTitle">
+          <div class="writing-exercise-meta">
+            <span id="writingModeKicker">SẮP XẾP CÂU</span>
+            <span class="writing-level-chip" id="writingLevelChip">Bài luyện cá nhân</span>
+          </div>
+          <div class="writing-prompt-head">
+            <div>
+              <h3 id="writingPromptTitle">Tạo một câu hoàn chỉnh</h3>
+              <p id="writingPromptLead">Chọn các cụm theo đúng thứ tự.</p>
+            </div>
+            <button type="button" class="btn ghost writing-skip" id="writingSkip">Đổi câu</button>
+          </div>
+          <div id="writingArea" class="writing-area"></div>
+          <div id="writingFeedback" class="writing-feedback" role="status" aria-live="polite" tabindex="-1" hidden></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Nói -->
+    <section id="tab-speaking" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="ps-title">
+      <h1 class="sr-only" id="ps-title">Luyện nói</h1>
+      <div class="seg speaking-modes" id="speakingModes">
+        <button type="button" data-mode="shadowing" class="active">Shadowing</button>
+        <button type="button" data-mode="pron">Phát âm</button>
+        <button type="button" data-mode="roleplay">Gọi thoại</button>
+        <button type="button" data-mode="qa">Trò chuyện</button>
+      </div>
+      <div class="card" id="speak-shadowing">
+        <div class="section-kicker">SHADOWING</div>
+        <h2>Nghe – nhại theo – ghi âm</h2>
+        <p class="hint" id="shadowSentence">Bấm nghe rồi đọc lại theo câu mẫu.</p>
+        <div class="hero-actions">
+          <button class="btn primary" id="shadowPlay">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe mẫu
+          </button>
+          <button class="btn ghost" id="shadowRecord">Ghi âm / nhận diện</button>
+          <button class="btn ghost" id="shadowNext">Câu tiếp theo</button>
+        </div>
+        <p id="shadowTranscript" class="shadow-transcript" role="status"></p>
+      </div>
+      <div class="card" id="speak-pron" hidden>
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">PHÁT ÂM</span>
+            <h2>Luyện phát âm — AI chỉ từ sai</h2>
+            <p class="hint">Nghe mẫu, nói lại qua micro. AI so với câu mục tiêu và chỉ từng từ phát âm chưa đúng kèm mẹo sửa.</p>
+          </div>
+          <select id="pronSource" class="select" aria-label="Nguồn câu luyện phát âm">
+            <option value="sentences">Câu mẫu</option>
+            <option value="words">Từ đã học</option>
+          </select>
+        </div>
+        <p class="pron-target" id="pronTarget" lang="en">
+          <span id="pronText">Bấm “Câu khác” để bắt đầu luyện.</span>
+          <small id="pronIpa"></small>
+        </p>
+        <p class="hint" id="pronMeaning"></p>
+        <div class="hero-actions">
+          <button class="btn primary" id="pronPlay">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe mẫu
+          </button>
+          <button class="btn ghost" id="pronMic" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg> Nói thử
+          </button>
+          <button class="btn ghost" id="pronReplay" aria-label="Nghe lại giọng bạn vừa nói" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe lại
+          </button>
+          <button class="btn ghost" id="pronNext">Câu khác</button>
+        </div>
+        <p id="pronStatus" class="shadow-transcript" role="status"></p>
+        <div id="pronResult" hidden>
+          <div class="pron-score" role="status">
+            <div class="pron-score-bar" aria-hidden="true"><span id="pronScoreFill"></span></div>
+            <strong id="pronScoreText" aria-live="polite"></strong>
+          </div>
+          <div id="pronWords" class="pron-words" aria-label="So từng từ với câu mục tiêu"></div>
+          <div id="pronFeedback"></div>
+        </div>
+      </div>
+      <div class="card" id="speak-roleplay" hidden>
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">VOICE CALL</span>
+            <h2>Gọi thoại với cô giáo</h2>
+            <p class="hint">Nói thật qua micro (hoặc gõ nếu cần). Cô giáo giữ vai và đọc to lời thoại.</p>
+          </div>
+          <select id="scenarioSelect" class="select" aria-label="Chọn tình huống"></select>
+        </div>
+        <div id="rpChat" class="rp-chat"></div>
+        <p id="rpHint" class="rp-hint"></p>
+        <div class="teacher-input">
+          <button class="btn mic-btn" id="rpMic" aria-label="Nói bằng micro">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg>
+            Nói
+          </button>
+          <input id="rpInput" type="text" placeholder="Hoặc gõ lời thoại bằng ngôn ngữ đang học…" aria-label="Lời thoại" />
+          <button class="btn primary" id="rpSend">Gửi</button>
+          <button class="btn ghost" id="rpEnd">Kết thúc cuộc gọi</button>
+        </div>
+      </div>
+      <div class="card" id="speak-qa" hidden>
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">TRÒ CHUYỆN VỚI CÔ GIÁO</span>
+            <h2>Nói chuyện với cô Linh</h2>
+            <p class="hint">Nói qua micro (hoặc gõ). Cô giáo trả lời và đọc to câu mẫu.</p>
+          </div>
+          <button class="btn ghost sm" id="teacherCustomizeOpen" type="button" aria-label="Tùy chỉnh giọng nói và tính cách cô Linh">Tùy chỉnh cô Linh</button>
+        </div>
+        <div class="co-stage" id="coStage" data-state="idle">
+          <div class="co-character">
+            <span class="co-avatar co-xl" id="coStageAvatar" data-state="idle"></span>
+            <div class="co-nameplate">
+              <span class="co-presence" aria-hidden="true"></span>
+              <span><strong>Cô Linh</strong><small id="coStateLabel">Sẵn sàng trò chuyện</small></span>
+            </div>
+          </div>
+          <div class="co-dialogue">
+            <div class="co-bubble" id="coBubble" role="status" aria-live="polite">Chào bạn! Hôm nay mình cùng luyện nói điều gì?</div>
+            <div class="co-status" id="coStatus" aria-live="polite">Bạn có thể nói hoặc gõ tin nhắn.</div>
+            <div class="co-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="hero-actions vc-actions">
+          <button class="btn primary btn-lg" id="qaVoice" aria-pressed="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg>
+            <span id="qaVoiceLabel">Bật giọng nói</span>
+          </button>
+        </div>
+        <div id="qaChat" class="rp-chat qa-chat" aria-label="Nội dung trò chuyện">
+          <div class="msg teacher"><span class="bubble">Chào bạn! Hãy chọn một gợi ý hoặc nói câu đầu tiên nhé.</span></div>
+        </div>
+        <div class="teacher-prompts" id="qaPrompts">
+          <button type="button" class="chip" data-q="Giới thiệu về bạn bằng tiếng Anh">Giới thiệu bản thân</button>
+          <button type="button" class="chip" data-q="Kể về ngày hôm nay của tôi bằng tiếng Anh">Kể về ngày hôm nay</button>
+          <button type="button" class="chip" data-q="Sửa câu tôi vừa nói giúp tôi">Sửa câu vừa nói</button>
+          <button type="button" class="chip" data-q="Hỏi tôi một câu hỏi bằng tiếng Anh">Hỏi tôi một câu</button>
+        </div>
+        <div class="teacher-input qa-composer">
+          <button class="btn mic-btn" id="qaMic" aria-label="Nói với cô giáo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12h-2z"/></svg>
+            Nói
+          </button>
+          <input id="qaInput" type="text" placeholder="Hoặc gõ tin nhắn cho cô giáo…" aria-label="Tin nhắn cho cô giáo" />
+          <button class="btn primary" id="qaSend">Gửi</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Đọc -->
+    <section id="tab-reading" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="pr-title">
+      <h1 class="sr-only" id="pr-title">Đọc hiểu</h1>
+      <div class="card" id="readLibrary">
+        <div class="section-head"><div><span class="section-kicker">READING</span><h2>Bài đọc theo trình độ</h2></div></div>
+        <div class="seg" id="readLevels">
+          <button type="button" data-level="1" class="active">Cấp 1</button>
+          <button type="button" data-level="2">Cấp 2</button>
+          <button type="button" data-level="3">Cấp 3</button>
+        </div>
+        <ul id="readList" class="read-list"></ul>
+      </div>
+      <div class="card" id="readView" hidden>
+        <div class="section-head">
+          <div><span class="section-kicker">READER</span><h2 id="readTitle"></h2></div>
+          <div class="hero-actions">
+            <button class="btn ghost sm" id="readAloud">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Đọc toàn bài
+            </button>
+            <button class="btn ghost sm" id="readBack">← Thư viện</button>
+          </div>
+        </div>
+        <div id="readParagraphs" class="read-paragraphs"></div>
+        <div id="readQuestions" class="read-questions"></div>
+        <div id="readMined" class="read-mined" hidden>
+          <span class="section-kicker">CỤM ĐÃ LƯU</span>
+          <div id="readMinedList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nghe (Focus Lesson Mode — Prompt 4) -->
+    <section id="tab-listening" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="pl-title">
+      <h1 class="sr-only" id="pl-title">Luyện nghe</h1>
+      <div class="card quiz-card" id="quiz" aria-labelledby="quizTitle">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">LISTENING DRILL</span>
+            <h2 id="quizTitle">Luyện nghe — <span id="quizLangLabel">English</span></h2>
+          </div>
+          <span class="score-chip" id="quizScore">0/0</span>
+        </div>
+        <p class="hint" id="quizLead">Bấm <strong>Nghe câu</strong> để phát giọng, rồi chọn nghĩa tiếng Việt đúng.</p>
+        <div class="quiz-box">
+          <button id="quizPlay" class="big-play">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <span>Nghe câu</span>
+          </button>
+          <div id="quizText" class="quiz-text" hidden></div>
+          <div id="quizChoices" class="quiz-choices" hidden></div>
+          <div id="quizFeedback" class="quiz-feedback" role="status"></div>
+          <button id="quizNext" class="btn primary" hidden>Câu tiếp theo</button>
+        </div>
+      </div>
+      <div class="card lessons-card" aria-labelledby="lessonsTitle">
+        <div class="section-head">
+          <div><span class="section-kicker">PHRASE LIBRARY</span><h2 id="lessonsTitle">Câu mẫu theo chủ đề</h2></div>
+          <button id="playAllTopic" class="btn ghost sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            Phát cả chủ đề
+          </button>
+        </div>
+        <div class="topic-tabs" id="topicTabs" role="tablist" aria-label="Chọn chủ đề"></div>
+        <ul class="sentence-list" id="sentenceList"></ul>
+      </div>
+    </section>
+
+    <!-- ===== THI THỬ TOEIC (bài tập cuối buổi) ===== -->
+    <section id="tab-toeic" class="tab-panel practice-panel" role="tabpanel" hidden aria-labelledby="pt-title">
+      <h1 class="sr-only" id="pt-title">Thi thử TOEIC cuối buổi</h1>
+
+      <!-- HOME: chọn đề + báo cáo kỹ năng tích lũy -->
+      <div id="toeicHome">
+        <div class="card toeic-hero">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">MINI TOEIC · CUỐI BUỔI</span>
+              <h2 id="toeicHomeTitle">Đề luyện từ chính các từ bạn đã học</h2>
+            </div>
+            <span class="score-chip" id="toeicLearnedChip">0 từ đã học</span>
+          </div>
+          <p class="hint" id="toeicHomeNote">Mỗi đề lấy từ vựng trong kho của bạn — ưu tiên từ đang học và đến hạn ôn theo lịch SRS. Không có AI chấm bài: đáp án cố định, chấm ngay khi nộp.</p>
+
+          <div class="toeic-duration" role="group" aria-label="Chọn thời lượng làm bài" id="toeicDuration">
+            <button type="button" data-min="10" aria-pressed="true"><b>10 phút</b><span>12 câu · nghe + đọc + từ vựng</span></button>
+            <button type="button" data-min="15" aria-pressed="false"><b>15 phút</b><span>18 câu · cân bằng đủ kỹ năng</span></button>
+            <button type="button" data-min="30" aria-pressed="false"><b>30 phút</b><span>36 câu · đủ từ đã học</span></button>
+          </div>
+
+          <div class="section-head toeic-forms-head">
+            <div><span class="section-kicker">50 ĐỀ</span><h3>Chọn đề số</h3></div>
+            <button class="btn ghost sm" id="toeicRandom" type="button">Đề ngẫu nhiên</button>
+          </div>
+          <div class="toeic-forms" id="toeicForms" role="listbox" aria-label="Chọn đề số từ 1 đến 50"></div>
+          <div class="hero-actions">
+            <button class="btn primary" id="toeicStart" type="button">Bắt đầu thi thử</button>
+          </div>
+        </div>
+
+        <div class="card" id="toeicSkillsCard" aria-labelledby="toeicSkillsTitle">
+          <div class="section-head">
+            <div><span class="section-kicker">KỸ NĂNG TÍCH LŨY</span><h2 id="toeicSkillsTitle">Đánh giá theo kỹ năng</h2></div>
+          </div>
+          <p class="hint" id="toeicSkillsEmpty">Chưa có bài thi nào — làm đề đầu tiên để bắt đầu theo dõi kỹ năng của bạn.</p>
+          <div class="toeic-skill-grid" id="toeicSkillGrid" hidden></div>
+          <div class="toeic-stats-row" id="toeicStatsRow" hidden></div>
+        </div>
+
+        <div class="card" aria-labelledby="toeicHistoryTitle">
+          <div class="section-head">
+            <div><span class="section-kicker">LỊCH SỬ</span><h2 id="toeicHistoryTitle">Các đề đã làm</h2></div>
+          </div>
+          <p class="hint" id="toeicHistoryEmpty">Chưa có kết quả nào được lưu.</p>
+          <ul class="toeic-history" id="toeicHistoryList" hidden></ul>
+        </div>
+      </div>
+
+      <!-- RUN: làm bài -->
+      <div class="card toeic-run" id="toeicRun" hidden>
+        <div class="toeic-run-head">
+          <div class="toeic-run-meta">
+            <b id="toeicRunForm">Đề 1</b>
+            <span id="toeicRunInfo">12 câu · 10 phút</span>
+          </div>
+          <div class="toeic-timer" id="toeicTimerWrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+            <span id="toeicTimer" aria-hidden="true">10:00</span>
+            <span class="sr-only" id="toeicTimerSr" role="status"></span>
+          </div>
+        </div>
+        <div class="toeic-time-bar" role="presentation"><div class="toeic-time-fill" id="toeicTimeFill"></div></div>
+
+        <div class="toeic-question" id="toeicQuestion">
+          <span class="toeic-q-type" id="toeicQType"></span>
+          <p class="toeic-q-prompt" id="toeicQPrompt"></p>
+          <button class="big-play toeic-play" id="toeicQPlay" type="button" hidden>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <span>Nghe từ</span>
+          </button>
+          <div class="quiz-choices" id="toeicQChoices"></div>
+        </div>
+
+        <div class="toeic-dots" id="toeicDots" aria-label="Tiến độ câu hỏi"></div>
+
+        <div class="hero-actions toeic-run-actions">
+          <button class="btn ghost" id="toeicPrev" type="button">Câu trước</button>
+          <button class="btn ghost" id="toeicSkipNext" type="button">Bỏ qua</button>
+          <button class="btn primary" id="toeicNext" type="button">Câu tiếp</button>
+          <button class="btn primary" id="toeicSubmitBtn" type="button">Nộp bài</button>
+        </div>
+        <button class="btn ghost sm toeic-quit" id="toeicQuit" type="button">Bỏ dở buổi thi</button>
+      </div>
+
+      <!-- RESULT: kết quả -->
+      <div id="toeicResult" hidden>
+        <div class="card summary-card toeic-result-card">
+          <span class="section-kicker">KẾT QUẢ THI THỬ</span>
+          <h2 id="toeicResultTitle">Hoàn thành đề 1</h2>
+          <div class="toeic-score-row">
+            <div class="toeic-score-ring" id="toeicScoreRing"><b id="toeicScoreVal">0</b><span>điểm</span></div>
+            <div class="toeic-score-meta">
+              <p id="toeicScoreLine">Đúng 0/0 câu</p>
+              <p class="hint" id="toeicScoreTime"></p>
+              <p class="hint" id="toeicScoreSaved"></p>
+            </div>
+          </div>
+          <div class="toeic-skill-grid" id="toeicResultSkills"></div>
+          <div class="hero-actions">
+            <button class="btn primary" id="toeicAgain" type="button">Làm đề khác</button>
+            <button class="btn ghost" id="toeicHomeBtn" type="button">Về trang thi thử</button>
+          </div>
+        </div>
+        <div class="card" id="toeicReviewCard" aria-labelledby="toeicReviewTitle" hidden>
+          <div class="section-head">
+            <div><span class="section-kicker">XEM LẠI</span><h2 id="toeicReviewTitle">Câu cần luyện thêm</h2></div>
+          </div>
+          <ul class="toeic-review" id="toeicReviewList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== THÊM / HỒ SƠ (setup + memory) ===== -->
+    <section id="tab-setup" class="tab-panel" role="tabpanel" hidden aria-labelledby="ts-title">
+      <h1 class="sr-only" id="ts-title">Mục tiêu &amp; hồ sơ</h1>
+      <nav class="setup-sections" aria-label="Phần trong mục thiết lập">
+        <button type="button" data-target="profileCard">Hồ sơ</button>
+        <button type="button" data-target="placementBox">Test đầu vào</button>
+        <button type="button" data-target="accountCard">Tài khoản</button>
+        <button type="button" data-target="parentCard">Phụ huynh</button>
+        <button type="button" data-target="teacherCustomCard">Cô Linh</button>
+      </nav>
+      <div class="card" id="profileCard">
+        <div class="section-head">
+          <div><span class="section-kicker">LEARNING PROFILE</span><h2>Mục tiêu &amp; lịch học cá nhân</h2></div>
+          <button class="btn ghost sm" id="profileSave">Lưu hồ sơ</button>
+        </div>
+        <div class="setup-grid">
+          <div class="setup-field identity-field">
+            <label for="profileName">Tên người học</label>
+            <input class="profile-input" id="profileName" name="profileName" maxlength="40" autocomplete="name" placeholder="Ví dụ: Minh Anh" />
+            <p class="hint">Một hồ sơ giữ nguyên tiến bộ từ lúc làm quen đến khi học tập và đi làm.</p>
+          </div>
+          <fieldset class="setup-field age-field">
+            <legend>Giai đoạn hiện tại</legend>
+            <p class="hint age-helper">App đổi nội dung, mục tiêu, độ khó và cách hướng dẫn nhưng vẫn giữ nguyên lịch sử học.</p>
+            <div class="age-picker" id="profileAgePicker">
+              <label class="age-option"><input type="radio" name="profileAge" value="preschool" /><span><b>3–6 tuổi</b><small>Nghe, chơi và nói cùng người lớn</small></span></label>
+              <label class="age-option"><input type="radio" name="profileAge" value="child" /><span><b>7–12 tuổi</b><small>Xây nền tảng và niềm vui học tập</small></span></label>
+              <label class="age-option"><input type="radio" name="profileAge" value="teen" /><span><b>13–17 tuổi</b><small>Trường học, thi cử và giao tiếp</small></span></label>
+              <label class="age-option"><input type="radio" name="profileAge" value="young-adult" /><span><b>18–25 tuổi</b><small>Đại học, nghề nghiệp và hội nhập</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="setup-field">
+            <legend>Mục tiêu (chọn 1–2)</legend>
+            <label class="check stage-goal" data-goal="giao-tiep"><input type="checkbox" id="goal-giaotiep" value="giao-tiep" /> Nghe và nói tự tin</label>
+            <label class="check stage-goal" data-goal="thi"><input type="checkbox" id="goal-thi" value="thi" /> Học tốt ở trường / chứng chỉ</label>
+            <label class="check stage-goal" data-goal="du-lich"><input type="checkbox" id="goal-dulich" value="du-lich" /> Khám phá thế giới</label>
+            <label class="check stage-goal" data-goal="cong-viec"><input type="checkbox" id="goal-congviec" value="cong-viec" /> Đại học, công việc &amp; phỏng vấn</label>
+          </fieldset>
+          <fieldset class="setup-field">
+            <legend>Thời gian mỗi ngày</legend>
+            <div class="seg" id="minutesSeg">
+              <button type="button" data-min="15">15'</button>
+              <button type="button" data-min="25" class="active">25'</button>
+              <button type="button" data-min="35">35'</button>
+              <button type="button" data-min="50">50'</button>
+            </div>
+            <p class="hint">Mặc định 25 phút/ngày — co giãn theo lịch của bạn.</p>
+          </fieldset>
+          <fieldset class="setup-field">
+            <legend>Tỷ lệ Anh / Trung</legend>
+            <input type="range" id="splitEn" min="0" max="100" step="10" value="60" />
+            <div class="split-labels"><span id="splitLabel">English 60% · 中文 40%</span></div>
+          </fieldset>
+        </div>
+        <div class="placement-box" id="placementBox">
+          <div class="section-kicker">PLACEMENT TEST</div>
+          <h3>Xác định trình độ khởi điểm</h3>
+          <p class="hint">Làm test 5–8 phút cho mỗi ngôn ngữ để app giao bài đúng level.</p>
+          <div class="hero-actions">
+            <button class="btn primary" id="placeEn">Test đầu vào English</button>
+            <button class="btn ghost" id="placeZh">中文入学测试</button>
+          </div>
+          <div class="place-results" id="placeResults"></div>
+        </div>
+        <fieldset class="setup-field" id="themeField">
+          <legend>Giao diện</legend>
+          <div class="seg" id="themeSeg">
+            <button type="button" data-theme-opt="system" class="active" aria-pressed="true">Theo hệ thống</button>
+            <button type="button" data-theme-opt="light" aria-pressed="false">Sáng</button>
+            <button type="button" data-theme-opt="dark" aria-pressed="false">Tối</button>
+          </div>
+          <p class="hint">Chế độ Tối dùng token đã chuẩn hóa — phù hợp học buổi tối.</p>
+        </fieldset>
+        <div id="profileSummary" class="profile-summary"></div>
+      </div>
+
+      <div class="card" id="accountCard">
+        <div class="section-head">
+          <div><span class="section-kicker">TÀI KHOẢN &amp; ĐỒNG BỘ</span><h2>Học tiếp trên mọi thiết bị</h2></div>
+        </div>
+        <p class="hint">Đăng nhập để đưa từ vựng, lỗi sai và tiến độ lên máy chủ — đổi máy, xóa trình duyệt cũng không mất.</p>
+        <p class="account-status" id="accountStatus" data-state="off" role="status">Đang kiểm tra đăng nhập…</p>
+
+        <form class="account-form" id="accountForm">
+          <div id="accountLoggedOut">
+            <div class="account-fields">
+              <label class="account-field"><span>Tên đăng nhập</span>
+                <input id="accountUser" name="username" autocomplete="username" maxlength="32" placeholder="vd: minh-anh" required />
+              </label>
+              <label class="account-field"><span>Mật khẩu</span>
+                <input id="accountPass" name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Tối thiểu 8 ký tự" required />
+              </label>
+            </div>
+            <label class="check parent-role-check" for="registerParent">
+              <input type="checkbox" id="registerParent" name="registerParent" />
+              Tôi là phụ huynh — tạo tài khoản để theo dõi con học
+            </label>
+            <div class="hero-actions">
+              <button class="btn primary" id="loginBtn" type="submit">Đăng nhập</button>
+              <button class="btn ghost" id="registerBtn" type="submit">Tạo tài khoản mới</button>
+            </div>
+          </div>
+          <div id="accountLoggedIn" hidden>
+            <div class="hero-actions">
+              <button class="btn primary" id="syncNow" type="button">Đồng bộ ngay</button>
+              <button class="btn ghost" id="importLocalBtn" type="button">Nhập dữ liệu đang có trên máy này</button>
+              <button class="btn ghost" id="logoutBtn" type="button">Đăng xuất</button>
+            </div>
+          </div>
+        </form>
+        <p class="account-message" id="accountMessage" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="card" id="parentCard">
+        <div class="section-head">
+          <div><span class="section-kicker">GIA ĐÌNH ĐỒNG HÀNH</span><h2>Phụ huynh &amp; người thân</h2></div>
+        </div>
+        <p class="hint" id="parentGuestHint" hidden>Phụ huynh tạo mã liên kết, con nhập mã để chia sẻ tiến độ học — chỉ tiến độ, không ai thấy mật khẩu hay nội dung trò chuyện.</p>
+
+        <div id="parentRoleBox" hidden>
+          <h3>Bạn là phụ huynh</h3>
+          <p class="hint">Tạo mã và gửi cho con. Sau khi con nhập mã, tiến độ tuần của con hiện ở đây.</p>
+          <div class="hero-actions">
+            <button class="btn primary" id="parentInviteBtn" type="button">Tạo mã liên kết con</button>
+            <button class="btn ghost sm" id="parentInviteCopy" type="button" hidden>Copy mã</button>
+          </div>
+          <p class="invite-code" id="parentInviteCode" hidden></p>
+          <p class="hint" id="parentInviteHint" hidden></p>
+          <div id="parentChildrenList" class="parent-children"></div>
+        </div>
+
+        <div id="childLinkBox" hidden>
+          <h3>Nhập mã của phụ huynh</h3>
+          <div class="account-fields">
+            <label class="account-field"><span>Mã liên kết</span>
+              <input id="parentLinkCode" maxlength="8" autocomplete="off" placeholder="8 ký tự, ví dụ K7MPQ2XA" />
+            </label>
+          </div>
+          <div class="hero-actions">
+            <button class="btn primary" id="parentLinkBtn" type="button">Liên kết</button>
+          </div>
+          <p class="account-message" id="parentLinkMsg" role="status" aria-live="polite"></p>
+          <div id="parentLinksList" class="parent-children"></div>
+        </div>
+      </div>
+
+      <div class="card teacher-custom-card" id="teacherCustomCard" tabindex="-1">
+        <div class="teacher-custom-head">
+          <span class="co-avatar co-lg" id="coLinhCustom"></span>
+          <div>
+            <span class="section-kicker">CUSTOM AI TEACHER</span>
+            <h2>Tùy chỉnh Cô Linh</h2>
+            <p class="hint">Chọn cách cô phản hồi và giọng đọc phù hợp với bạn.</p>
+          </div>
+          <span class="teacher-saved-badge" id="teacherSavedBadge" role="status">Đã lưu</span>
+        </div>
+
+        <fieldset class="teacher-custom-field">
+          <legend>Tính cách</legend>
+          <div class="personality-grid" id="teacherPersonality">
+            <label class="personality-option">
+              <input type="radio" name="teacherPersonality" value="warm" />
+              <span><b>Ấm áp</b><small>Nhẹ nhàng, kiên nhẫn và khích lệ.</small></span>
+            </label>
+            <label class="personality-option">
+              <input type="radio" name="teacherPersonality" value="strict" />
+              <span><b>Kỷ luật</b><small>Thẳng vào lỗi sai, mục tiêu rõ ràng.</small></span>
+            </label>
+            <label class="personality-option">
+              <input type="radio" name="teacherPersonality" value="energetic" />
+              <span><b>Năng lượng</b><small>Nhanh, tích cực và tạo động lực.</small></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="teacher-voice-grid">
+          <label class="teacher-select-label">Giọng English
+            <select id="teacherVoiceEn" class="select" aria-label="Giọng cô Linh bằng tiếng Anh"><option value="">Đang tải giọng…</option></select>
+          </label>
+          <label class="teacher-select-label">Giọng 中文
+            <select id="teacherVoiceZh" class="select" aria-label="Giọng cô Linh bằng tiếng Trung"><option value="">Đang tải giọng…</option></select>
+          </label>
+          <label class="teacher-speed-label" for="teacherSpeed">Tốc độ nói <output id="teacherSpeedValue">0.95×</output></label>
+          <input id="teacherSpeed" type="range" min="0.75" max="1.15" step="0.05" value="0.95" />
+        </div>
+
+        <div class="teacher-custom-actions">
+          <button class="btn ghost" id="teacherVoicePreview" type="button">Nghe thử giọng</button>
+          <button class="btn primary" id="teacherCustomSave" type="button">Lưu tùy chỉnh</button>
+        </div>
+      </div>
+
+      <div class="card memory-card">
+        <div class="section-head">
+          <div><span class="section-kicker">TEACHER MEMORY</span><h2>Bộ nhớ dài hạn của cô giáo</h2></div>
+          <button class="btn ghost sm" id="memorySync">Đồng bộ ngay</button>
+        </div>
+        <p class="hint">Cô Linh ghi nhớ mục tiêu, trình độ, điểm yếu, từ đã học và lỗi của bạn — để mỗi câu trả lời luôn hướng tới mục tiêu và giúp bạn dùng, nói, nghe thông thạo.</p>
+        <div id="memoryView" class="memory-view"></div>
+        <div class="add-word">
+          <input id="memoryNoteInput" type="text" placeholder="Ghi chú cho cô giáo (ví dụ: 'Tôi muốn luyện nói khi đi phỏng vấn')…" aria-label="Ghi chú cho cô giáo" />
+          <button class="btn primary" id="memoryNoteBtn">Lưu ghi chú</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Onboarding 3 bước (lần đầu) -->
+  <div class="modal" id="onboardModal" role="dialog" aria-modal="true" aria-labelledby="onboardDialogTitle" aria-hidden="true">
+    <div class="modal-box onboard-box">
+      <h1 class="sr-only" id="onboardDialogTitle">Thiết lập hồ sơ học tập</h1>
+      <div class="progress-track"><span id="wgBar"></span></div>
+
+      <div class="og-step" id="wgStep1">
+        <span class="section-kicker">BƯỚC 1/3 · HỒ SƠ HỌC TẬP</span>
+        <img class="onboard-splash" src="/assets/splash-illustration.webp" width="120" height="120" loading="lazy" decoding="async" alt="" />
+        <div class="onboard-intro">
+          <div>
+            <h2 tabindex="-1">Một hồ sơ đồng hành cùng bạn đến tuổi 25</h2>
+            <p class="hint">LingoVoice giữ lại tiến bộ, lỗi cần sửa và sở thích học khi bạn lớn lên. Có thể thay đổi mọi lựa chọn sau này.</p>
+          </div>
+          <img class="onboard-character" src="/assets/co-linh-guide.webp" width="112" height="168" loading="lazy" decoding="async" alt="Cô Linh cầm sách, sẵn sàng đồng hành cùng bạn" />
+        </div>
+        <fieldset class="setup-field age-field">
+          <legend>Chọn giai đoạn hiện tại</legend>
+          <div class="age-picker" id="onboardAgePicker">
+            <label class="age-option"><input type="radio" name="onboardAge" value="preschool" /><span><b>3–6 tuổi</b><small>Làm quen qua nghe, hình và trò chơi</small></span></label>
+            <label class="age-option"><input type="radio" name="onboardAge" value="child" /><span><b>7–12 tuổi</b><small>Xây nền tảng và thói quen vui</small></span></label>
+            <label class="age-option"><input type="radio" name="onboardAge" value="teen" /><span><b>13–17 tuổi</b><small>Bứt phá cho trường học và tương lai</small></span></label>
+            <label class="age-option"><input type="radio" name="onboardAge" value="young-adult" /><span><b>18–25 tuổi</b><small>Ứng dụng cho đại học và công việc</small></span></label>
+          </div>
+        </fieldset>
+        <div class="setup-field identity-field">
+          <label for="onboardName">Tên người học</label>
+          <input class="profile-input" id="onboardName" name="onboardName" maxlength="40" autocomplete="name" placeholder="Bạn muốn cô gọi là gì?" />
+        </div>
+        <fieldset class="setup-field">
+          <legend>Mục tiêu (chọn 1–2)</legend>
+          <label class="check stage-goal" data-goal="giao-tiep"><input type="checkbox" id="wg-goal-giaotiep" value="giao-tiep" /> Nghe và nói tự tin</label>
+          <label class="check stage-goal" data-goal="thi"><input type="checkbox" id="wg-goal-thi" value="thi" /> Học tốt ở trường / chứng chỉ</label>
+          <label class="check stage-goal" data-goal="du-lich"><input type="checkbox" id="wg-goal-dulich" value="du-lich" /> Khám phá thế giới</label>
+          <label class="check stage-goal" data-goal="cong-viec"><input type="checkbox" id="wg-goal-congviec" value="cong-viec" /> Đại học, công việc &amp; phỏng vấn</label>
+        </fieldset>
+        <fieldset class="setup-field">
+          <legend>Thời gian mỗi ngày</legend>
+          <div class="seg" id="wgMin">
+            <button type="button" data-min="15">15'</button>
+            <button type="button" data-min="25" class="active">25'</button>
+            <button type="button" data-min="35">35'</button>
+            <button type="button" data-min="50">50'</button>
+          </div>
+        </fieldset>
+        <div class="hero-actions"><button class="btn primary" id="wgNext1">Tiếp tục →</button></div>
+      </div>
+
+      <div class="og-step" id="wgStep2" hidden>
+        <span class="section-kicker">BƯỚC 2/3 · TEST ĐẦU VÀO</span>
+        <h2 tabindex="-1">Xác định trình độ khởi điểm</h2>
+        <p class="hint">Làm test 5–8 phút để app giao bài đúng level của bạn. Có thể bỏ qua, học ngay.</p>
+        <div class="hero-actions">
+          <button class="btn primary" id="wgPlaceEn">Test English</button>
+          <button class="btn ghost" id="wgPlaceZh">中文测试</button>
+          <button class="btn ghost" id="wgSkipPlace">Bỏ qua, học luôn</button>
+        </div>
+        <div id="wgPlaceResult" class="place-results"></div>
+        <div class="hero-actions"><button class="btn primary" id="wgNext2">Tiếp tục →</button></div>
+      </div>
+
+      <div class="og-step" id="wgStep3" hidden>
+        <span class="section-kicker">BƯỚC 3/3 · SẴN SÀNG</span>
+        <h2 tabindex="-1">Sẵn sàng học thôi!</h2>
+        <p class="hint" id="wgSummary"></p>
+        <div class="hero-actions"><button class="btn primary btn-lg" id="wgStart">Học bài đầu tiên ngay →</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Placement modal -->
+  <div class="modal" id="placementModal" role="dialog" aria-modal="true" aria-labelledby="placeTitle" aria-describedby="placeNotice" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="section-kicker" id="placeKind">PLACEMENT TEST</span>
+        <button type="button" class="teacher-close" id="placeClose" aria-label="Đóng">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="progress-track"><span id="placeProgress"></span></div>
+      <h3 id="placeTitle">Kiểm tra đầu vào</h3>
+      <p class="hint" id="placeNotice"></p>
+      <p id="placePrompt" class="place-prompt"></p>
+      <button class="btn ghost sm" id="placeListen" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Nghe
+      </button>
+      <div id="placeChoices" class="quiz-choices"></div>
+      <textarea id="placeOpenAnswer" class="place-open" placeholder="Viết câu trả lời ở đây…" aria-label="Câu trả lời bài kiểm tra đầu vào" hidden></textarea>
+      <div class="hero-actions">
+        <button class="btn primary" id="placeNext">Câu tiếp theo →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="parentDashModal" role="dialog" aria-modal="true" aria-labelledby="pdTitle" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="section-kicker">DASHBOARD PHỤ HUYNH</span>
+        <button type="button" class="teacher-close" id="pdClose" aria-label="Đóng">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <h3 id="pdTitle">Tiến độ của con</h3>
+      <p class="hint" id="pdSub"></p>
+      <div class="habit-grid" id="pdStats"></div>
+      <div class="week-bars pd-bars" id="pdBars" role="img" aria-label="Phút học 14 ngày gần nhất"></div>
+      <h4>Kỹ năng 14 ngày</h4>
+      <div id="pdSkills"></div>
+      <h4>Lỗi hay gặp</h4>
+      <div id="pdMistakes"></div>
+      <h4>Huy hiệu</h4>
+      <div class="badge-row" id="pdBadges"></div>
+      <h4>Gợi ý đồng hành</h4>
+      <ul class="pd-suggestions" id="pdSuggestions"></ul>
+    </div>
+  </div>
+
+  <div class="mini-player" id="miniPlayer" role="status" aria-live="polite" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    <span id="miniPlayerText">Đang phát…</span>
+  </div>
+
+  <!-- Cô Linh: nút nổi + panel (bottom sheet trên mobile) -->
+  <div class="teacher-backdrop" id="teacherBackdrop" hidden></div>
+  <div class="teacher-dock" id="teacherDock">
+    <button class="teacher-toggle" id="teacherToggle" aria-expanded="false" aria-controls="teacherPanel" aria-label="Mở cô giáo đồng hành">
+      <span class="co-avatar co-sm" id="coLinhDock"></span>
+      <span class="teacher-ping" id="teacherPing" hidden></span>
+    </button>
+
+    <div class="teacher-panel" id="teacherPanel" hidden role="dialog" aria-label="Cô giáo đồng hành" aria-modal="false">
+      <div class="teacher-head">
+        <div class="teacher-head-left">
+          <span class="co-avatar co-lg" id="coLinhHeader"></span>
+          <div class="teacher-id">
+            <strong>Cô Linh</strong>
+            <span class="teacher-meta" id="teacherMeta">Giáo viên đồng hành</span>
+          </div>
+        </div>
+        <button class="teacher-min" id="teacherMin" aria-expanded="true" aria-label="Thu gọn khung trò chuyện">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button class="teacher-close" id="teacherClose" aria-label="Đóng cô giáo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="teacher-context" id="teacherContext" role="status" aria-live="polite"></div>
+
+      <div class="teacher-chat" id="teacherChat" aria-live="polite">
+        <div class="msg teacher">
+          <span class="bubble">Xin chào! Cô Linh đây. Cô sẽ đồng hành cùng bạn trong suốt buổi học. Hỏi cô bất cứ điều gì nhé.</span>
+        </div>
+      </div>
+
+      <div class="teacher-prompts" id="teacherPrompts">
+        <button type="button" class="chip" data-prompt="Giải thích nghĩa câu này giúp tôi">Nghĩa là gì?</button>
+        <button type="button" class="chip" data-prompt="Đọc phát âm câu này giúp tôi, chậm một chút">Phát âm giúp tôi</button>
+        <button type="button" class="chip" data-prompt="Cho tôi một câu tương tự để luyện tập">Câu tương tự</button>
+        <button type="button" class="chip" data-prompt="Tôi nên học gì tiếp theo?">Học gì tiếp?</button>
+      </div>
+
+      <div class="teacher-input">
+        <input id="teacherInput" type="text" placeholder="Nhập tin nhắn cho cô giáo…" aria-label="Tin nhắn cho giáo viên" autocomplete="off" />
+        <button type="button" id="teacherMic" class="teacher-mic" aria-label="Nói với Cô Linh" aria-pressed="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg>
+        </button>
+        <button type="button" id="teacherSend" class="teacher-send" aria-label="Gửi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20 21 12 3 4v6l12 2-12 2z"/></svg>
+        </button>
+      </div>
+
+      <div class="teacher-foot">
+        <button type="button" class="teacher-voice-toggle" id="teacherMute" aria-pressed="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 10v4h4l5 5V5L7 10H3zm13 2a3 3 0 0 0-2-2.8v5.6a3 3 0 0 0 2-2.8z"/></svg>
+          <span id="teacherMuteLabel">Đọc to: bật</span>
+        </button>
+        <span class="teacher-ai-status" id="teacherAiStatus"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Banner lỗi toàn cục: minh họa error-retry + nút thử lại -->
+  <div class="error-state" id="globalError" role="alert" hidden>
+    <img src="/assets/error-retry.webp" width="88" height="66" loading="lazy" decoding="async" alt="" />
+    <span id="globalErrorMessage">Đã có lỗi xảy ra.</span>
+    <button class="btn primary sm" id="globalErrorRetry" type="button">Thử lại</button>
+    <button class="error-dismiss" id="globalErrorDismiss" type="button" aria-label="Đóng thông báo lỗi">&times;</button>
+  </div>
+
+  <!-- Thẻ audio lỗi / mất mạng: minh họa offline-audio -->
+  <div class="offline-state" id="audioOffline" role="status" hidden>
+    <img src="/assets/offline-audio.webp" width="110" height="82" loading="lazy" decoding="async" alt="Bạn học viên đeo tai nghe cạnh biểu tượng mạng bị gạch chéo" />
+    <div>
+      <b>Không phát được audio</b>
+      <p>Âm thanh của bài học tạm thời không tải được. Bạn vẫn học được — phần nghe sẽ chuyển sang giọng của thiết bị.</p>
+    </div>
+    <button class="btn ghost sm" id="audioOfflineDismiss" type="button">Đã hiểu</button>
+  </div>
+
+  <script src="content-core.cjs"></script>
+  <script src="app.js"></script>
+  <script src="srs-core.cjs"></script>
+  <script src="writing-core.cjs"></script>
+  <script src="pron-core.cjs"></script>
+  <script src="toeic-core.cjs"></script>
+  <script src="learning.js"></script>
+  <script src="lv-api.js"></script>
+  <script src="lv-shell.js"></script>
+  <script src="toeic.js"></script>
+</body>
+</html>

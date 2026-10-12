@@ -1,0 +1,2857 @@
+{
+  "version": 1,
+  "lang": "en",
+  "updatedAt": "2026-08-18T13:29:57.152Z",
+  "items": [
+    {
+      "example": "The first item on the agenda is the budget review.",
+      "ipa": "/əˈdʒendə/",
+      "meaning": "chương trình nghị sự, danh sách các việc cần bàn",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Mục đầu tiên trong chương trình nghị sự là xem xét ngân sách.",
+      "collocations": [
+        "on the agenda",
+        "set the agenda"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "agenda",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-agenda",
+      "cefr": "B1"
+    },
+    {
+      "example": "I will attend the meeting tomorrow.",
+      "ipa": "/əˈtend/",
+      "meaning": "tham dự, có mặt",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi sẽ tham dự cuộc họp vào ngày mai.",
+      "collocations": [
+        "attend a meeting",
+        "attend school"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "attend",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-attend",
+      "cefr": "A2"
+    },
+    {
+      "example": "We need to discuss the project details before the meeting.",
+      "ipa": "/dɪˈskʌs/",
+      "meaning": "thảo luận, bàn về",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần thảo luận chi tiết dự án trước cuộc họp.",
+      "collocations": [
+        "discuss something with someone",
+        "discuss in detail"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "discuss",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-discuss",
+      "cefr": "B1"
+    },
+    {
+      "example": "Please attach the file to the email.",
+      "ipa": "/əˈtætʃ/",
+      "meaning": "gắn, đính, kèm",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Vui lòng đính kèm tệp vào email.",
+      "collocations": [
+        "attach importance to",
+        "attach to"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "attach",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-attach",
+      "cefr": "B1"
+    },
+    {
+      "example": "Please move forward to the next topic.",
+      "ipa": "/ˈfɔːrwərd/",
+      "meaning": "về phía trước; tiến về phía trước",
+      "pos": "adverb",
+      "topic": "Công việc",
+      "translation": "Vui lòng chuyển sang chủ đề tiếp theo.",
+      "collocations": [
+        "look forward to",
+        "move forward"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "forward",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-forward",
+      "cefr": "B1"
+    },
+    {
+      "example": "Please reply to my email as soon as possible.",
+      "ipa": "/rɪˈplaɪ/",
+      "meaning": "trả lời, phản hồi",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Vui lòng trả lời email của tôi càng sớm càng tốt.",
+      "collocations": [
+        "reply to",
+        "reply with"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "reply",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-reply",
+      "cefr": "A2"
+    },
+    {
+      "example": "I am writing to you regarding the meeting tomorrow.",
+      "ipa": "/rɪˈɡɑːrdɪŋ/",
+      "meaning": "về, liên quan đến",
+      "pos": "preposition",
+      "topic": "Công việc",
+      "translation": "Tôi viết thư cho bạn về cuộc họp ngày mai.",
+      "collocations": [
+        "regarding the issue",
+        "regarding your request"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "regarding",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-regarding",
+      "cefr": "B1"
+    },
+    {
+      "example": "The meeting room is available for booking.",
+      "ipa": "/əˈveɪləbl/",
+      "meaning": "có sẵn, sẵn sàng để dùng",
+      "pos": "adjective",
+      "topic": "Công việc",
+      "translation": "Phòng họp có sẵn để đặt.",
+      "collocations": [
+        "be available for",
+        "make something available"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "available",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-available",
+      "cefr": "A2"
+    },
+    {
+      "example": "I have a doctor's appointment at 3 p.m.",
+      "ipa": "/əˈpɔɪntmənt/",
+      "meaning": "cuộc hẹn",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi có cuộc hẹn với bác sĩ lúc 3 giờ chiều.",
+      "collocations": [
+        "make an appointment",
+        "keep an appointment"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "appointment",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-appointment",
+      "cefr": "B1"
+    },
+    {
+      "example": "She has a lot of experience in customer service.",
+      "ipa": "/ɪkˈspɪəriəns/",
+      "meaning": "kinh nghiệm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy có nhiều kinh nghiệm trong lĩnh vực dịch vụ khách hàng.",
+      "collocations": [
+        "have experience in",
+        "gain experience"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "experience",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-experience",
+      "cefr": "A2"
+    },
+    {
+      "example": "She has the strength to lift heavy weights.",
+      "ipa": "/streŋkθ/",
+      "meaning": "sức mạnh, sức mạnh thể chất hoặc tinh thần",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy có sức mạnh để nâng tạ nặng.",
+      "collocations": [
+        "physical strength",
+        "strength and weakness"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "strength",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-strength",
+      "cefr": "B1"
+    },
+    {
+      "example": "Admitting your weaknesses is the first step to improving yourself.",
+      "ipa": "/ˈwiːknəs/",
+      "meaning": "điểm yếu, sự yếu kém",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Thừa nhận điểm yếu của bạn là bước đầu tiên để cải thiện bản thân.",
+      "collocations": [
+        "admit a weakness",
+        "have a weakness for"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "weakness",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-weakness",
+      "cefr": "B1"
+    },
+    {
+      "example": "I want to apply for the job.",
+      "ipa": "/əˈplaɪ/",
+      "meaning": "áp dụng, nộp đơn, ứng dụng",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi muốn nộp đơn cho công việc đó.",
+      "collocations": [
+        "apply for",
+        "apply to"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "apply",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-apply",
+      "cefr": "A2"
+    },
+    {
+      "example": "The company decided to hire a new manager.",
+      "ipa": "/ˈhaɪər/",
+      "meaning": "thuê",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Công ty quyết định thuê một quản lý mới.",
+      "collocations": [
+        "hire someone for a job",
+        "hire a car"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "hire",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-hire",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company hired a new employee to manage the project.",
+      "ipa": "/ɪmˈplɔɪiː/",
+      "meaning": "nhân viên",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Công ty đã thuê một nhân viên mới để quản lý dự án.",
+      "collocations": [
+        "full-time employee",
+        "employee benefits"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "employee",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-employee",
+      "cefr": "B1"
+    },
+    {
+      "example": "My employer offered me a promotion.",
+      "ipa": "/ɪmˈplɔɪər/",
+      "meaning": "người sử dụng lao động, chủ lao động",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chủ lao động của tôi đã đề nghị tôi thăng chức.",
+      "collocations": [
+        "current employer",
+        "employer benefits"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "employer",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-employer",
+      "cefr": "B1"
+    },
+    {
+      "example": "After the break, we will resume the meeting.",
+      "ipa": "/rɪˈzuːm/",
+      "meaning": "tiếp tục, tóm tắt lý lịch",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Sau giờ giải lao, chúng ta sẽ tiếp tục cuộc họp.",
+      "collocations": [
+        "resume business",
+        "resume normal"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "resume",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-resume",
+      "cefr": "B1"
+    },
+    {
+      "example": "She slid the document across the table to her colleague.",
+      "ipa": "/slaɪd/",
+      "meaning": "trượt; cầu trượt; sự trượt; bản trình chiếu",
+      "pos": "verb/noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy trượt tài liệu qua bàn cho đồng nghiệp.",
+      "collocations": [
+        "slide into",
+        "slide presentation"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "slide",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-slide",
+      "cefr": "B1"
+    },
+    {
+      "example": "The audience applauded loudly at the end of the performance.",
+      "ipa": "/ˈɔːdiəns/",
+      "meaning": "khán giả, thính giả, độc giả",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Khán giả vỗ tay rất to khi màn trình diễn kết thúc.",
+      "collocations": [
+        "target audience",
+        "audience member"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "audience",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-audience",
+      "cefr": "B1"
+    },
+    {
+      "example": "Can you give me a summary of the meeting?",
+      "ipa": "/ˈsʌməri/",
+      "meaning": "tóm tắt, bản tóm tắt",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Bạn có thể cho tôi một bản tóm tắt của cuộc họp không?",
+      "collocations": [
+        "a brief summary",
+        "summary of"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "summary",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-summary",
+      "cefr": "B1"
+    },
+    {
+      "example": "Please highlight the important points in the report.",
+      "ipa": "/ˈhaɪ.laɪt/",
+      "meaning": "làm nổi bật, đánh dấu",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Hãy làm nổi bật những điểm quan trọng trong báo cáo.",
+      "collocations": [
+        "highlight the importance",
+        "highlight a problem"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "highlight",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-highlight",
+      "cefr": "B1"
+    },
+    {
+      "example": "The study concluded that regular exercise improves mental health.",
+      "ipa": "/kənˈkluːd/",
+      "meaning": "kết luận, kết thúc",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Nghiên cứu kết luận rằng tập thể dục thường xuyên cải thiện sức khỏe tinh thần.",
+      "collocations": [
+        "conclude that",
+        "conclude with"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "conclude",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-conclude",
+      "cefr": "B1"
+    },
+    {
+      "example": "They offered me a job at the company.",
+      "ipa": "/ˈɒfər/",
+      "meaning": "đề nghị, đề xuất",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Họ đã đề nghị cho tôi một công việc tại công ty.",
+      "collocations": [
+        "offer someone something",
+        "offer to do something"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "offer",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-offer",
+      "cefr": "B1"
+    },
+    {
+      "example": "We need to set a budget for the new project.",
+      "ipa": "/ˈbʌdʒɪt/",
+      "meaning": "ngân sách",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần lập ngân sách cho dự án mới.",
+      "collocations": [
+        "set a budget",
+        "within budget"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "budget",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-budget",
+      "cefr": "B1"
+    },
+    {
+      "example": "The store offers a 20% discount on all items this week.",
+      "ipa": "/ˈdɪskaʊnt/",
+      "meaning": "giảm giá, chiết khấu",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cửa hàng giảm giá 20% cho tất cả các mặt hàng trong tuần này.",
+      "collocations": [
+        "get a discount",
+        "discount price"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "discount",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-discount",
+      "cefr": "B1"
+    },
+    {
+      "example": "They finally reached an agreement after long negotiations.",
+      "ipa": "/əˈɡriːmənt/",
+      "meaning": "sự đồng ý, thỏa thuận",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Họ cuối cùng đã đạt được thỏa thuận sau các cuộc đàm phán dài.",
+      "collocations": [
+        "reach an agreement",
+        "sign an agreement"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "agreement",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-agreement",
+      "cefr": "B1"
+    },
+    {
+      "example": "Graduating from university was a major milestone in my life.",
+      "ipa": "/ˈmaɪlstəʊn/",
+      "meaning": "cột mốc, mốc quan trọng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tốt nghiệp đại học là một cột mốc quan trọng trong cuộc đời tôi.",
+      "collocations": [
+        "reach a milestone",
+        "an important milestone"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "milestone",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-milestone",
+      "cefr": "B1"
+    },
+    {
+      "example": "She has made significant progress in her English skills.",
+      "ipa": "ˈprəʊɡres",
+      "meaning": "sự tiến bộ, sự phát triển",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy đã đạt được sự tiến bộ đáng kể trong kỹ năng tiếng Anh của mình.",
+      "collocations": [
+        "make progress",
+        "progress report"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "progress",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-progress",
+      "cefr": "A2"
+    },
+    {
+      "example": "What is the status of the project?",
+      "ipa": "/ˈsteɪtəs/",
+      "meaning": "tình trạng, trạng thái",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tình trạng của dự án là gì?",
+      "collocations": [
+        "current status",
+        "status update"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "status",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-status",
+      "cefr": "B1"
+    },
+    {
+      "example": "Starting a new business involves some risk.",
+      "ipa": "/rɪsk/",
+      "meaning": "rủi ro, nguy cơ",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Bắt đầu một doanh nghiệp mới có một số rủi ro.",
+      "collocations": [
+        "take a risk",
+        "risk management"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "risk",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-risk",
+      "cefr": "B1"
+    },
+    {
+      "example": "The first deliverable of the project is a detailed report.",
+      "ipa": "/dɪˈlɪvərəbl/",
+      "meaning": "sản phẩm bàn giao, kết quả đầu ra",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Sản phẩm bàn giao đầu tiên của dự án là một báo cáo chi tiết.",
+      "collocations": [
+        "project deliverable",
+        "deliverable is due"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "deliverable",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-deliverable",
+      "cefr": "B2"
+    },
+    {
+      "example": "Please send me the invoice by email.",
+      "ipa": "/ˈɪn.vɔɪs/",
+      "meaning": "hóa đơn",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Vui lòng gửi hóa đơn cho tôi qua email.",
+      "collocations": [
+        "issue an invoice",
+        "pay an invoice"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "invoice",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-invoice",
+      "cefr": "B1"
+    },
+    {
+      "example": "I need to purchase a new laptop for work.",
+      "ipa": "/ˈpɜːrtʃəs/",
+      "meaning": "mua, sự mua",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi cần mua một chiếc laptop mới cho công việc.",
+      "collocations": [
+        "make a purchase",
+        "purchase order"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "purchase",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-purchase",
+      "cefr": "B1"
+    },
+    {
+      "example": "Our company needs a reliable supplier for raw materials.",
+      "ipa": "/səˈplaɪər/",
+      "meaning": "nhà cung cấp",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Công ty chúng tôi cần một nhà cung cấp đáng tin cậy cho nguyên vật liệu.",
+      "collocations": [
+        "reliable supplier",
+        "supplier of goods"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "supplier",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-supplier",
+      "cefr": "B1"
+    },
+    {
+      "example": "I would like to order a cup of coffee.",
+      "ipa": "ˈɔːrdər",
+      "meaning": "thứ tự; đặt hàng; ra lệnh",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi muốn gọi một tách cà phê.",
+      "collocations": [
+        "place an order",
+        "in order to"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "order",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-order",
+      "cefr": "A2"
+    },
+    {
+      "example": "The laptop comes with a two-year warranty.",
+      "ipa": "/ˈwɒrənti/",
+      "meaning": "bảo hành",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chiếc laptop này được bảo hành hai năm.",
+      "collocations": [
+        "under warranty",
+        "warranty period"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "warranty",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-warranty",
+      "cefr": "B2"
+    },
+    {
+      "example": "She received a bonus for her excellent performance.",
+      "ipa": "/ˈboʊnəs/",
+      "meaning": "tiền thưởng, tiền thưởng thêm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy nhận được tiền thưởng vì thành tích xuất sắc.",
+      "collocations": [
+        "a cash bonus",
+        "a bonus for"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "bonus",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-bonus",
+      "cefr": "B1"
+    },
+    {
+      "example": "Regular exercise has many health benefits.",
+      "ipa": "/ˈbenɪfɪt/",
+      "meaning": "lợi ích, phúc lợi",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tập thể dục thường xuyên có nhiều lợi ích cho sức khỏe.",
+      "collocations": [
+        "health benefit",
+        "benefit from"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "benefit",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-benefit",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company decided to raise the salaries of all employees.",
+      "ipa": "/reɪz/",
+      "meaning": "nâng lên, tăng lên, nuôi (trẻ)",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Công ty đã quyết định tăng lương cho tất cả nhân viên.",
+      "collocations": [
+        "raise awareness",
+        "raise a child"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "raise",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-raise",
+      "cefr": "B1"
+    },
+    {
+      "example": "I usually leave home at 7 a.m. to go to work.",
+      "ipa": "/liːv/",
+      "meaning": "rời đi, để lại, nghỉ phép",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi thường rời khỏi nhà lúc 7 giờ sáng để đi làm.",
+      "collocations": [
+        "leave for",
+        "leave without"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "leave",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-leave",
+      "cefr": "A2"
+    },
+    {
+      "example": "I need to buy health insurance before I travel abroad.",
+      "ipa": "/ɪnˈʃʊrəns/",
+      "meaning": "bảo hiểm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi cần mua bảo hiểm y tế trước khi đi du lịch nước ngoài.",
+      "collocations": [
+        "health insurance",
+        "insurance policy"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "insurance",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-insurance",
+      "cefr": "B1"
+    },
+    {
+      "example": "We need to make an arrangement for the meeting.",
+      "ipa": "/əˈreɪndʒmənt/",
+      "meaning": "sự sắp xếp, sự sắp đặt",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng tôi cần sắp xếp cho cuộc họp.",
+      "collocations": [
+        "make an arrangement",
+        "arrangement for"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "arrangement",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-arrangement",
+      "cefr": "B1"
+    },
+    {
+      "example": "The two companies decided to cooperate on the new project.",
+      "ipa": "/koʊˈɑːpəreɪt/",
+      "meaning": "hợp tác",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Hai công ty quyết định hợp tác trong dự án mới.",
+      "collocations": [
+        "cooperate with someone",
+        "cooperate on something"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "cooperate",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-cooperate",
+      "cefr": "B1"
+    },
+    {
+      "example": "Taking care of a pet is a big responsibility.",
+      "ipa": "/rɪˌspɑːnsəˈbɪləti/",
+      "meaning": "trách nhiệm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chăm sóc thú cưng là một trách nhiệm lớn.",
+      "collocations": [
+        "take responsibility for",
+        "have a responsibility to"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "responsibility",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-responsibility",
+      "cefr": "B1"
+    },
+    {
+      "example": "The teacher assigned a lot of homework for the weekend.",
+      "ipa": "/əˈsaɪn/",
+      "meaning": "giao, phân công",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Giáo viên đã giao rất nhiều bài tập về nhà cho cuối tuần.",
+      "collocations": [
+        "assign something to someone",
+        "be assigned to do something"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "assign",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-assign",
+      "cefr": "B1"
+    },
+    {
+      "example": "The teacher supervises the students during the exam.",
+      "ipa": "/ˈsuːpəvaɪz/",
+      "meaning": "giám sát",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Giáo viên giám sát học sinh trong kỳ thi.",
+      "collocations": [
+        "supervise a project",
+        "supervise staff"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "supervise",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-supervise",
+      "cefr": "B2"
+    },
+    {
+      "example": "Making a decision is not always easy.",
+      "ipa": "/dɪˈsɪʒən/",
+      "meaning": "quyết định",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Việc đưa ra một quyết định không phải lúc nào cũng dễ dàng.",
+      "collocations": [
+        "make a decision",
+        "reach a decision"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "decision",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-decision",
+      "cefr": "B1"
+    },
+    {
+      "example": "We need a new strategy to increase sales.",
+      "ipa": "/ˈstrætədʒi/",
+      "meaning": "chiến lược, sách lược",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần một chiến lược mới để tăng doanh số.",
+      "collocations": [
+        "develop a strategy",
+        "implement a strategy"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "strategy",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-strategy",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company plans to increase its workforce next year.",
+      "ipa": "/ɪnˈkriːs/",
+      "meaning": "tăng, tăng lên",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Công ty dự định tăng lực lượng lao động vào năm tới.",
+      "collocations": [
+        "increase dramatically",
+        "increase by"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "increase",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-increase",
+      "cefr": "A2"
+    },
+    {
+      "example": "The number of students decreased last year.",
+      "ipa": "/dɪˈkriːs/",
+      "meaning": "giảm",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Số lượng học sinh đã giảm vào năm ngoái.",
+      "collocations": [
+        "decrease by",
+        "decrease in"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "decrease",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-decrease",
+      "cefr": "B1"
+    },
+    {
+      "example": "The production of this car model will begin next month.",
+      "ipa": "/prəˈdʌkʃn/",
+      "meaning": "sản xuất, quá trình sản xuất",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Việc sản xuất mẫu xe này sẽ bắt đầu vào tháng tới.",
+      "collocations": [
+        "production line",
+        "mass production"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "production",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-production",
+      "cefr": "B1"
+    },
+    {
+      "example": "She works in a large office in the city center.",
+      "ipa": "/ˈɒfɪs/",
+      "meaning": "văn phòng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy làm việc trong một văn phòng lớn ở trung tâm thành phố.",
+      "collocations": [
+        "office hours",
+        "office building"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "office",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-office",
+      "cefr": "A1"
+    },
+    {
+      "example": "She wants to start her own business.",
+      "ipa": "/ˈbɪznəs/",
+      "meaning": "việc kinh doanh, công việc, doanh nghiệp",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy muốn bắt đầu công việc kinh doanh của riêng mình.",
+      "collocations": [
+        "run a business",
+        "business plan"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "business",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-business",
+      "cefr": "A2"
+    },
+    {
+      "example": "She works for a large company in Hanoi.",
+      "ipa": "/ˈkʌmpəni/",
+      "meaning": "công ty",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy làm việc cho một công ty lớn ở Hà Nội.",
+      "collocations": [
+        "start a company",
+        "work for a company"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "company",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-company",
+      "cefr": "A2"
+    },
+    {
+      "example": "Our team won the competition last week.",
+      "ipa": "/tiːm/",
+      "meaning": "đội, nhóm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Đội của chúng tôi đã thắng cuộc thi tuần trước.",
+      "collocations": [
+        "team work",
+        "team member"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "team",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-team",
+      "cefr": "A2"
+    },
+    {
+      "example": "My boss is very kind and supportive.",
+      "ipa": "/bɒs/",
+      "meaning": "ông chủ, sếp",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Sếp của tôi rất tử tế và hay hỗ trợ.",
+      "collocations": [
+        "boss around",
+        "boss's office"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "boss",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-boss",
+      "cefr": "A2"
+    },
+    {
+      "example": "We need to make a plan for the project before we start.",
+      "ipa": "/plæn/",
+      "meaning": "kế hoạch, dự định",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần lập kế hoạch cho dự án trước khi bắt đầu.",
+      "collocations": [
+        "make a plan",
+        "plan for"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "plan",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-plan",
+      "cefr": "A2"
+    },
+    {
+      "example": "She helped me organize the files on my computer.",
+      "ipa": "/ˈɔːrɡənaɪz/",
+      "meaning": "sắp xếp, tổ chức",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Cô ấy đã giúp tôi sắp xếp các tệp trên máy tính.",
+      "collocations": [
+        "organize a meeting",
+        "organize an event"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "organize",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-organize",
+      "cefr": "B1"
+    },
+    {
+      "example": "I need to prepare for the meeting tomorrow.",
+      "ipa": "/prɪˈper/",
+      "meaning": "chuẩn bị",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi cần chuẩn bị cho cuộc họp ngày mai.",
+      "collocations": [
+        "prepare for",
+        "prepare something"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "prepare",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-prepare",
+      "cefr": "A2"
+    },
+    {
+      "example": "We need to solve this problem before the deadline.",
+      "ipa": "/sɒlv/",
+      "meaning": "giải quyết",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần giải quyết vấn đề này trước thời hạn.",
+      "collocations": [
+        "solve a problem",
+        "solve an equation"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "solve",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-solve",
+      "cefr": "B1"
+    },
+    {
+      "example": "We need to solve this problem quickly.",
+      "ipa": "/ˈprɒbləm/",
+      "meaning": "vấn đề, rắc rối",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng ta cần giải quyết vấn đề này nhanh chóng.",
+      "collocations": [
+        "solve a problem",
+        "have a problem"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "problem",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-problem",
+      "cefr": "A2"
+    },
+    {
+      "example": "My family always supports me in everything I do.",
+      "ipa": "/səˈpɔːrt/",
+      "meaning": "ủng hộ, hỗ trợ",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Gia đình tôi luôn ủng hộ tôi trong mọi việc tôi làm.",
+      "collocations": [
+        "support someone in something",
+        "support a cause"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "support",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-support",
+      "cefr": "A2"
+    },
+    {
+      "example": "Can you help me with this task?",
+      "ipa": "/help/",
+      "meaning": "giúp đỡ, trợ giúp",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Bạn có thể giúp tôi với nhiệm vụ này không?",
+      "collocations": [
+        "help someone with something",
+        "ask for help"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "help",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-help",
+      "cefr": "A1"
+    },
+    {
+      "example": "I will call you tomorrow.",
+      "ipa": "/kɔːl/",
+      "meaning": "gọi điện, gọi tên, gọi là",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi sẽ gọi cho bạn vào ngày mai.",
+      "collocations": [
+        "call back",
+        "call off"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "call",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-call",
+      "cefr": "A1"
+    },
+    {
+      "example": "I received a message from my boss this morning.",
+      "ipa": "/ˈmesɪdʒ/",
+      "meaning": "tin nhắn, thông điệp",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi đã nhận được một tin nhắn từ sếp của tôi sáng nay.",
+      "collocations": [
+        "send a message",
+        "leave a message"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "message",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-message",
+      "cefr": "A2"
+    },
+    {
+      "example": "I sent an email to my boss this morning.",
+      "ipa": "/ˈiːmeɪl/",
+      "meaning": "thư điện tử",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi đã gửi một email cho sếp của tôi sáng nay.",
+      "collocations": [
+        "send an email",
+        "check your email"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "email",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-email",
+      "cefr": "A2"
+    },
+    {
+      "example": "Please sign this document before you leave.",
+      "ipa": "/ˈdɒkjumənt/",
+      "meaning": "tài liệu, văn kiện",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Vui lòng ký tài liệu này trước khi bạn rời đi.",
+      "collocations": [
+        "legal document",
+        "sign a document"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "document",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-document",
+      "cefr": "B1"
+    },
+    {
+      "example": "Please save the file before you close the program.",
+      "ipa": "/faɪl/",
+      "meaning": "tập tin, hồ sơ",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Vui lòng lưu tập tin trước khi bạn đóng chương trình.",
+      "collocations": [
+        "save a file",
+        "open a file"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "file",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-file",
+      "cefr": "A2"
+    },
+    {
+      "example": "Please copy this file to the shared folder.",
+      "ipa": "/ˈkɒpi/",
+      "meaning": "sao chép, bản sao",
+      "pos": "verb/noun",
+      "topic": "Công việc",
+      "translation": "Vui lòng sao chép tệp này vào thư mục dùng chung.",
+      "collocations": [
+        "copy something to",
+        "make a copy of"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "copy",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-copy",
+      "cefr": "A2"
+    },
+    {
+      "example": "Can you print this document for me?",
+      "ipa": "/prɪnt/",
+      "meaning": "in, in ấn",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Bạn có thể in tài liệu này cho tôi không?",
+      "collocations": [
+        "print out",
+        "print a document"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "print",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-print",
+      "cefr": "A2"
+    },
+    {
+      "example": "I use my computer to check emails every morning.",
+      "ipa": "/kəmˈpjuːtər/",
+      "meaning": "máy tính",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi dùng máy tính để kiểm tra email mỗi sáng.",
+      "collocations": [
+        "personal computer",
+        "computer science"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "computer",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-computer",
+      "cefr": "A1"
+    },
+    {
+      "example": "We had a long discussion about the project.",
+      "ipa": "/dɪˈskʌʃən/",
+      "meaning": "cuộc thảo luận, sự bàn bạc",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng tôi đã có một cuộc thảo luận dài về dự án.",
+      "collocations": [
+        "have a discussion",
+        "discussion about"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "discussion",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-discussion",
+      "cefr": "B1"
+    },
+    {
+      "example": "They signed a contract with a new supplier.",
+      "ipa": "/ˈkɒntrækt/",
+      "meaning": "hợp đồng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Họ đã ký hợp đồng với một nhà cung cấp mới.",
+      "collocations": [
+        "sign a contract",
+        "breach of contract"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "contract",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-contract",
+      "cefr": "B1"
+    },
+    {
+      "example": "The customer asked for a refund.",
+      "ipa": "/ˈkʌstəmər/",
+      "meaning": "khách hàng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Khách hàng yêu cầu hoàn tiền.",
+      "collocations": [
+        "customer service",
+        "satisfied customer"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "customer",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-customer",
+      "cefr": "A2"
+    },
+    {
+      "example": "They sell fresh fruits at the market every morning.",
+      "ipa": "/sel/",
+      "meaning": "bán",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Họ bán trái cây tươi ở chợ mỗi buổi sáng.",
+      "collocations": [
+        "sell out",
+        "sell for"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "sell",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-sell",
+      "cefr": "A2"
+    },
+    {
+      "example": "I want to buy a new laptop.",
+      "ipa": "/baɪ/",
+      "meaning": "mua",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi muốn mua một chiếc laptop mới.",
+      "collocations": [
+        "buy something",
+        "buy from"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "buy",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-buy",
+      "cefr": "A1"
+    },
+    {
+      "example": "The price of this shirt is too high.",
+      "ipa": "/praɪs/",
+      "meaning": "giá cả",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Giá của chiếc áo này quá cao.",
+      "collocations": [
+        "at a good price",
+        "price range"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "price",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-price",
+      "cefr": "A2"
+    },
+    {
+      "example": "This new product is very popular among young people.",
+      "ipa": "/ˈprɒdʌkt/",
+      "meaning": "sản phẩm",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Sản phẩm mới này rất phổ biến trong giới trẻ.",
+      "collocations": [
+        "product launch",
+        "product quality"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "product",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-product",
+      "cefr": "A2"
+    },
+    {
+      "example": "The hotel provides excellent service to its guests.",
+      "ipa": "/ˈsɜːrvɪs/",
+      "meaning": "dịch vụ",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Khách sạn cung cấp dịch vụ tuyệt vời cho khách hàng.",
+      "collocations": [
+        "customer service",
+        "public service"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "service",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-service",
+      "cefr": "A2"
+    },
+    {
+      "example": "The quality of this product is very good.",
+      "ipa": "/ˈkwɒləti/",
+      "meaning": "chất lượng; phẩm chất",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chất lượng của sản phẩm này rất tốt.",
+      "collocations": [
+        "good quality",
+        "high quality"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "quality",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-quality",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company will deliver the package to your door tomorrow.",
+      "ipa": "/dɪˈlɪvər/",
+      "meaning": "giao hàng, chuyển phát; trình bày, đưa ra",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Công ty sẽ giao gói hàng đến tận cửa nhà bạn vào ngày mai.",
+      "collocations": [
+        "deliver a speech",
+        "deliver on a promise"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "deliver",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-deliver",
+      "cefr": "B1"
+    },
+    {
+      "example": "The package arrived at my door this morning.",
+      "ipa": "/ˈpækɪdʒ/",
+      "meaning": "gói, bưu kiện; gói hàng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Bưu kiện đã đến cửa nhà tôi sáng nay.",
+      "collocations": [
+        "deliver a package",
+        "package deal"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "package",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-package",
+      "cefr": "B1"
+    },
+    {
+      "example": "The shipment of goods arrived at the port yesterday.",
+      "ipa": "/ˈʃɪpmənt/",
+      "meaning": "lô hàng, chuyến hàng",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Lô hàng hóa đã đến cảng hôm qua.",
+      "collocations": [
+        "make a shipment",
+        "deliver a shipment"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "shipment",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-shipment",
+      "cefr": "B2"
+    },
+    {
+      "example": "The goods are stored in the warehouse.",
+      "ipa": "/ˈweəhaʊs/",
+      "meaning": "nhà kho",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Hàng hóa được lưu trữ trong nhà kho.",
+      "collocations": [
+        "warehouse manager",
+        "warehouse storage"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "warehouse",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-warehouse",
+      "cefr": "B2"
+    },
+    {
+      "example": "We need to check the inventory before placing a new order.",
+      "ipa": "/ˈɪnvəntɔːri/",
+      "meaning": "hàng tồn kho; kiểm kê",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chúng tôi cần kiểm tra hàng tồn kho trước khi đặt hàng mới.",
+      "collocations": [
+        "take inventory",
+        "inventory management"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "inventory",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-inventory",
+      "cefr": "B2"
+    },
+    {
+      "example": "She works in finance and manages the company's budget.",
+      "ipa": "/ˈfaɪnæns/",
+      "meaning": "tài chính",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Cô ấy làm trong lĩnh vực tài chính và quản lý ngân sách của công ty.",
+      "collocations": [
+        "corporate finance",
+        "personal finance"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "finance",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-finance",
+      "cefr": "B2"
+    },
+    {
+      "example": "I need to create a new account for the website.",
+      "ipa": "/əˈkaʊnt/",
+      "meaning": "tài khoản; lời giải thích",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Tôi cần tạo một tài khoản mới cho trang web.",
+      "collocations": [
+        "open an account",
+        "account for"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "account",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-account",
+      "cefr": "B1"
+    },
+    {
+      "example": "The payment for the invoice is due by Friday.",
+      "ipa": "/ˈpeɪmənt/",
+      "meaning": "sự thanh toán, khoản thanh toán",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Khoản thanh toán cho hóa đơn đến hạn vào thứ Sáu.",
+      "collocations": [
+        "make a payment",
+        "payment method"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "payment",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-payment",
+      "cefr": "B1"
+    },
+    {
+      "example": "The government collects taxes from citizens to fund public services.",
+      "ipa": "/tæks/",
+      "meaning": "thuế",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Chính phủ thu thuế từ công dân để tài trợ cho các dịch vụ công cộng.",
+      "collocations": [
+        "pay tax",
+        "tax cut"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "tax",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-tax",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company's revenue increased by 20% this year.",
+      "ipa": "/ˈrevənuː/",
+      "meaning": "doanh thu",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Doanh thu của công ty đã tăng 20% trong năm nay.",
+      "collocations": [
+        "generate revenue",
+        "annual revenue"
+      ],
+      "freq": 3,
+      "workplace": true,
+      "term": "revenue",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b2-revenue",
+      "cefr": "B2"
+    },
+    {
+      "example": "The company made a large profit this year.",
+      "ipa": "/ˈprɒfɪt/",
+      "meaning": "lợi nhuận",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Công ty đã thu được lợi nhuận lớn trong năm nay.",
+      "collocations": [
+        "make a profit",
+        "profit margin"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "profit",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-profit",
+      "cefr": "B1"
+    },
+    {
+      "example": "The company reported a big loss last year.",
+      "ipa": "/lɔːs/",
+      "meaning": "sự mất mát, sự thua lỗ",
+      "pos": "noun",
+      "topic": "Công việc",
+      "translation": "Công ty đã báo cáo một khoản lỗ lớn vào năm ngoái.",
+      "collocations": [
+        "suffer a loss",
+        "at a loss"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "loss",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-loss",
+      "cefr": "B1"
+    },
+    {
+      "example": "The cost of living in the city is very high.",
+      "ipa": "/kɒst/",
+      "meaning": "chi phí, giá phải trả; làm tốn",
+      "pos": "noun/verb",
+      "topic": "Công việc",
+      "translation": "Chi phí sinh hoạt ở thành phố rất cao.",
+      "collocations": [
+        "cost of living",
+        "cost an arm and a leg"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "cost",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-cost",
+      "cefr": "B1"
+    },
+    {
+      "example": "I spend a lot of time reading books.",
+      "ipa": "/spend/",
+      "meaning": "tiêu tiền, dành thời gian",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi dành nhiều thời gian để đọc sách.",
+      "collocations": [
+        "spend money on",
+        "spend time doing"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "spend",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-spend",
+      "cefr": "B1"
+    },
+    {
+      "example": "She earns a good salary as a software engineer.",
+      "ipa": "/ɜːrn/",
+      "meaning": "kiếm được, kiếm tiền",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Cô ấy kiếm được mức lương tốt với vai trò kỹ sư phần mềm.",
+      "collocations": [
+        "earn money",
+        "earn a living"
+      ],
+      "freq": 2,
+      "workplace": true,
+      "term": "earn",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-earn",
+      "cefr": "B1"
+    },
+    {
+      "example": "I need to pay the bill before we leave.",
+      "ipa": "/peɪ/",
+      "meaning": "trả tiền, thanh toán",
+      "pos": "verb",
+      "topic": "Công việc",
+      "translation": "Tôi cần trả tiền hóa đơn trước khi chúng ta rời đi.",
+      "collocations": [
+        "pay for",
+        "pay attention"
+      ],
+      "freq": 1,
+      "workplace": true,
+      "term": "pay",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-pay",
+      "cefr": "A2"
+    },
+    {
+      "example": "I usually have breakfast at 7 o'clock.",
+      "ipa": "/ˈbrekfəst/",
+      "meaning": "bữa sáng",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Tôi thường ăn sáng lúc 7 giờ.",
+      "collocations": [
+        "have breakfast",
+        "make breakfast"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "breakfast",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-breakfast",
+      "cefr": "A1"
+    },
+    {
+      "example": "I usually have lunch at noon.",
+      "ipa": "/lʌntʃ/",
+      "meaning": "bữa trưa",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Tôi thường ăn trưa lúc 12 giờ trưa.",
+      "collocations": [
+        "have lunch",
+        "lunch break"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "lunch",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-lunch",
+      "cefr": "A1"
+    },
+    {
+      "example": "We usually have dinner at 7 p.m.",
+      "ipa": "/ˈdɪnər/",
+      "meaning": "bữa tối, bữa ăn chính vào buổi tối",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Chúng tôi thường ăn tối lúc 7 giờ tối.",
+      "collocations": [
+        "have dinner",
+        "cook dinner"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "dinner",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-dinner",
+      "cefr": "A1"
+    },
+    {
+      "example": "The weather is nice today, so we can go for a walk.",
+      "ipa": "/ˈweðər/",
+      "meaning": "thời tiết",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Hôm nay thời tiết đẹp, vì vậy chúng ta có thể đi dạo.",
+      "collocations": [
+        "weather forecast",
+        "bad weather"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "weather",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-weather",
+      "cefr": "A1"
+    },
+    {
+      "example": "My family is very important to me.",
+      "ipa": "/ˈfæməli/",
+      "meaning": "gia đình",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Gia đình tôi rất quan trọng với tôi.",
+      "collocations": [
+        "family members",
+        "start a family"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "family",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-family",
+      "cefr": "A1"
+    },
+    {
+      "example": "I'm going to the movies with my friend this weekend.",
+      "ipa": "/frend/",
+      "meaning": "bạn bè",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Cuối tuần này tôi sẽ đi xem phim với bạn của tôi.",
+      "collocations": [
+        "close friend",
+        "make friends"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "friend",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-friend",
+      "cefr": "A1"
+    },
+    {
+      "example": "My house is near the park.",
+      "ipa": "/haʊs/",
+      "meaning": "ngôi nhà",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Nhà của tôi ở gần công viên.",
+      "collocations": [
+        "buy a house",
+        "rent a house"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "house",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-house",
+      "cefr": "A1"
+    },
+    {
+      "example": "I'm going home after work.",
+      "ipa": "/hoʊm/",
+      "meaning": "nhà, tổ ấm",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Tôi sẽ về nhà sau khi tan làm.",
+      "collocations": [
+        "at home",
+        "go home"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "home",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-home",
+      "cefr": "A1"
+    },
+    {
+      "example": "She drives a red car to work every day.",
+      "ipa": "/kɑːr/",
+      "meaning": "ô tô, xe hơi",
+      "pos": "noun",
+      "topic": "Giao thông",
+      "translation": "Cô ấy lái một chiếc ô tô màu đỏ đến nơi làm việc mỗi ngày.",
+      "collocations": [
+        "drive a car",
+        "park a car"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "car",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-car",
+      "cefr": "A1"
+    },
+    {
+      "example": "I take the bus to work every day.",
+      "ipa": "/bʌs/",
+      "meaning": "xe buýt",
+      "pos": "noun",
+      "topic": "Giao thông",
+      "translation": "Tôi bắt xe buýt đi làm mỗi ngày.",
+      "collocations": [
+        "catch a bus",
+        "miss the bus"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "bus",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-bus",
+      "cefr": "A1"
+    },
+    {
+      "example": "I take the train to work every day.",
+      "ipa": "/treɪn/",
+      "meaning": "tàu hỏa; đào tạo",
+      "pos": "noun/verb",
+      "topic": "Giao thông",
+      "translation": "Tôi đi tàu hỏa đến chỗ làm mỗi ngày.",
+      "collocations": [
+        "catch a train",
+        "train station"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "train",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-train",
+      "cefr": "A1"
+    },
+    {
+      "example": "I need to go to the airport two hours before my flight.",
+      "ipa": "/ˈerpɔːrt/",
+      "meaning": "sân bay",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Tôi cần đến sân bay trước chuyến bay hai tiếng.",
+      "collocations": [
+        "at the airport",
+        "airport terminal"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "airport",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-airport",
+      "cefr": "A2"
+    },
+    {
+      "example": "We stayed at a nice hotel near the beach.",
+      "ipa": "/hoʊˈtel/",
+      "meaning": "khách sạn",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Chúng tôi đã ở một khách sạn đẹp gần bãi biển.",
+      "collocations": [
+        "book a hotel",
+        "stay at a hotel"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "hotel",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-hotel",
+      "cefr": "A2"
+    },
+    {
+      "example": "You need a valid passport to travel abroad.",
+      "ipa": "/ˈpæspɔːrt/",
+      "meaning": "hộ chiếu",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Bạn cần hộ chiếu hợp lệ để đi nước ngoài.",
+      "collocations": [
+        "apply for a passport",
+        "valid passport"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "passport",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-passport",
+      "cefr": "A2"
+    },
+    {
+      "example": "I need to check my luggage before the flight.",
+      "ipa": "/ˈlʌɡɪdʒ/",
+      "meaning": "hành lý",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Tôi cần ký gửi hành lý trước chuyến bay.",
+      "collocations": [
+        "hand luggage",
+        "luggage allowance"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "luggage",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-luggage",
+      "cefr": "A2"
+    },
+    {
+      "example": "We are planning a trip to the beach this weekend.",
+      "ipa": "/trɪp/",
+      "meaning": "chuyến đi, cuộc hành trình",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Chúng tôi đang lên kế hoạch cho một chuyến đi biển vào cuối tuần này.",
+      "collocations": [
+        "take a trip",
+        "business trip"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "trip",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-trip",
+      "cefr": "A2"
+    },
+    {
+      "example": "The journey from Hanoi to Ho Chi Minh City takes about two hours by plane.",
+      "ipa": "/ˈdʒɜːrni/",
+      "meaning": "hành trình, chuyến đi",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Hành trình từ Hà Nội đến Thành phố Hồ Chí Minh mất khoảng hai giờ đi máy bay.",
+      "collocations": [
+        "long journey",
+        "journey begins"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "journey",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-journey",
+      "cefr": "A2"
+    },
+    {
+      "example": "She is reading a book about history.",
+      "ipa": "/bʊk/",
+      "meaning": "quyển sách",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Cô ấy đang đọc một quyển sách về lịch sử.",
+      "collocations": [
+        "read a book",
+        "write a book"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "book",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-book",
+      "cefr": "A2"
+    },
+    {
+      "example": "I would like to reserve a table for two at 7 pm.",
+      "ipa": "/rɪˈzɜːrv/",
+      "meaning": "đặt trước, giữ chỗ",
+      "pos": "verb",
+      "topic": "Du lịch",
+      "translation": "Tôi muốn đặt trước một bàn cho hai người lúc 7 giờ tối.",
+      "collocations": [
+        "reserve a table",
+        "reserve a room"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "reserve",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-reserve",
+      "cefr": "B1"
+    },
+    {
+      "example": "I need to cancel my appointment for tomorrow.",
+      "ipa": "/ˈkænsəl/",
+      "meaning": "hủy bỏ",
+      "pos": "verb",
+      "topic": "Du lịch",
+      "translation": "Tôi cần hủy cuộc hẹn ngày mai.",
+      "collocations": [
+        "cancel a meeting",
+        "cancel an order"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "cancel",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-cancel",
+      "cefr": "B1"
+    },
+    {
+      "example": "We arrived at the airport two hours early.",
+      "ipa": "/əˈraɪv/",
+      "meaning": "đến, tới (một nơi nào đó)",
+      "pos": "verb",
+      "topic": "Du lịch",
+      "translation": "Chúng tôi đã đến sân bay sớm hai tiếng.",
+      "collocations": [
+        "arrive at",
+        "arrive in"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "arrive",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-arrive",
+      "cefr": "A2"
+    },
+    {
+      "example": "The train departs at 9 a.m. from the central station.",
+      "ipa": "/dɪˈpɑːrt/",
+      "meaning": "khởi hành, rời đi",
+      "pos": "verb",
+      "topic": "Du lịch",
+      "translation": "Chuyến tàu khởi hành lúc 9 giờ sáng từ nhà ga trung tâm.",
+      "collocations": [
+        "depart from",
+        "depart for"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "depart",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-depart",
+      "cefr": "B1"
+    },
+    {
+      "example": "The flight to Hanoi was delayed by two hours.",
+      "ipa": "/flaɪt/",
+      "meaning": "chuyến bay; sự bay",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Chuyến bay đến Hà Nội đã bị hoãn hai tiếng.",
+      "collocations": [
+        "book a flight",
+        "flight attendant"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "flight",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-flight",
+      "cefr": "A2"
+    },
+    {
+      "example": "We spent the whole day at the beach.",
+      "ipa": "/biːtʃ/",
+      "meaning": "bãi biển",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Chúng tôi đã dành cả ngày ở bãi biển.",
+      "collocations": [
+        "go to the beach",
+        "sandy beach"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "beach",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-beach",
+      "cefr": "A1"
+    },
+    {
+      "example": "They climbed the mountain early in the morning.",
+      "ipa": "/ˈmaʊntən/",
+      "meaning": "núi",
+      "pos": "noun",
+      "topic": "Du lịch",
+      "translation": "Họ leo núi vào sáng sớm.",
+      "collocations": [
+        "climb a mountain",
+        "mountain range"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "mountain",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-mountain",
+      "cefr": "A1"
+    },
+    {
+      "example": "I go to the market every Sunday to buy fresh vegetables.",
+      "ipa": "/ˈmɑːrkɪt/",
+      "meaning": "chợ, thị trường",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Tôi đi chợ mỗi Chủ nhật để mua rau tươi.",
+      "collocations": [
+        "stock market",
+        "market research"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "market",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-market",
+      "cefr": "A1"
+    },
+    {
+      "example": "I need to go to the shop to buy some milk.",
+      "ipa": "/ʃɒp/",
+      "meaning": "cửa hàng, cửa hiệu; mua sắm",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Tôi cần đến cửa hàng để mua sữa.",
+      "collocations": [
+        "go shopping",
+        "shop assistant"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "shop",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-shop",
+      "cefr": "A1"
+    },
+    {
+      "example": "She needs to save money for her trip.",
+      "ipa": "/ˈmʌni/",
+      "meaning": "tiền",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Cô ấy cần tiết kiệm tiền cho chuyến đi của mình.",
+      "collocations": [
+        "make money",
+        "spend money"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "money",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-money",
+      "cefr": "A1"
+    },
+    {
+      "example": "This shirt is very cheap.",
+      "ipa": "/tʃiːp/",
+      "meaning": "rẻ",
+      "pos": "adjective",
+      "topic": "Mua sắm",
+      "translation": "Chiếc áo này rất rẻ.",
+      "collocations": [
+        "cheap price",
+        "cheap and cheerful"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "cheap",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-cheap",
+      "cefr": "A1"
+    },
+    {
+      "example": "This watch is too expensive for me to buy.",
+      "ipa": "/ɪkˈspensɪv/",
+      "meaning": "đắt, đắt đỏ",
+      "pos": "adjective",
+      "topic": "Mua sắm",
+      "translation": "Chiếc đồng hồ này quá đắt để tôi có thể mua.",
+      "collocations": [
+        "expensive car",
+        "too expensive"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "expensive",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-expensive",
+      "cefr": "A2"
+    },
+    {
+      "example": "What size do you want?",
+      "ipa": "/saɪz/",
+      "meaning": "kích thước, cỡ",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Bạn muốn cỡ nào?",
+      "collocations": [
+        "size up",
+        "a size too big"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "size",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-size",
+      "cefr": "A2"
+    },
+    {
+      "example": "What is your favorite color?",
+      "ipa": "/ˈkʌlər/",
+      "meaning": "màu sắc",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Màu sắc yêu thích của bạn là gì?",
+      "collocations": [
+        "bright color",
+        "color scheme"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "color",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-color",
+      "cefr": "A1"
+    },
+    {
+      "example": "I will return your book tomorrow.",
+      "ipa": "/rɪˈtɜːrn/",
+      "meaning": "trở lại, quay lại",
+      "pos": "verb",
+      "topic": "Mua sắm",
+      "translation": "Tôi sẽ trả lại sách của bạn vào ngày mai.",
+      "collocations": [
+        "return to",
+        "return something to someone"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "return",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-return",
+      "cefr": "A2"
+    },
+    {
+      "example": "We exchanged contact information at the meeting.",
+      "ipa": "/ɪksˈtʃeɪndʒ/",
+      "meaning": "trao đổi, sự trao đổi",
+      "pos": "verb",
+      "topic": "Mua sắm",
+      "translation": "Chúng tôi đã trao đổi thông tin liên lạc tại cuộc họp.",
+      "collocations": [
+        "exchange information",
+        "exchange ideas"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "exchange",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-exchange",
+      "cefr": "B1"
+    },
+    {
+      "example": "The store gave me a full refund for the damaged item.",
+      "ipa": "/ˈriːfʌnd/",
+      "meaning": "hoàn tiền",
+      "pos": "noun",
+      "topic": "Mua sắm",
+      "translation": "Cửa hàng đã hoàn lại toàn bộ tiền cho tôi vì món đồ bị hỏng.",
+      "collocations": [
+        "get a refund",
+        "full refund"
+      ],
+      "freq": 3,
+      "workplace": false,
+      "term": "refund",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-refund",
+      "cefr": "B1"
+    },
+    {
+      "example": "Regular exercise is important for good health.",
+      "ipa": "/helθ/",
+      "meaning": "sức khỏe",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Tập thể dục thường xuyên rất quan trọng cho sức khỏe tốt.",
+      "collocations": [
+        "good health",
+        "health care"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "health",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-health",
+      "cefr": "A2"
+    },
+    {
+      "example": "The doctor advised me to rest for a few days.",
+      "ipa": "/ˈdɒktər/",
+      "meaning": "bác sĩ",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Bác sĩ khuyên tôi nên nghỉ ngơi vài ngày.",
+      "collocations": [
+        "see a doctor",
+        "doctor's appointment"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "doctor",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-doctor",
+      "cefr": "A1"
+    },
+    {
+      "example": "You should take this medicine after meals.",
+      "ipa": "/ˈmed.ɪ.sɪn/",
+      "meaning": "thuốc, y học",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Bạn nên uống thuốc này sau bữa ăn.",
+      "collocations": [
+        "take medicine",
+        "medicine bottle"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "medicine",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-medicine",
+      "cefr": "A2"
+    },
+    {
+      "example": "She works at the hospital as a nurse.",
+      "ipa": "/ˈhɒspɪtl/",
+      "meaning": "bệnh viện",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Cô ấy làm việc tại bệnh viện với vai trò y tá.",
+      "collocations": [
+        "in hospital",
+        "go to hospital"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "hospital",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-hospital",
+      "cefr": "A2"
+    },
+    {
+      "example": "I do exercise every morning to stay healthy.",
+      "ipa": "/ˈek.sə.saɪz/",
+      "meaning": "bài tập, tập thể dục",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Tôi tập thể dục mỗi sáng để giữ sức khỏe.",
+      "collocations": [
+        "do exercise",
+        "take exercise"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "exercise",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-exercise",
+      "cefr": "A2"
+    },
+    {
+      "example": "She is on a strict diet to lose weight.",
+      "ipa": "/ˈdaɪət/",
+      "meaning": "chế độ ăn kiêng, chế độ ăn uống",
+      "pos": "noun",
+      "topic": "Cuộc sống",
+      "translation": "Cô ấy đang ăn kiêng nghiêm ngặt để giảm cân.",
+      "collocations": [
+        "go on a diet",
+        "balanced diet"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "diet",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-diet",
+      "cefr": "B1"
+    },
+    {
+      "example": "I usually sleep for eight hours every night.",
+      "ipa": "/sliːp/",
+      "meaning": "ngủ",
+      "pos": "verb",
+      "topic": "Cuộc sống",
+      "translation": "Tôi thường ngủ tám tiếng mỗi đêm.",
+      "collocations": [
+        "go to sleep",
+        "sleep well"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "sleep",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-sleep",
+      "cefr": "A1"
+    },
+    {
+      "example": "She studies English every day.",
+      "ipa": "/ˈstʌdi/",
+      "meaning": "học, nghiên cứu",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Cô ấy học tiếng Anh mỗi ngày.",
+      "collocations": [
+        "study hard",
+        "study for an exam"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "study",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-study",
+      "cefr": "A1"
+    },
+    {
+      "example": "I want to learn English.",
+      "ipa": "/lɜːrn/",
+      "meaning": "học",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Tôi muốn học tiếng Anh.",
+      "collocations": [
+        "learn from",
+        "learn about"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "learn",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-learn",
+      "cefr": "A1"
+    },
+    {
+      "example": "The teacher explains the lesson clearly.",
+      "ipa": "/ˈtiːtʃər/",
+      "meaning": "giáo viên",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Giáo viên giải thích bài học một cách rõ ràng.",
+      "collocations": [
+        "a primary school teacher",
+        "a teacher's assistant"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "teacher",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-teacher",
+      "cefr": "A1"
+    },
+    {
+      "example": "The students are studying for their final exams.",
+      "ipa": "/ˈstjuːdənt/",
+      "meaning": "học sinh, sinh viên",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Các học sinh đang ôn thi cuối kỳ.",
+      "collocations": [
+        "a good student",
+        "student loan"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "student",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-student",
+      "cefr": "A1"
+    },
+    {
+      "example": "I have an English exam tomorrow.",
+      "ipa": "/ɪɡˈzæm/",
+      "meaning": "kỳ thi, bài kiểm tra",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Ngày mai tôi có kỳ thi tiếng Anh.",
+      "collocations": [
+        "take an exam",
+        "pass an exam"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "exam",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-exam",
+      "cefr": "A2"
+    },
+    {
+      "example": "I have a lot of homework to do tonight.",
+      "ipa": "/ˈhoʊmwɜːrk/",
+      "meaning": "bài tập về nhà",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Tôi có rất nhiều bài tập về nhà phải làm tối nay.",
+      "collocations": [
+        "do homework",
+        "homework assignment"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "homework",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a1-homework",
+      "cefr": "A1"
+    },
+    {
+      "example": "My favorite subject is mathematics.",
+      "ipa": "/ˈsʌbdʒɪkt/",
+      "meaning": "môn học; chủ đề; đối tượng",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Môn học yêu thích của tôi là toán.",
+      "collocations": [
+        "school subject",
+        "main subject"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "subject",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-subject",
+      "cefr": "A2"
+    },
+    {
+      "example": "I don't understand this question.",
+      "ipa": "/ˌʌndərˈstænd/",
+      "meaning": "hiểu",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Tôi không hiểu câu hỏi này.",
+      "collocations": [
+        "understand something",
+        "understand that"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "understand",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-understand",
+      "cefr": "A2"
+    },
+    {
+      "example": "I can't remember his name.",
+      "ipa": "/rɪˈmembər/",
+      "meaning": "nhớ, ghi nhớ",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Tôi không thể nhớ tên anh ấy.",
+      "collocations": [
+        "remember to do something",
+        "remember doing something"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "remember",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-remember",
+      "cefr": "A2"
+    },
+    {
+      "example": "Don't forget to lock the door when you leave.",
+      "ipa": "/fərˈɡet/",
+      "meaning": "quên",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Đừng quên khóa cửa khi bạn rời đi.",
+      "collocations": [
+        "forget to do something",
+        "forget about something"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "forget",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-forget",
+      "cefr": "A2"
+    },
+    {
+      "example": "She practices the piano every day.",
+      "ipa": "/ˈpræktɪs/",
+      "meaning": "thực hành, luyện tập",
+      "pos": "verb",
+      "topic": "Học tập",
+      "translation": "Cô ấy luyện tập piano mỗi ngày.",
+      "collocations": [
+        "practice doing something",
+        "practice for something"
+      ],
+      "freq": 1,
+      "workplace": false,
+      "term": "practice",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-a2-practice",
+      "cefr": "A2"
+    },
+    {
+      "example": "She has a good knowledge of English grammar.",
+      "ipa": "/ˈnɒlɪdʒ/",
+      "meaning": "kiến thức",
+      "pos": "noun",
+      "topic": "Học tập",
+      "translation": "Cô ấy có kiến thức tốt về ngữ pháp tiếng Anh.",
+      "collocations": [
+        "have a good knowledge of",
+        "broaden one's knowledge"
+      ],
+      "freq": 2,
+      "workplace": false,
+      "term": "knowledge",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "id": "en-b1-knowledge",
+      "cefr": "B1"
+    }
+  ]
+}

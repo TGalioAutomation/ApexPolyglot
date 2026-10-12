@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.log
+cache/
+data/learner-memory.json
+
+.video_agent/
+.DS_Store
+.zcode/
